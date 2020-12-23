@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=emu8086
+Exec=emu8086 %f
+Comment=A simple 8086 emulator
+Icon=emu8086
+Terminal=false
+Categories=Development;IDE;
+MimeType=text/x-asm;
