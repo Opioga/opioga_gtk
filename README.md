@@ -9,6 +9,7 @@
 ## What is this
 
 This is a github repo containing source code of an 8086 emulator written in C that is currently in the works.
+View the documentation [here](https://kosiken.github.io/gtkemu8086-docs)
 
 ## Motivation
 
