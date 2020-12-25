@@ -13,4 +13,3 @@ emu8086app.c \
 emu8086aboutwin.c \
 main.c 
 
-

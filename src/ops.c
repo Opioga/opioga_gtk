@@ -31,9 +31,15 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <emu8086.h>
 #include <opcodes.h>
 #include <m_ops.h>
+
+
+
+extern struct instruction *_instruction_list;
+extern struct instruction *_last_instruction;
+extern struct instruction *_current_instruction, *_first_instruction;
+extern struct variable *variable_list, *first_variable, *v_ordered_list;
 
 enum err_index
 {
@@ -93,7 +99,7 @@ void find_instruction(struct emu8086 *aCPU)
 
     char off = *(CODE_SEGMENT + IP);
     // off = off < 0 ? 0 - off : off;
-    __uint16_t add = 0;
+    __uint128_t add = 0;
     // char is_back = off >> 7;
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
@@ -155,7 +161,7 @@ void find_instruction_call(struct emu8086 *aCPU)
 {
     IP++;
     short value = *(CODE_SEGMENT_IP);
-    __uint16_t add = 0;
+    __uint128_t add = 0;
 
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
