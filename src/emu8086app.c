@@ -35,6 +35,14 @@
 #include <emu8086app.h>
 #include <emu8086win.h>
 #include <emu8086aboutwin.h>
+
+
+extern struct instruction   *_instruction_list;
+extern struct instruction *_current_instruction, *_first_instruction;
+extern struct label *label_list, *explore;
+extern struct errors_list *first_err, *list_err;
+extern int errors, assembler_step;
+
 struct _Emu8086App
 {
     GtkApplication parent;

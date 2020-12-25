@@ -28,6 +28,7 @@
 
 #ifndef _M_OPS_H_
 #define _M_OPS_H_
+#include <emu8086.h>
 void xor_addr8_i8(struct emu8086 *aCPU, int *handled);
 void sub_addr8_i8(struct emu8086 *aCPU, int *handled);
 void sbb_addr8_i8(struct emu8086 *aCPU, int *handled);

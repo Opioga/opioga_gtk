@@ -36,15 +36,7 @@ char *match_register(), *match_expression(),
     *match_expression_level1(), *match_expression_level2(),
     *match_expression_level3(), *match_expression_level4(),
     *match_expression_level5(), *match_expression_level6();
-int undefined, instruction_addr,
-    instruction_register, instruction_value2;
-unsigned char code_mem[0xffff];
-char global_label[MAX_SIZE];
-char name[MAX_SIZE];
-char expr_name[MAX_SIZE];
-char undefined_name[MAX_SIZE];
 
-int line_number, assembler_step, size, data_mem_offset;
 struct label
 {
     struct label *left;
@@ -60,16 +52,10 @@ struct label
 /* 
     assm.c
 */
-int label_identifier, is_offset;
-struct label *label_list, *explore;
-struct label *last_label, *current_label, *_current_label;
-int is_first;
+ 
 struct label *define_label(char *name, int value);
 struct label *find_label(char *name);
-char *p;
-char line[256];
-char part[MAX_SIZE];
-int errors;
+ 
 struct errors_list
 {
     char message[256];
@@ -77,12 +63,6 @@ struct errors_list
     struct errors_list *prev;
     int line;
 };
-struct errors_list *define_errors_list(char *name, int line);
-struct errors_list *first_err, *list_err;
-int instruction_addressing, ic;
-int instruction_offset;
-int instruction_offset_width, start_address, address, assembler_step,
-    instruction_value;
 
 void message(char *m, int level, int line);
 

@@ -57,10 +57,7 @@ struct variable
     int offset;
     //int is_16;
 };
-struct instruction *_instruction_list;
-struct instruction *_last_instruction;
-struct instruction *_current_instruction, *_first_instruction;
-struct variable *variable_list, *first_variable, *v_ordered_list;
+
 
 struct emu8086
 {
