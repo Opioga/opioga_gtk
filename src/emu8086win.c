@@ -350,9 +350,20 @@ static void rev_str_activate_cb(GtkMenuItem *item, gpointer user_data)
     PRIV;
     gchar *con;
     gsize len;
-    GFile *file = g_file_new_for_path("/usr/local/share/emu8086/egs/RevStr.asm");
+    gchar *path;
+    #ifdef __WIN32
+        path = "egs/RevStr.asm";
+    #endif
+
+    #ifdef  __linux__
+        path = "/usr/local/share/emu8086/egs/RevStr.asm";
+
+    #endif // DEBUG
+
+
+    GFile *file = g_file_new_for_path(path);
     g_return_if_fail(file != NULL);
-    strcpy(win->state.file_path, "/usr/local/share/emu8086/egs/RevStr.asm");
+    strcpy(win->state.file_path, path);
     strcpy(win->state.file_name, "RevStr.asm");
 
     if (g_file_load_contents(file, NULL, &con, &len, NULL, NULL))
@@ -747,8 +758,10 @@ static void populate_win(Emu8086AppWindow *win)
     mem = gtk_label_new("00000");
     gtk_container_add(GTK_CONTAINER(b), mem);
     gtk_container_add(GTK_CONTAINER(scrolled_2), b);
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
+    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_margin_top(box2, 10);
+    gtk_widget_set_margin_left(box2, 10);
     gtk_widget_show(scrolled_2);
     gtk_widget_show(mem);
     gtk_widget_show(header);

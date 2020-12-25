@@ -541,44 +541,46 @@ void update(GtkTextBuffer *textbuffer, Emu8086AppCode *code)
     priv->lc = lc;
     int size, index;
 
-    if (lc < 10)
-        size = lc * 2;
-    else if (lc < 100)
-    {
-        size = 9 * 2 + (90 * 3);
-    }
-    else
-        size = (900 * 4) + (9 * 2) + (90 * 3);
+    
 
-    char *ln = (char *)malloc(sizeof(char) * size + 2);
-    ln[0] = '\0';
-    for (int i = 1; i < lc + 1; i++)
+    // if (lc < 10)
+    //     size = lc * 2;
+    // else if (lc < 100)
+    // {
+    //     size = 9 * 2 + (90 * 3);
+    // }
+    // else
+    //     size = (900 * 4) + (9 * 2) + (90 * 3);
 
-    {
-        if (i < 10)
-        {
-            char buf[3];
-            sprintf(buf, "%d\n", i);
-            ln = strcat(ln, buf);
-        }
-        else if (i < 100)
-        {
-            char buf[4];
-            sprintf(buf, "%d\n", i);
-            ln = strcat(ln, buf);
-        }
-        else
-        {
-            char buf[5];
-            sprintf(buf, "%d\n", i);
-            ln = strcat(ln, buf);
-        }
+    // char *ln = (char *)malloc(sizeof(char) * size + 2);
+    // ln[0] = '\0';
+    // for (int i = 1; i < lc + 1; i++)
 
-        /* code */
-    }
+    // {
+    //     if (i < 10)
+    //     {
+    //         char buf[6];
+    //         sprintf(buf, "%d\r\n", i);
+    //         ln = strcat(ln, buf);
+    //     }
+    //     else if (i < 100)
+    //     {
+    //         char buf[8];
+    //         sprintf(buf, "%d\r\n", i);
+    //         ln = strcat(ln, buf);
+    //     }
+    //     else
+    //     {
+    //         char buf[10];
+    //         sprintf(buf, "%d\r\n", i);
+    //         ln = strcat(ln, buf);
+    //     }
 
-    gtk_label_set_text(GTK_LABEL(priv->lines), ln);
-    free(ln);
+    //     /* code */
+    // }
+
+    // gtk_label_set_text(GTK_LABEL(priv->lines), ln);
+    // free(ln);
     highlight(code);
 }
 
@@ -628,11 +630,12 @@ static void create_tags(GtkTextBuffer *buffer)
 
 static void *getCss(gint size, GtkStyleProvider *provider)
 {
-    gchar buf[46];
+    gchar buf[85];
     if (size > 30)
         return;
 
-    sprintf(buf, "* {font-family: Monospace;font-size: %dpx;}", size);
+    sprintf(buf, "* {font-family: Monospace;font-size: %dpx; color: #ffffff;"
+    "caret-color: #ffffff;}", size);
     gtk_css_provider_load_from_data(provider, buf, strlen(buf), NULL);
 }
 
@@ -647,15 +650,25 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     GtkWidget *lines;
     Emu8086AppCode *code;
     GtkStyleProvider *provider;
-    lines = gtk_label_new("1\n");
+    lines = gtk_label_new(" ");
     gtk_widget_show(lines);
     code = emu_8086_app_code_new();
+    GdkRGBA cursor_color;
+    cursor_color.alpha = 1.0;
+    cursor_color.blue = 0.5;
+    cursor_color.red = 0.5;
+    cursor_color.green = 1.0;
+
 
     provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), provider, G_MAXUINT);
     gtk_style_context_add_provider(gtk_widget_get_style_context(lines), provider, G_MAXUINT);
     gtk_css_provider_load_from_resource(provider, "/com/krc/emu8086app/css/text.css");
     // gtk_css_provider_load_from_data(provider, getCss(40), -1, NULL);
+    gtk_widget_set_margin_top(GTK_WIDGET(code), 10);
+    gtk_widget_override_cursor(GTK_WIDGET(code), &cursor_color, &cursor_color);
+        gtk_widget_override_cursor(GTK_WIDGET(box), &cursor_color, &cursor_color);
+        gtk_widget_override_cursor(GTK_WIDGET(box), &cursor_color, &cursor_color);
 
     gtk_container_add(GTK_CONTAINER(box2), lines);
     gtk_container_add(GTK_CONTAINER(box), box2);
@@ -665,6 +678,7 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
 
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
     create_tags(buffer);
+    // gtk_text_buffer_set_text(buffer, "1 ", 1);
     // priv->code = code;
     priv->isOpen = FALSE;
     priv->lines = lines;
