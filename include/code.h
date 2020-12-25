@@ -39,6 +39,7 @@ void update(GtkTextBuffer *textbuffer, Emu8086AppCode *code);
 
 void select_line(GtkWidget *code, gint line);
 void reset_code(GtkWidget *co);
+void editFontSize(Emu8086AppCode *code, gint size);
 // GtkWidget *create();
 Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *win);
 

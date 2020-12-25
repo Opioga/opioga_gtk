@@ -3,6 +3,7 @@
   <gresource prefix="/com/krc/emu8086app">
     <file preprocess="xml-stripblanks">emu8086.ui</file>
     <file preprocess="xml-stripblanks">about.ui</file>
- 
+    <file>css/text.css</file>
+    <file>pics/emu8086.png</file>
   </gresource>
 </gresources>

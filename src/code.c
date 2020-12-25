@@ -43,6 +43,7 @@ struct _Emu8086AppCodePrivate
     Emu8086AppWindow *win;
     uint16_t hl;
     gboolean isOpen;
+    GtkStyleProvider *provider;
 };
 
 static gchar *keywords[] = {
@@ -625,21 +626,41 @@ static void create_tags(GtkTextBuffer *buffer)
     gtk_text_buffer_create_tag(buffer, "comment", "foreground", "#6A9955", "style", PANGO_STYLE_ITALIC, NULL);
 }
 
+static void *getCss(gint size, GtkStyleProvider *provider)
+{
+    gchar buf[46];
+    if (size > 30)
+        return;
+
+    sprintf(buf, "* {font-family: Monospace;font-size: %dpx;}", size);
+    gtk_css_provider_load_from_data(provider, buf, strlen(buf), NULL);
+}
+
+void editFontSize(Emu8086AppCode *code, gint size)
+{
+    PRIV_CODE;
+    getCss(size, priv->provider);
+}
+
 Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *win)
 {
     GtkWidget *lines;
     Emu8086AppCode *code;
-    PangoFontDescription *font_desc;
+    GtkStyleProvider *provider;
     lines = gtk_label_new("1\n");
     gtk_widget_show(lines);
     code = emu_8086_app_code_new();
-    font_desc = pango_font_description_from_string("mono 12");
-    gtk_widget_modify_font(code, font_desc);
-    pango_font_description_free(font_desc);
+
+    provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
+    gtk_style_context_add_provider(gtk_widget_get_style_context(code), provider, G_MAXUINT);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(lines), provider, G_MAXUINT);
+    gtk_css_provider_load_from_resource(provider, "/com/krc/emu8086app/css/text.css");
+    // gtk_css_provider_load_from_data(provider, getCss(40), -1, NULL);
+
     gtk_container_add(GTK_CONTAINER(box2), lines);
     gtk_container_add(GTK_CONTAINER(box), box2);
 
-    gtk_container_add(GTK_CONTAINER(box), code);
+    gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(code));
     PRIV_CODE;
 
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
@@ -650,11 +671,12 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     priv->line = 0;
     priv->win = win;
     priv->hl = 0;
+    priv->provider = provider;
     g_signal_connect(buffer, "insert-text", G_CALLBACK(user_function), code);
     g_signal_connect(buffer, "delete-range", G_CALLBACK(user_function2), code);
     //
 
-    return code;
+    return EMU_8086_APP_CODE(code);
 
     //gtk_widget_show(lines);
 }

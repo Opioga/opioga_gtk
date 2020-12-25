@@ -49,6 +49,7 @@ struct _Emu8086AppWindowState
     char file_path[100];
     gboolean file_path_set;
     gboolean Open;
+    gint fontSize;
 };
 
 void emu_8086_app_window_open(Emu8086AppWindow *win,

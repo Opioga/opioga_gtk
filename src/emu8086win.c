@@ -198,12 +198,48 @@ emu_8086_window_key_press_event(GtkWidget *widget,
     static gpointer grand_parent_class = NULL;
     gboolean handled = FALSE;
     GtkWindow *window = GTK_WINDOW(widget);
+
     if (event->state & GDK_CONTROL_MASK)
     {
+        g_print("%d \n", event->keyval);
         if ((event->keyval == GDK_KEY_o))
         {
             handled = TRUE;
             _open(EMU_8086_APP_WINDOW(widget));
+        }
+        else if ((event->keyval == GDK_KEY_plus) || (event->keyval == GDK_KEY_KP_Add) || (event->keyval == GDK_KEY_equal))
+        {
+            handled = TRUE;
+            Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
+            PRIV;
+            if (win->state.fontSize < 30)
+            {
+                win->state.fontSize++;
+                editFontSize(priv->code, win->state.fontSize);
+            }
+
+            else
+            {
+                emu_8086_app_window_flash(win, "Max font size reached");
+            }
+        }
+
+        else if ((event->keyval == GDK_KEY_minus) || (event->keyval == GDK_KEY_KP_Subtract))
+        {
+            handled = TRUE;
+            Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
+            PRIV;
+            g_print("here\n");
+            if (win->state.fontSize > 10)
+            {
+                win->state.fontSize--;
+                editFontSize(priv->code, win->state.fontSize);
+            }
+
+            else
+            {
+                emu_8086_app_window_flash(win, "Min font size reached");
+            }
         }
         else if ((event->keyval == GDK_KEY_s))
         {
@@ -685,7 +721,24 @@ static void populate_win(Emu8086AppWindow *win)
     GtkWidget *scrolled, *scrolled_2, *mem, *header, *b;
     GtkWidget *box, *code, *box2;
     int be = 0;
+
+#ifdef __linux__
     gtk_window_set_icon_name(GTK_WINDOW(win), "emu8086");
+#endif
+
+#ifdef _WIN32
+    GError *error = NULL;
+
+    GdkPixbuf *pic = gdk_pixbuf_new_from_resource("/com/krc/emu8086app/pics/emu8086.png", error);
+    if (error == NULL)
+        gtk_window_set_icon(GTK_WINDOW(win), pic);
+    else
+        g_debug(error->message);
+
+    if (error != NULL)
+        g_error_free(error);
+#endif
+
     scrolled = gtk_scrolled_window_new(NULL, NULL);
     scrolled_2 = gtk_scrolled_window_new(NULL, NULL);
     b = gtk_box_new(GTK_ORIENTATION_VERTICAL, 16);
@@ -734,6 +787,7 @@ static void populate_win(Emu8086AppWindow *win)
     strcpy(win->state.file_name, "Untitled.asm");
     win->state.isSaved = TRUE;
     win->state.file_path_set = FALSE;
+    win->state.fontSize = 16;
     gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
 }
 

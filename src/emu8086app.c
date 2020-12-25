@@ -516,13 +516,24 @@ void open_help()
     window = emu_8086_about_window_new("Help");
     // gtk_window_set_icon_from_file(window, "/usr/share/datausage/resources/leo.png", NULL);
     //
-    GError *error = NULL;
 
-    GdkPixbuf *pic = gdk_pixbuf_new_from_file("/usr/local/share/emu8086/pics/leo.png", &error);
-    if (pic)
+    // #ifdef __linux__
+    GError *error = NULL;
+    GdkPixbuf *pic;
+#ifdef __linux__
+    pic = gdk_pixbuf_new_from_file("/usr/local/share/emu8086/pics/leo.png", &error);
+
+#endif
+#ifdef _WIN32
+    pic = gdk_pixbuf_new_from_resource("/com/krc/emu8086app/pics/emu8086.png", error);
+#endif
+    if (error == NULL)
         gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(window), pic);
     else
         g_debug(error->message);
+    // g_free(pic);
+    if (error != NULL)
+        g_error_free(error);
 
     // gtk_window_set_default_icon_list()
     gtk_window_present(GTK_WINDOW(window));

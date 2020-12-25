@@ -75,6 +75,7 @@ struct errors_list *define_errors_list(char *name, int line)
         list_err->next = error;
         list_err = error;
     }
+    return error;
 };
 struct label *define_label(name, value) char *name;
 int value;
@@ -166,7 +167,7 @@ int value;
     size = 0;
     struct variable *variable;
     //   struct variable *explore;
-    int c;
+    // int c;
 
     /* Allocate variable */
     variable = malloc(sizeof(struct variable) + strlen(name));
@@ -308,7 +309,7 @@ void check_end(p) char *p;
     p = avoid_spaces(p);
     if (*p && *p != ';')
     {
-        char buf[20];
+        char buf[45];
         sprintf(buf, "Error: extra characters at end of line %d\n", line_number);
         message(buf, ERR, line_number);
         errors++;
@@ -1527,7 +1528,7 @@ void process_instr()
         }
         if (instruction_set[c] == NULL)
         {
-            char m[25 + MAX_SIZE];
+            char m[MAX_SIZE + 31];
 
             sprintf(m, "Undefined instruction '%s %s'\n", part, p);
             message(m, ERR, line_number);
@@ -1550,7 +1551,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
     {
         _message("cant fin fil", ERR);
     }
-    char *p2, *p3;
+    char *p2;
     int i = 0;
     int starting_address = 0;
     _INSTRUCTIONS = NULL;
@@ -1633,7 +1634,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
                         {
                             char m[18 + MAX_SIZE];
 
-                            sprintf(m, "Redefined label '%s\n'", name);
+                            sprintf(m, "Redefined label '%s'", name);
                             _message(m, WARN);
                             _nu->is_defined = 1;
                             // exit(1);
@@ -1652,7 +1653,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
 
                 if (nu != NULL && assembler_step == 0)
                 {
-                    char m[18 + MAX_SIZE];
+                    char m[30 + MAX_SIZE];
 
                     sprintf(m, "Warning Redefined label '%s'", name);
 

@@ -33,6 +33,7 @@
 
 #include <emu8086.h>
 #include <opcodes.h>
+#include <m_ops.h>
 
 enum err_index
 {
@@ -171,10 +172,10 @@ void find_instruction_call(struct emu8086 *aCPU)
     int b = IP + value + 1;
     if (SP == 0)
     {
-        char buf[15];
+        char buf[256];
         sprintf(buf, "Stack reached maximum: on line %d",
                 _current_instruction->line_number);
-        _message(buf, ERR);
+        massage(buf, ERR);
     }
     if (b == 0xfffd)
     {
@@ -218,7 +219,7 @@ void find_instruction_call(struct emu8086 *aCPU)
             }
             if ((prev == NULL) && (next == NULL))
             {
-                char buf[15];
+                char buf[256];
                 sprintf(buf, errors_str[UNDEFINED],
                         _current_instruction->line_number);
                 massage(buf, ERR);
@@ -275,7 +276,6 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
         printf("jjjj\n");
         // special
         *dest = DATA_SEGMENT;
-        int vmmm = 0;
         IP++;
         int v = *(CODE_SEGMENT_IP);
         IP++;
@@ -426,7 +426,6 @@ void add_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void add_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -452,12 +451,11 @@ void add_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void add_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -476,7 +474,6 @@ void add_reg8_addr8(struct emu8086 *aCPU, int *handled)
 void add_addr8_reg8(struct emu8086 *aCPU, int *handled)
 {
 
-    int b = 0;
     is_16 = 0;
     // int _value = INSTRUCTIONS->value;
     IP++;
@@ -513,7 +510,7 @@ void add_addr8_reg8(struct emu8086 *aCPU, int *handled)
         *handled = 1;
         return;
     }
-    b = get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
+    get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
 
     int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
     IP++;
@@ -559,7 +556,7 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
 
     is_16 = 0;
 
-    int op2, value, *op4;
+    int value, *op4;
 
     unsigned char reg = (opn & 0b00111000) >> 3;
 
@@ -595,7 +592,6 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
     {
         // opn = opn - 0x20;
         value = 0;
-        int width = _INSTRUCTIONS->end_address - IP - 1;
         IP++;
         value = *(CODE_SEGMENT_IP);
 
@@ -870,7 +866,6 @@ void or_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void or_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -898,12 +893,11 @@ void or_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void or_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2;
     int opn = *(CODE_SEGMENT + IP);
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
@@ -1186,7 +1180,7 @@ void adc_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void adc_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -1212,12 +1206,12 @@ void adc_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void adc_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -1238,7 +1232,6 @@ void adc_reg8_addr8(struct emu8086 *aCPU, int *handled)
 void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
 {
 
-    int b = 0;
     is_16 = 0;
     // int _value = INSTRUCTIONS->value;
     IP++;
@@ -1276,7 +1269,7 @@ void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
         return;
     }
-    b = get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
+    get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
 
     int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
     IP++;
@@ -1318,14 +1311,14 @@ void adc_ax_i16(struct emu8086 *aCPU, int *handled)
 
 void adc_addr8_i8(struct emu8086 *aCPU, int *handled)
 {
-    int offset = 0, *op3;
+    int offset = 0;
 
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
     is_16 = 0;
 
-    int op2, value, *op4;
+    int value, *op4;
     if (opn == 0x16)
     {
         // opn
@@ -1366,7 +1359,7 @@ void adc_addr16_s8(struct emu8086 *aCPU, int *handled)
     opn = *(CODE_SEGMENT + IP);
 
     unsigned char *op1 = NULL;
-    int *op2, value = 0, *op3;
+    int *op2, value = 0;
     if (opn == 0x16)
     {
         IP++;
@@ -1405,7 +1398,7 @@ void adc_addr16_d16(struct emu8086 *aCPU, int *handled)
     opn = *(CODE_SEGMENT + IP);
 
     unsigned char *op1 = NULL;
-    int *op2, value = 0, *op3;
+    int *op2, value = 0;
     if (opn == 0x16)
     {
         IP++;
@@ -1483,7 +1476,7 @@ void sbb_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void sbb_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -1512,12 +1505,12 @@ void sbb_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void sbb_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2; //, *op3;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -1676,7 +1669,7 @@ void sbb_addr16_s8(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x1e)
     {
@@ -1712,7 +1705,7 @@ void sbb_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x1e)
     {
@@ -2083,7 +2076,7 @@ void and_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void and_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -2112,12 +2105,12 @@ void and_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void and_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2; //, *op3;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -2274,7 +2267,7 @@ void and_addr16_s8(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x26)
     {
@@ -2317,7 +2310,7 @@ void and_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x26)
     {
@@ -2404,7 +2397,7 @@ void sub_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void sub_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -2433,12 +2426,12 @@ void sub_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void sub_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2; // *op3;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -2597,7 +2590,7 @@ void sub_addr16_s8(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x2e)
     {
@@ -2633,7 +2626,7 @@ void sub_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x2e)
     {
@@ -2714,7 +2707,7 @@ void xor_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void xor_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -2743,12 +2736,12 @@ void xor_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void xor_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
+    // int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2; //;, *op3;
     int opn = *(CODE_SEGMENT + IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
@@ -2904,7 +2897,7 @@ void xor_addr16_s8(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x36)
     {
@@ -2942,7 +2935,7 @@ void xor_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
 
-    int op2, value;
+    int *op2 = NULL, value;
     op1 = &opn;
     if (opn == 0x36)
     {
@@ -3226,12 +3219,11 @@ void mov_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
 void mov_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 0;
     unsigned char *op1;
     op1 = DATA_SEGMENT;
     printf("here\n");
-    int *op2 = NULL, *op3 = NULL;
+    int *op2 = NULL;
     IP++;
     int opn = *(CODE_SEGMENT_IP);
 
@@ -3376,7 +3368,7 @@ void mov_addr_cs(struct emu8086 *aCPU, int *handled)
     is_16 = 1;
     unsigned int offset = 0;
     unsigned char *op1, opn = *(CODE_SEGMENT_IP);
-    int value = 0, *op2 = NULL, *op3 = NULL;
+    int *op2 = NULL, *op3 = NULL;
 
     unsigned char reg = (opn & 0b00111000) >> 3;
     if (reg == 0)
@@ -3422,7 +3414,7 @@ void mov_addr_ds(struct emu8086 *aCPU, int *handled)
     unsigned int offset = 0;
     is_16 = 1;
     unsigned char *op1, opn = *(CODE_SEGMENT_IP);
-    int value = 0, *op2 = NULL, *op3 = NULL;
+    int *op2 = NULL, *op3 = NULL;
     if (opn == 0x1e)
     {
         int width = _INSTRUCTIONS->end_address - IP - 1;
@@ -3461,7 +3453,7 @@ void mov_addr_es(struct emu8086 *aCPU, int *handled)
     unsigned int offset = 0;
     is_16 = 1;
     unsigned char *op1, opn = *(CODE_SEGMENT_IP);
-    int value = 0, *op2 = NULL, *op3 = NULL;
+    int *op2 = NULL, *op3 = NULL;
     if (opn == 0x6)
     {
         int width = _INSTRUCTIONS->end_address - IP - 1;
@@ -3500,7 +3492,7 @@ void mov_addr_ss(struct emu8086 *aCPU, int *handled)
     unsigned int offset = 0;
     is_16 = 1;
     unsigned char *op1, opn = *(CODE_SEGMENT_IP);
-    int value = 0, *op2 = NULL, *op3 = NULL;
+    int *op2 = NULL, *op3 = NULL;
     if (opn == 0x16)
     {
         int width = _INSTRUCTIONS->end_address - IP - 1;
@@ -3751,14 +3743,9 @@ void push_addr(struct emu8086 *aCPU, int *handled)
 {
     IP++;
     unsigned char opn = *(CODE_SEGMENT_IP);
-    unsigned char offset = 0;
     unsigned char *op1;
     int value = 0, *op2 = NULL;
-    if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
-    {
-
-        offset = 0;
-    }
+    get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
     value = *op1++;
     value |= *op1 << 8;
     push_to_stack(aCPU, value);
@@ -3828,14 +3815,9 @@ void pop_addr(struct emu8086 *aCPU, int *handled)
 {
     IP++;
     unsigned char opn = *(CODE_SEGMENT_IP);
-    unsigned char offset = 0;
     unsigned char *op1;
     int value = 0, *op2 = NULL;
-    if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
-    {
-
-        offset = 0;
-    }
+    get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
     pop_from_stack(aCPU, &value);
 
     *op1++ = value & 0xff;
@@ -3955,7 +3937,7 @@ void call_addr(struct emu8086 *aCPU, int *handled)
 {
     if (aCPU->call_stack > (MAX_CALL_STACK - 1))
     {
-        char buf[35];
+        char buf[256];
         sprintf(buf, errors_str[MAX_CALL], _INSTRUCTIONS->line_number);
         massage(buf, ERR);
         // massage("MAX CALL EXCEEDED\n", ERR);
@@ -3976,10 +3958,10 @@ void call_addr(struct emu8086 *aCPU, int *handled)
 
 void ret_addr(struct emu8086 *aCPU, int *handled)
 {
-    unsigned int value;
+    int value;
     if (aCPU->call_stack == 0)
     {
-        char buf[30];
+        char buf[256];
         sprintf(buf, errors_str[INVALID_RET], _INSTRUCTIONS->line_number);
         massage(buf, ERR);
         *handled = 1;
@@ -4045,7 +4027,6 @@ void cmp_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
 void cmp_reg16_addr16(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 1;
     IP++;
     unsigned char *op1;
@@ -4075,12 +4056,11 @@ void cmp_reg16_addr16(struct emu8086 *aCPU, int *handled)
 
 void cmp_reg8_addr8(struct emu8086 *aCPU, int *handled)
 {
-    int b = 0;
     is_16 = 0;
 
     IP++;
     unsigned char *op1;
-    int *op2, *op3;
+    int *op2;
     int opn = *(CODE_SEGMENT + IP);
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
 
@@ -4192,7 +4172,7 @@ void cmp_addr8_i8(struct emu8086 *aCPU, int *handled)
     opn = *(CODE_SEGMENT + IP);
     offset = opn > (0x9f + 16) ? 0x40 : 0;
 
-    int op2, value;
+    int *op2 = NULL, value;
     if (opn == 0x3e)
     {
         IP++;
@@ -4232,7 +4212,7 @@ void cmp_addr16_s8(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
     op1 = &opn;
-    int op2, value;
+    int *op2 = NULL, value;
     if (opn == 0x3e)
     {
         IP++;
@@ -4265,7 +4245,7 @@ void cmp_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char *op1, opn;
     opn = *(CODE_SEGMENT + IP);
     op1 = &opn;
-    int op2, value;
+    int *op2 = NULL, value;
     if (opn == 0x3e)
     {
         IP++;
@@ -4371,44 +4351,44 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
     IP++;
     unsigned char *op1 = NULL, opn = *(CODE_SEGMENT_IP);
     int *op2, b;
-    unsigned char *op3;
+    int *op3;
     is_16 = 0;
-    b = get_ops_reg_8(aCPU, opn, &op1, &op2);
+    b = get_ops_reg_8(aCPU, opn, &op3, &op2);
     if (b)
     {
         int value, value2;
 
         if (high_reg == 0)
         {
-            value = *op1 & 0xff;
+            value = *op3 & 0xff;
             value2 = *op2 & 0xff;
 
-            *op1 = (*op1 & 0xff00) | value2;
+            *op3 = (*op3 & 0xff00) | value2;
             *op2 = (*op2 & 0xff00) | value;
         }
         else if (high_reg == 1)
         {
-            value = *op1 >> 8;
+            value = *op3 >> 8;
             value2 = *op2 >> 8;
 
-            *op1 = (*op1 & 0xff) | (value2 << 8);
+            *op3 = (*op3 & 0xff) | (value2 << 8);
             *op2 = (*op2 & 0xff) | (value << 8);
         }
         else if (high_reg == 2)
         {
-            value = *op1 >> 8;
+            value = *op3 >> 8;
             value2 = *op2 & 0xff;
 
-            *op1 = (*op1 & 0xff) | (value2 << 8);
+            *op3 = (*op3 & 0xff) | (value2 << 8);
             *op2 = (*op2 & 0xff00) | (value);
         }
         else
         {
             value2 = *op2 >> 8;
-            value = *op1 & 0xff;
+            value = *op3 & 0xff;
 
             *op2 = (*op2 & 0xff) | (value << 8);
-            *op1 = (*op1 & 0xff00) | (value2);
+            *op3 = (*op3 & 0xff00) | (value2);
         }
 
         IP += 1;

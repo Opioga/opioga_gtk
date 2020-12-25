@@ -77,9 +77,9 @@ struct emu8086
     struct instruction *instructions_list;
     struct instruction *instruction_cache[MAX_CALL_STACK];
     struct instruction *instruction_cache_loop;
-    char call_stack;
+    int call_stack;
     struct variable *variable_list;
-    __uint16_t last_ip;
+    int last_ip;
 };
 enum MESSAGES_
 {
@@ -150,35 +150,12 @@ void sfrwrite(struct emu8086 *aCPU, int aRegister);
 #define GET_FLAG(f) (FLAGS >> f) & 1
 #define SET_FLAG(f) FLAGS |= (1 << f)
 #define CLEAR_FLAG(f) FLAGS &= (((~FLAGS & 0xffff) | (1 << f)) ^ FLAGS);
+void op_setptrs(struct emu8086 *aCPU);
 
 #define STACK_SEGMENT aCPU->mDataMem + (_SS * 0x10)
 #define INSTRUCTIONS aCPU->instruction_list
 #define _INSTRUCTIONS aCPU->instructions_list
 #define SFRS aCPU->mSFR
-void xor_addr8_i8(struct emu8086 *aCPU, int *handled);
-void sub_addr8_i8(struct emu8086 *aCPU, int *handled);
-void and_addr8_i8(struct emu8086 *aCPU, int *handled);
-void or_addr8_i8(struct emu8086 *aCPU, int *handled);
-void add_addr8_i8(struct emu8086 *aCPU, int *handled);
-void cmp_addr8_i8(struct emu8086 *aCPU, int *handled);
-
-void mov_addr_cs(struct emu8086 *aCPU, int *handled);
-void mov_addr_ds(struct emu8086 *aCPU, int *handled);
-void mov_addr_es(struct emu8086 *aCPU, int *handled);
-void mov_addr_ss(struct emu8086 *aCPU, int *handled);
-
-void mov_cs_addr(struct emu8086 *aCPU, int *handled);
-void mov_ds_addr(struct emu8086 *aCPU, int *handled);
-void mov_es_addr(struct emu8086 *aCPU, int *handled);
-void mov_ss_addr(struct emu8086 *aCPU, int *handled);
-void or_addr16_s8(struct emu8086 *aCPU, int *handled);
-void and_addr16_s8(struct emu8086 *aCPU, int *handled);
-void sub_addr16_s8(struct emu8086 *aCPU, int *handled);
-void xor_addr16_s8(struct emu8086 *aCPU, int *handled);
-
-void cmp_addr16_s8(struct emu8086 *aCPU, int *handled);
-void push_to_stack(struct emu8086 *aCPU, int value);
-void op_setptrs(struct emu8086 *aCPU);
 
 void dump_stack(struct emu8086 *aCPU);
 
