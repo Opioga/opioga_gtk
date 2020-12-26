@@ -34,6 +34,9 @@
 #define PRIV_CODE Emu8086AppCodePrivate *priv = emu_8086_app_code_get_instance_private(code)
 
 G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
+
+
+
 Emu8086AppCode *emu_8086_app_code_new(void);
 void update(GtkTextBuffer *textbuffer, Emu8086AppCode *code);
 

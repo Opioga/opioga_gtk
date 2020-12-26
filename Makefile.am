@@ -1,4 +1,4 @@
-SUBDIRS = src egs include pixmaps pixbufs mime
+SUBDIRS = src
 
 
 desktopdir = $(datadir)/applications

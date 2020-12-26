@@ -22,8 +22,4 @@ PKG_CHECK_MODULES([EMU8086], [
 AC_OUTPUT([
 Makefile
 src/Makefile
-egs/Makefile
-include/Makefile
-pixbufs/Makefile
-pixmaps/Makefile
-mime/Makefile])
+])

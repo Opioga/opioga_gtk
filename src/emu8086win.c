@@ -28,6 +28,8 @@
 #include <emu8086app.h>
 #include <emu8086win.h>
 #include <code.h>
+#include <code_buffer.h>
+
 struct _Emu8086AppWindow
 {
     GtkApplicationWindow parent;
@@ -175,7 +177,7 @@ static void _open(Emu8086AppWindow *win)
         {
             PRIV;
             GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
-
+            refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
             setOpen(win);
             gtk_text_buffer_set_text(buffer, contents, length);
             update(buffer, EMU_8086_APP_CODE(priv->code));
@@ -322,9 +324,18 @@ static void arr_sum_activate_cb(GtkMenuItem *item, gpointer user_data)
     PRIV;
     gchar *con;
     gsize len;
-    GFile *file = g_file_new_for_path("/usr/local/share/emu8086/egs/ArraySum.asm");
+    gchar *path;
+#ifdef __WIN32
+    path = "egs/ArraySum.asm";
+#endif
+
+#ifdef __linux__
+    path = "/usr/local/share/emu8086/egs/ArraySum.asm";
+
+#endif // DEBUG
+    GFile *file = g_file_new_for_path(path);
     g_return_if_fail(file != NULL);
-    strcpy(win->state.file_path, "/usr/local/share/emu8086/egs/ArraySum.asm");
+    strcpy(win->state.file_path, path);
     strcpy(win->state.file_name, "ArraySum.asm");
 
     if (g_file_load_contents(file, NULL, &con, &len, NULL, NULL))
@@ -333,6 +344,7 @@ static void arr_sum_activate_cb(GtkMenuItem *item, gpointer user_data)
         // memcpy
         GtkTextBuffer *buf;
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+        refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
         gtk_text_buffer_set_text(buf, con, len);
         update(buf, EMU_8086_APP_CODE(priv->code));
@@ -351,15 +363,14 @@ static void rev_str_activate_cb(GtkMenuItem *item, gpointer user_data)
     gchar *con;
     gsize len;
     gchar *path;
-    #ifdef __WIN32
-        path = "egs/RevStr.asm";
-    #endif
+#ifdef __WIN32
+    path = "egs/RevStr.asm";
+#endif
 
-    #ifdef  __linux__
-        path = "/usr/local/share/emu8086/egs/RevStr.asm";
+#ifdef __linux__
+    path = "/usr/local/share/emu8086/egs/RevStr.asm";
 
-    #endif // DEBUG
-
+#endif // DEBUG
 
     GFile *file = g_file_new_for_path(path);
     g_return_if_fail(file != NULL);
@@ -372,6 +383,7 @@ static void rev_str_activate_cb(GtkMenuItem *item, gpointer user_data)
         // memcpy
         GtkTextBuffer *buf;
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+        refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
         gtk_text_buffer_set_text(buf, con, len);
         update(buf, EMU_8086_APP_CODE(priv->code));
@@ -429,7 +441,7 @@ void char_ins(GtkTextView *text_view,
 
 void upd(Emu8086AppWindow *win)
 {
-
+g_print("open: ", win->state.open);
     if (win->state.isSaved && (win->state.Open == 0))
     {
         char buf[20];
