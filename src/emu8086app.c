@@ -35,9 +35,9 @@
 #include <emu8086app.h>
 #include <emu8086win.h>
 #include <emu8086aboutwin.h>
+#include <emu8086appprefs.h>
 
-
-extern struct instruction   *_instruction_list;
+extern struct instruction *_instruction_list;
 extern struct instruction *_current_instruction, *_first_instruction;
 extern struct label *label_list, *explore;
 extern struct errors_list *first_err, *list_err;
@@ -55,6 +55,7 @@ struct _Emu8086AppPrivate
     char *fname;
     gint state;
     Emu8086AppWindow *win;
+    GSettings *settings;
     gint to;
 };
 
@@ -148,6 +149,7 @@ emu_8086_app_init(Emu8086App *app)
     // g_print("%d", g);
     priv = emu_8086_app_get_instance_private(app);
     priv->aCPU = NULL;
+    priv->settings = g_settings_new("com.krc.emu8086app");
 }
 void user_function3(GtkApplication *application,
                     GtkWindow *window,
@@ -219,9 +221,197 @@ emu_8086_open(GApplication *app,
 }
 
 static void
+quit_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer app)
+{
+    g_application_quit(G_APPLICATION(app));
+}
+
+static void
+open_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+    open_activate_cb(priv->win);
+}
+static void
+save_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+    save_activate_cb(priv->win);
+}
+
+static void
+save_as_activated(GSimpleAction *action,
+                  GVariant *parameter,
+                  gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+    save_as_activate_cb(priv->win);
+}
+
+static void
+help_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    open_help();
+}
+
+static void
+ex1_activated(GSimpleAction *action,
+              GVariant *parameter,
+              gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+
+    _PRIV;
+
+    arr_sum_activate_cb(priv->win);
+}
+
+static void
+ex2_activated(GSimpleAction *action,
+              GVariant *parameter,
+              gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+
+    _PRIV;
+    rev_str_activate_cb(priv->win);
+}
+
+static void
+copy_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+
+static void
+redo_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+
+static void
+paste_activated(GSimpleAction *action,
+                GVariant *parameter,
+                gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+
+static void
+select_all_activated(GSimpleAction *action,
+                     GVariant *parameter,
+                     gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+
+static void
+undo_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+
+static void
+cut_activated(GSimpleAction *action,
+              GVariant *parameter,
+              gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+}
+static void
+pref_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer app)
+{
+    GtkWindow *win;
+
+    win = gtk_application_get_active_window(GTK_APPLICATION(app));
+    Emu8086AppPrefs *prefs;
+    prefs = emu8086_app_prefs_new(EMU_8086_APP_WINDOW(win));
+    gtk_window_present(GTK_WINDOW(prefs));
+}
+
+static GActionEntry app_entries[] = {
+    {"open", open_activated, NULL, NULL, NULL},
+    {"save", save_activated, NULL, NULL, NULL},
+
+    {"save_as", save_as_activated, NULL, NULL, NULL},
+    {"quit", quit_activated, NULL, NULL, NULL},
+
+    {"help", help_activated, NULL, NULL, NULL},
+    {"ex1", ex1_activated, NULL, NULL, NULL},
+
+    {"ex2", ex2_activated, NULL, NULL, NULL},
+
+    {"copy", copy_activated, NULL, NULL, NULL},
+
+    {"redo", redo_activated, NULL, NULL, NULL},
+
+    {"undo", undo_activated, NULL, NULL, NULL},
+
+    {"cut", cut_activated, NULL, NULL, NULL},
+
+    {"paste", paste_activated, NULL, NULL, NULL},
+
+    {"select_all", select_all_activated, NULL, NULL, NULL},
+
+    {"pref", pref_activated, NULL, NULL, NULL},
+
+};
+
+static void emu_8086_startup(GApplication *app)
+{
+    GtkBuilder *builder;
+    GMenuModel *app_menu;
+    const gchar *quit_accels[2] = {"<Ctrl>Q", NULL};
+    const gchar *open_accels[2] = {"<Ctrl>O", NULL};
+    const gchar *save_accels[2] = {"<Ctrl>S", NULL};
+
+    G_APPLICATION_CLASS(emu_8086_app_parent_class)->startup(app);
+    g_action_map_add_action_entries(G_ACTION_MAP(app),
+                                    app_entries, G_N_ELEMENTS(app_entries),
+                                    app);
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.quit",
+                                          quit_accels);
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.open",
+                                          open_accels);
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.save",
+                                          save_accels);
+
+    builder = gtk_builder_new_from_resource("/com/krc/emu8086app/menu.ui");
+    app_menu = G_MENU_MODEL(gtk_builder_get_object(builder, "appmenu"));
+    gtk_application_set_menubar(GTK_APPLICATION(app), app_menu);
+    g_object_unref(builder);
+}
+
+static void
 emu_8086_app_class_init(Emu8086AppClass *class)
 {
-    //   G_APPLICATION_CLASS (class)->startup = emu_8086_startup;
+    G_APPLICATION_CLASS(class)->startup = emu_8086_startup;
     G_APPLICATION_CLASS(class)->activate = emu_8086_activate;
     G_APPLICATION_CLASS(class)->open = emu_8086_open;
 }

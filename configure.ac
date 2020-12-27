@@ -16,10 +16,15 @@ PKG_CHECK_MODULES([EMU8086], [
     gtk+-3.0
 ])
 
- 
+GLIB_GSETTINGS
  
 
 AC_OUTPUT([
 Makefile
 src/Makefile
+include/Makefile
+pixmaps/Makefile
+pixbufs/Makefile
+egs/Makefile
+mime/Makefile
 ])

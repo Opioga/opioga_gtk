@@ -59,6 +59,12 @@ void emu_8086_app_window_set_app(Emu8086AppWindow *win, Emu8086App *app);
 void emu_8086_app_window_update_wids(Emu8086AppWindow *win, struct emu8086 *aCPU);
 
 void setOpen(Emu8086AppWindow *win);
+void arr_sum_activate_cb(Emu8086AppWindow *win);
+void rev_str_activate_cb(Emu8086AppWindow *win);
+
+void save_activate_cb(Emu8086AppWindow *win);
+void save_as_activate_cb(Emu8086AppWindow *win);
+void open_activate_cb(Emu8086AppWindow *win);
 
 void emu_8086_app_window_flash(Emu8086AppWindow *win, char *_err);
 void upd(Emu8086AppWindow *win);

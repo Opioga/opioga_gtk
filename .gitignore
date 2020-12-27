@@ -20,3 +20,5 @@ emu8086-1.0.0.tar.gz
 docs/lee.yml
 docs/gtkemu8086/node_modules
 docs/gtkemu8086-docs
+
+**/*.o

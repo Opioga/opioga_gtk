@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <menu id="menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Check for updates</attribute>
+        <attribute name="action">win.check-updates</attribute>
+
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Open Memory</attribute>
+        <attribute name="action">win.open_mem</attribute>
+
+      </item>
+    </section>
+  </menu>
+</interface>
