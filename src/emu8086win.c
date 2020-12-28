@@ -34,7 +34,8 @@ typedef enum
 {
     PROP_0,
     PROP_UPDATES,
-    PROP_MEM
+    PROP_MEM,
+    PROP_THEME
 } Emu8086AppWindowProperty;
 
 struct _Emu8086AppWindow
@@ -42,6 +43,8 @@ struct _Emu8086AppWindow
     GtkApplicationWindow parent;
     Emu8086AppWindowState state;
     gboolean updates;
+
+    gchar *theme;
     gboolean memory;
 };
 
@@ -76,6 +79,8 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *scrolled;
     GtkWidget *gears;
     Emu8086App *app;
+    GtkWidget *box;
+    GSettings *settings;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppWindow, emu_8086_app_window, GTK_TYPE_APPLICATION_WINDOW);
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
@@ -106,6 +111,7 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     GMenuModel *menu;
     gtk_widget_init_template(GTK_WIDGET(win));
     PRIV;
+    priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2;
     // g_property_action_new
     action = (GAction *)g_property_action_new("check-updates", win, "updates");
@@ -414,6 +420,42 @@ void rev_str_activate_cb(Emu8086AppWindow *win)
     }
 }
 
+static void changeThemeWin(Emu8086AppWindow *win)
+{
+    PRIV;
+    gint a;
+    GdkRGBA color;
+
+    //   ;
+    if (strcmp("dark+", win->theme) == 0)
+    {
+        color.alpha = 1;
+        color.red = 0.22;
+        color.green = 0.22;
+        color.blue = 0.22;
+    }
+
+    else if (strcmp("cobalt", win->theme) == 0)
+    {
+        color.alpha = 1;
+        color.red = 0.58;
+        color.green = 0.31;
+        color.blue = 0.055;
+    }
+
+    else if (strcmp("light", win->theme) == 0)
+    {
+        color.alpha = 1;
+        color.red = 1.0;
+        color.green = 1.0;
+        color.blue = 1.0;
+    }
+    gtk_widget_override_background_color(priv->box, GTK_STATE_NORMAL, &color);
+    gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
+
+    g_print("%s %d", win->theme, a);
+}
+
 static void
 emu_8086_window_set_property(GObject *object,
                              guint property_id,
@@ -437,7 +479,13 @@ emu_8086_window_set_property(GObject *object,
         open_memory(self, g_value_get_boolean(value));
         // g_print("filename: %s\n", self->filename);
         break;
+    case PROP_THEME:
+        // *v = (gboolean *)value;
 
+        self->theme = g_value_get_string(value);
+        changeThemeWin(self);
+        // g_print("filename: %s\n", self->filename);
+        break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -497,6 +545,13 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ip);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, CS_);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ES_);
+
+    g_object_class_install_property(object_class, PROP_THEME,
+                                    g_param_spec_string("theme",
+                                                        "Theme",
+                                                        "The window's theme",
+                                                        "dark+",
+                                                        G_PARAM_READWRITE));
 
     g_object_class_install_property(object_class, PROP_UPDATES,
                                     g_param_spec_boolean("updates",
@@ -759,11 +814,13 @@ void populate_tools(Emu8086AppWindow *win)
     PRIV;
     GtkRecentManager *manager;
     manager = gtk_recent_manager_get_default();
-    GtkToolItem *play, *step, *stop, *pause, *save, *open, *step_over;
+    GtkToolItem *play, *step, *stop, *pause, *save, *step_over, *sep;
     GtkMenuToolButton *recents;
     recents = gtk_menu_tool_button_new(NULL, NULL);
     gtk_menu_tool_button_set_menu(recents, (gtk_recent_chooser_menu_new_for_manager(manager)));
-    // gtk_tool_button_set_icon_name(recents, "down");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(recents), "document-open");
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(recents), ("Open"));
+    gtk_tool_item_set_is_important(recents, TRUE);
     gtk_widget_show(recents);
     play = gtk_tool_button_new(NULL, NULL);
     // gtk_tool_button_set_label(GTK_TOOL_BUTTON(play), ("Run"));
@@ -771,6 +828,11 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(play), TRUE);
     gtk_tool_item_set_is_important(play, TRUE);
     gtk_widget_show(play);
+
+    sep = gtk_separator_tool_item_new();
+
+    gtk_separator_tool_item_set_draw(sep, TRUE);
+    gtk_widget_show(sep);
 
     stop = gtk_tool_button_new(NULL, NULL);
 
@@ -800,12 +862,12 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_tool_item_set_is_important(save, TRUE);
     gtk_widget_show(save);
 
-    open = gtk_tool_button_new(NULL, NULL);
-    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(open), "document-open");
-    gtk_tool_button_set_label(GTK_TOOL_BUTTON(open), ("Open"));
-    gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(open), TRUE);
-    gtk_tool_item_set_is_important(open, TRUE);
-    gtk_widget_show(open);
+    // open = gtk_tool_button_new(NULL, NULL);
+    // gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(open), "document-open");
+    // gtk_tool_button_set_label(GTK_TOOL_BUTTON(open), ("Open"));
+    // gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(open), TRUE);
+    // gtk_tool_item_set_is_important(open, TRUE);
+    // gtk_widget_show(open);
     //
 
     step_over = gtk_tool_button_new(NULL, NULL);
@@ -814,10 +876,11 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_tool_item_set_is_important(step_over, TRUE);
     gtk_widget_show(step_over);
     // GtkToolItemGroup
-    // gtk_tool_button_set_label(step, "Step");
+    gtk_tool_button_set_label(step, "Step");
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, save, 0);
-    gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, open, -1);
+    // gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, open, -1);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, recents, -1);
+    gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, sep, -1);
 
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, play, -1);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, pause, -1);
@@ -828,7 +891,7 @@ void populate_tools(Emu8086AppWindow *win)
     g_signal_connect(play, "clicked", G_CALLBACK(play_clicked), win);
     g_signal_connect(pause, "clicked", G_CALLBACK(pause_clicked), win);
     g_signal_connect(step, "clicked", G_CALLBACK(step_clicked), win);
-    g_signal_connect(open, "clicked", G_CALLBACK(open_clicked), win);
+    g_signal_connect(recents, "clicked", G_CALLBACK(open_clicked), win);
     g_signal_connect(stop, "clicked", G_CALLBACK(stop_clicked), win);
     g_signal_connect(save, "clicked", G_CALLBACK(save_clicked), win);
     g_signal_connect(step_over, "clicked", G_CALLBACK(step_over_clicked), win);
@@ -888,11 +951,13 @@ static void populate_win(Emu8086AppWindow *win)
     priv->code = code;
     priv->scrolled = scrolled;
     priv->tos = 0;
+    priv->box = box;
     strcpy(win->state.file_name, "Untitled.asm");
     win->state.isSaved = TRUE;
     win->state.file_path_set = FALSE;
     win->state.fontSize = 16;
     gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
+    g_settings_bind(priv->settings, "theme", win, "theme", G_SETTINGS_BIND_GET);
 }
 
 void emu_8086_app_window_up(Emu8086AppWindow *win)

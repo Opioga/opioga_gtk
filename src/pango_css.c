@@ -205,7 +205,7 @@ emu8086_pango_font_description_to_css(const PangoFontDescription *desc)
         g_string_append(s, "; ");
     }
 #endif
-    g_string_append(s, "color: #d4d4d4;caret-color: #ffffff;");
+    g_string_append(s, "color: #d4d4d4;caret-color: #795e26;");
     g_string_append(s, "}\n");
     return g_string_free(s, FALSE);
 }

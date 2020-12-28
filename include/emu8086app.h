@@ -50,6 +50,13 @@ void open_help();
 void _step(Emu8086App *app);
 void quit(Emu8086App *app);
 
+typedef struct _theme them;
+struct _theme
+{
+    gchar *id;
+    gchar *text;
+};
+
 enum app_state
 {
     PLAYING,

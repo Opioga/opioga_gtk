@@ -33,12 +33,14 @@ struct _Emu8086AppCode
 {
     GtkTextView parent;
     gchar *font;
+    gchar *theme;
 };
 
 typedef enum
 {
     PROP_0,
-    PROP_FONT
+    PROP_FONT,
+    PROP_THEME
 } Emu8086AppCodeProperty;
 
 typedef struct _Emu8086AppCodePrivate Emu8086AppCodePrivate;
@@ -59,6 +61,13 @@ struct _Emu8086AppCodePrivate
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
 
+static void changeTheme(Emu8086AppCode *code)
+{
+    gint a;
+    a = g_strcmp0("dark+", code->theme);
+    g_print("lion: %s %d \n", code->theme, a);
+}
+
 static void
 emu_8086_app_code_set_property(GObject *object,
                                guint property_id,
@@ -67,11 +76,11 @@ emu_8086_app_code_set_property(GObject *object,
 {
     Emu8086AppCode *code = EMU_8086_APP_CODE(object);
     PRIV_CODE;
-    // g_print("l %d\n", *value);
+
     PangoFontDescription *desc;
 
     gchar *m;
-    pango_font_description_free(desc);
+
     gchar *v;
     switch ((Emu8086AppCodeProperty)property_id)
     {
@@ -82,8 +91,16 @@ emu_8086_app_code_set_property(GObject *object,
         gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
 
         code->font = g_strdup(v);
+
+        pango_font_description_free(desc);
         // g_print("filename: %s\n", self->font);
         // g_free(v);
+        break;
+
+    case PROP_THEME:
+        v = g_value_get_string(value);
+        code->theme = g_strdup(v);
+        // changeTheme(code);
         break;
 
     default:
@@ -99,7 +116,7 @@ emu_8086_app_code_get_property(GObject *object,
                                GParamSpec *pspec)
 {
     Emu8086AppCode *self = EMU_8086_APP_CODE(object);
-
+    g_print("lion\n");
     switch ((Emu8086AppCodeProperty)property_id)
     {
     case PROP_FONT:
@@ -122,6 +139,9 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
                                                         G_PARAM_READWRITE));
+    g_object_class_install_property(object_class, PROP_THEME,
+                                    g_param_spec_string("theme", "Theme", "Editor Theme", "dark+",
+                                                        G_PARAM_READWRITE));
 }
 
 static void emu_8086_app_code_init(Emu8086AppCode *code)
@@ -131,6 +151,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
+    g_settings_bind(priv->settings, "theme", code, "theme", G_SETTINGS_BIND_GET);
 }
 
 void select_line(GtkWidget *co, gint line)
@@ -355,7 +376,7 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     gtk_text_buffer_create_tag(buffer, "keyword", "foreground", "#96CBFE", NULL);
     gtk_text_buffer_create_tag(buffer, "reg", "foreground", "#B5CAE8", "weight", PANGO_WEIGHT_BOLD, NULL);
     gtk_text_buffer_create_tag(buffer, "string", "foreground", "#CE9178", NULL);
-    gtk_text_buffer_create_tag(buffer, "label_def", "foreground", "#DCDCAA", NULL);
+    gtk_text_buffer_create_tag(buffer, "label_def", "foreground", "#ebeb8d", NULL);
     gtk_text_buffer_create_tag(buffer, "num", "foreground", "#B5CEA8", NULL);
     gtk_text_buffer_create_tag(buffer, "special", "foreground", "#C586C0", "weight", PANGO_WEIGHT_BOLD, NULL);
     // gtk_text_tag_    // #b5cea8

@@ -64,12 +64,6 @@ style_scheme_changed(GtkWidget *treeview,
 
   g_free(id);
 }
-typedef struct _theme them;
-struct _theme
-{
-  gchar *id;
-  gchar *text;
-};
 
 static void
 dialog_response_handler(GtkDialog *dlg,
