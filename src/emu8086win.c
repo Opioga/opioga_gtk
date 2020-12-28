@@ -33,7 +33,8 @@
 typedef enum
 {
     PROP_0,
-    PROP_UPDATES
+    PROP_UPDATES,
+    PROP_MEM
 } Emu8086AppWindowProperty;
 
 struct _Emu8086AppWindow
@@ -41,6 +42,7 @@ struct _Emu8086AppWindow
     GtkApplicationWindow parent;
     Emu8086AppWindowState state;
     gboolean updates;
+    gboolean memory;
 };
 
 typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
@@ -69,7 +71,7 @@ struct _Emu8086AppWindowPrivate
     Emu8086AppCode *code;
     GtkWidget *messages; //GtkWidget *spinner;
     gchar *fname;
-    GtkWidget *head_bar;
+    GtkWidget *revealer;
     GtkWidget *window_m;
     GtkWidget *scrolled;
     GtkWidget *gears;
@@ -83,34 +85,38 @@ Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
                         NULL);
 };
 
-void open_mem(GSimpleAction *action,
-              GVariant *parameter,
-              gpointer appe)
+static void open_memory(Emu8086AppWindow *win, gboolean b)
 {
-    g_print("lol\n");
+    win->memory = b;
+    PRIV;
+    gtk_revealer_set_reveal_child(GTK_REVEALER(priv->revealer), b);
 }
 
-static GActionEntry win_entries[] = {
-    {"open_mem", open_mem, NULL, NULL, NULL}
+void emu_8086_window_set_memory(Emu8086AppWindow *win, gboolean b)
+{
+    open_memory(win, b);
 
-};
+    g_object_notify(G_OBJECT(win), "memory");
+    //   g_object_set_property(G_OBJECT(win), "memory", &value);
+}
+
 static void emu_8086_app_window_init(Emu8086AppWindow *win)
 {
     GtkBuilder *builder;
     GMenuModel *menu;
     gtk_widget_init_template(GTK_WIDGET(win));
     PRIV;
-    GAction *action;
+    GAction *action, *action2;
     // g_property_action_new
     action = (GAction *)g_property_action_new("check-updates", win, "updates");
+    action2 = (GAction *)g_property_action_new("open_mem", win, "memory");
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/gears.ui");
     menu = G_MENU_MODEL(gtk_builder_get_object(builder, "menu"));
     g_action_map_add_action(G_ACTION_MAP(win), action);
-    g_action_map_add_action_entries(G_ACTION_MAP(win),
-                                    win_entries, G_N_ELEMENTS(win_entries),
-                                    win);
-    g_object_unref(action);
+    g_action_map_add_action(G_ACTION_MAP(win), action2);
 
+    g_object_unref(action);
+    g_object_unref(action2);
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(priv->gears), menu);
     // gtk_menu_button_get_menu_model;
 
@@ -425,6 +431,12 @@ emu_8086_window_set_property(GObject *object,
         self->updates = g_value_get_boolean(value);
         // g_print("filename: %s\n", self->filename);
         break;
+    case PROP_MEM:
+        // *v = (gboolean *)value;
+
+        open_memory(self, g_value_get_boolean(value));
+        // g_print("filename: %s\n", self->filename);
+        break;
 
     default:
         /* We don't have any other property... */
@@ -445,7 +457,9 @@ emu_8086_window_get_property(GObject *object,
     case PROP_UPDATES:
         g_value_set_boolean(value, self->updates);
         break;
-
+    case PROP_MEM:
+        g_value_set_boolean(value, self->memory);
+        break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -463,6 +477,7 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
     widget_class->key_press_event = emu_8086_window_key_press_event;
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, gears);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, spinner);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, revealer);
 
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, tool_bar);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, stack);
@@ -487,6 +502,13 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
                                     g_param_spec_boolean("updates",
                                                          "Updates",
                                                          "The window's state",
+                                                         FALSE,
+                                                         G_PARAM_READWRITE));
+
+    g_object_class_install_property(object_class, PROP_MEM,
+                                    g_param_spec_boolean("memory",
+                                                         "Memory",
+                                                         "Toggle memory view",
                                                          FALSE,
                                                          G_PARAM_READWRITE));
 };
@@ -637,6 +659,7 @@ void play_clicked(GtkToolButton *toolbutton,
     if (c > 0)
     {
         gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), FALSE);
+        emu_8086_window_set_memory(win, TRUE);
         run_clicked_app(priv->app, win->state.file_path);
     }
     else
@@ -668,6 +691,8 @@ void step_clicked(GtkToolButton *toolbutton,
     if (c > 0)
     {
         gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), FALSE);
+        if (!win->memory)
+            emu_8086_window_set_memory(win, TRUE);
         step_clicked_app(priv->app, win->state.file_path);
     }
 
@@ -689,6 +714,8 @@ void step_over_clicked(GtkToolButton *toolbutton,
     if (c > 0)
     {
         gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), FALSE);
+        if (!win->memory)
+            emu_8086_window_set_memory(win, TRUE);
 
         step_over_clicked_app(priv->app, win->state.file_path);
     }
@@ -717,6 +744,7 @@ void stop_clicked(GtkToolButton *toolbutton,
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
     PRIV;
     stop_clicked_app(priv->app);
+    emu_8086_window_set_memory(win, FALSE);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), TRUE);
 
     //step_over_clicked_app
@@ -837,9 +865,9 @@ static void populate_win(Emu8086AppWindow *win)
 
     box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 15);
     box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_set_margin_top(box2, 10);
-    gtk_widget_set_margin_left(box2, 10);
 
+    gtk_widget_set_hexpand(box, TRUE);
+    gtk_widget_set_vexpand(box, TRUE);
     gtk_widget_set_hexpand(scrolled, TRUE);
     gtk_widget_set_vexpand(scrolled, TRUE);
 
@@ -973,6 +1001,7 @@ void reset_win(Emu8086AppWindow *win)
     // gtk_label_set_text(GTK_LABEL(priv->messages), "ENDED");
 
     reset_code(priv->code);
+    emu_8086_window_set_memory(win, FALSE);
     milli(priv->AX_, "AX", 0);
     milli(priv->BX_, "BX", 0);
 

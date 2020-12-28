@@ -314,11 +314,11 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     lines = gtk_text_view_new();
     gtk_widget_show(lines);
     code = emu_8086_app_code_new();
-    GdkRGBA cursor_color;
-    cursor_color.alpha = 1.0;
-    cursor_color.blue = 0.5;
-    cursor_color.red = 0.5;
-    cursor_color.green = 1.0;
+    GdkRGBA _color;
+    _color.alpha = 1.0;
+    _color.blue = 0.20;
+    _color.red = 0.20;
+    _color.green = 0.20;
     PRIV_CODE;
     provider = priv->provider;
     //
@@ -331,12 +331,16 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     color.alpha = 1;
     gtk_widget_override_background_color(box, GTK_STATE_NORMAL, &color);
     gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
-    gtk_widget_override_background_color(lines, GTK_STATE_NORMAL, &color); // getCss(size, priv->provider);
-                                                                           // gtk_widget_override_symbolic_color
+    gtk_widget_override_background_color(lines, GTK_STATE_NORMAL, &_color);
+    gtk_widget_override_background_color(box2, GTK_STATE_NORMAL, &_color);
+
+    // getCss(size, priv->provider);
+    gtk_widget_set_margin_top(GTK_WIDGET(lines), 10);
+    gtk_widget_set_margin_right(GTK_WIDGET(lines), 5);
+    gtk_widget_set_margin_left(GTK_WIDGET(lines), 5);
+
+    // gtk_widget_override_symbolic_color
     gtk_widget_set_margin_top(GTK_WIDGET(code), 10);
-    gtk_widget_override_cursor(GTK_WIDGET(code), &cursor_color, &cursor_color);
-    gtk_widget_override_cursor(GTK_WIDGET(box), &cursor_color, &cursor_color);
-    gtk_widget_override_cursor(GTK_WIDGET(box), &cursor_color, &cursor_color);
 
     gtk_container_add(GTK_CONTAINER(box2), lines);
     gtk_container_add(GTK_CONTAINER(box), box2);
@@ -354,8 +358,7 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     gtk_text_buffer_create_tag(buffer, "label_def", "foreground", "#DCDCAA", NULL);
     gtk_text_buffer_create_tag(buffer, "num", "foreground", "#B5CEA8", NULL);
     gtk_text_buffer_create_tag(buffer, "special", "foreground", "#C586C0", "weight", PANGO_WEIGHT_BOLD, NULL);
-    // #c586c0
-    // #b5cea8
+    // gtk_text_tag_    // #b5cea8
 
     gtk_text_view_set_editable(GTK_TEXT_VIEW(lines), FALSE);
     gtk_text_buffer_create_tag(buffer, "comment", "foreground", "#6A9955", "style", PANGO_STYLE_ITALIC, NULL);

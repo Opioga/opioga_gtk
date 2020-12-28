@@ -55,7 +55,7 @@ int label_identifier, is_offset;
 struct label *label_list, *explore;
 struct label *last_label, *current_label, *_current_label;
 int is_first;
- 
+
 char *p;
 char line[256];
 char part[MAX_SIZE];
@@ -272,12 +272,10 @@ void message(char *m, int level, int line)
         fprintf(stdout, m);
 #endif
 }
-#if DEBUG
 void _message(char *m, int level)
 {
     fprintf(stdout, m);
 };
-#endif
 
 /*
  ** Avoid spaces in input
@@ -1743,7 +1741,6 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
     }
     if (assembler_step)
     {
-        printf("\n\n");
         unsigned char *h;
         h = CODE_SEGMENT;
 
@@ -1758,7 +1755,10 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
         {
 
             *(h + start) = *(code_mem + data_mem_offset + start);
+
+#ifdef DEBUG
             printf("%03x: %02x\n", (CS * 0x10) + start, *((CODE_SEGMENT) + start));
+#endif
             start++;
         }
         aCPU->instructions_list = _first_instruction;

@@ -28,7 +28,7 @@
 
 #ifndef _EMU_8086_H_
 #define _EMU_8086_H_
-#define DEBUG 1
+
 #define MAX_CALL_STACK 10
 struct emu8086;
 
@@ -57,7 +57,6 @@ struct variable
     int offset;
     //int is_16;
 };
-
 
 struct emu8086
 {
