@@ -176,6 +176,28 @@ static gboolean check(gchar *n)
     n -= len - 3;
     return ret;
 }
+
+static add_recent(gchar *uri)
+{
+    GtkRecentManager *manager;
+    GtkRecentData recent_data;
+
+    static gchar *groups[2] = {
+        "emu8086",
+        NULL};
+    manager = gtk_recent_manager_get_default();
+    recent_data.display_name = NULL;
+    recent_data.description = NULL;
+    recent_data.mime_type = (gchar *)"text/x-asm";
+    recent_data.app_name = (gchar *)g_get_application_name();
+    recent_data.app_exec = g_strjoin(" ", g_get_prgname(), "%u", NULL);
+    recent_data.groups = groups;
+    // recent_data.
+    gboolean v = gtk_recent_manager_add_full(manager, uri, &recent_data);
+    g_print("%s %d \n", uri, v);
+    g_free(recent_data.app_exec);
+}
+
 static void _open(Emu8086AppWindow *win)
 {
     GtkWidget *dialog;
@@ -213,6 +235,9 @@ static void _open(Emu8086AppWindow *win)
             gtk_widget_destroy(dialog);
             return;
         }
+
+        gchar *uri;
+
         strcpy(win->state.file_name, base);
         //win->state.file_name[strlen(base) - 1] = '\0';
         gtk_window_set_title(win, win->state.file_name);
@@ -225,10 +250,17 @@ static void _open(Emu8086AppWindow *win)
             PRIV;
             GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
             refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
+            uri = gtk_file_chooser_get_uri(chooser);
+            add_recent(uri);
+            g_free(uri);
             setOpen(win);
             gtk_text_buffer_set_text(buffer, contents, length);
             // update(buffer, EMU_8086_APP_CODE(priv->code));
+            strcpy(win->state.file_name, base);
+            //win->state.file_name[strlen(base) - 1] = '\0';
+            gtk_window_set_title(win, win->state.file_name);
 
+            strcpy(win->state.file_path, filename);
             g_free(contents);
             win->state.isSaved = TRUE;
             win->state.file_path_set = TRUE;
@@ -650,12 +682,16 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf)
     res = gtk_dialog_run(GTK_DIALOG(dialog));
     if (res == GTK_RESPONSE_ACCEPT)
     {
-        char *filename;
+        gchar *filename;
 
         filename = gtk_file_chooser_get_filename(chooser);
+        gchar *uri;
+        uri = gtk_file_chooser_get_uri(chooser);
+        add_recent(uri);
         //  save_to_file(filename);
         strcpy(buf, filename);
         g_free(filename);
+        g_free(uri);
         ret = TRUE;
     }
 
@@ -805,8 +841,40 @@ void stop_clicked(GtkToolButton *toolbutton,
     //step_over_clicked_app
 }
 
-void add_items(GtkMenuToolButton *recents)
+static void open_item(GtkRecentChooser *recents, gpointer user_data)
 {
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
+    gchar *uri;
+    uri = gtk_recent_chooser_get_current_uri(recents);
+    GFile *file = NULL, *contents = NULL, *base, *filename;
+    gsize length;
+    file = g_file_new_for_uri(uri);
+    g_return_if_fail(file != NULL);
+    base = g_file_get_basename(file);
+    filename = g_file_get_path(file);
+    if (g_file_load_contents(file, NULL, &contents, &length, NULL, NULL))
+    {
+        PRIV;
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+        refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
+
+        strcpy(win->state.file_name, base);
+        //win->state.file_name[strlen(base) - 1] = '\0';
+        gtk_window_set_title(win, win->state.file_name);
+
+        strcpy(win->state.file_path, filename);
+        add_recent(uri);
+        g_free(uri);
+        setOpen(win);
+        gtk_text_buffer_set_text(buffer, contents, length);
+        // update(buffer, EMU_8086_APP_CODE(priv->code));
+
+        g_free(contents);
+        g_free(base);
+        g_free(filename);
+        win->state.isSaved = TRUE;
+        win->state.file_path_set = TRUE;
+    }
 }
 
 void populate_tools(Emu8086AppWindow *win)
@@ -816,10 +884,20 @@ void populate_tools(Emu8086AppWindow *win)
     manager = gtk_recent_manager_get_default();
     GtkToolItem *play, *step, *stop, *pause, *save, *step_over, *sep;
     GtkMenuToolButton *recents;
+    GtkWidget *recents_chooser;
+    GtkRecentFilter *filter;
+    recents_chooser = gtk_recent_chooser_menu_new_for_manager(manager);
+    filter = gtk_recent_filter_new();
+    gtk_recent_filter_add_group(filter, "emu8086");
+    // gtk_recent_filter_add_pattern(filter, "*.asm");
+    gtk_recent_chooser_set_filter(GTK_RECENT_CHOOSER(recents_chooser),
+                                  filter);
     recents = gtk_menu_tool_button_new(NULL, NULL);
-    gtk_menu_tool_button_set_menu(recents, (gtk_recent_chooser_menu_new_for_manager(manager)));
+    gtk_menu_tool_button_set_menu(recents, (recents_chooser));
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(recents), "document-open");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(recents), ("Open"));
+    gtk_recent_chooser_set_local_only(GTK_RECENT_CHOOSER(recents_chooser),
+                                      TRUE);
     gtk_tool_item_set_is_important(recents, TRUE);
     gtk_widget_show(recents);
     play = gtk_tool_button_new(NULL, NULL);
@@ -895,6 +973,7 @@ void populate_tools(Emu8086AppWindow *win)
     g_signal_connect(stop, "clicked", G_CALLBACK(stop_clicked), win);
     g_signal_connect(save, "clicked", G_CALLBACK(save_clicked), win);
     g_signal_connect(step_over, "clicked", G_CALLBACK(step_over_clicked), win);
+    g_signal_connect(recents_chooser, "item-activated", G_CALLBACK(open_item), win);
 }
 
 static void populate_win(Emu8086AppWindow *win)
