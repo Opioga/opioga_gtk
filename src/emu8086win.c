@@ -880,11 +880,14 @@ void populate_tools(Emu8086AppWindow *win)
     PRIV;
     GtkRecentManager *manager;
     manager = gtk_recent_manager_get_default();
-    GtkToolItem *play, *step, *stop, *pause, *save, *step_over, *sep;
+    GtkToolButton *play, *step, *stop, *pause, *save, *step_over;
+    GtkToolItem *sep;
     GtkMenuToolButton *recents;
     GtkWidget *recents_chooser;
     GtkRecentFilter *filter;
-    GtkActionGroup *action_group;
+    GtkStyleProvider *provider;
+    provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
+
     recents_chooser = gtk_recent_chooser_menu_new_for_manager(manager);
     filter = gtk_recent_filter_new();
     gtk_recent_filter_add_group(filter, "emu8086");
@@ -898,6 +901,8 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_recent_chooser_set_local_only(GTK_RECENT_CHOOSER(recents_chooser),
                                       TRUE);
     gtk_tool_item_set_is_important(recents, TRUE);
+    gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(recents),
+                                   ("Open a file"));
     gtk_menu_tool_button_set_arrow_tooltip_text(GTK_MENU_TOOL_BUTTON(recents),
                                                 ("Open a recently used file"));
 
@@ -924,7 +929,6 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(pause), "media-playback-pause");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(pause), ("Halt"));
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(pause), TRUE);
-    gtk_tool_item_set_is_important(pause, TRUE);
 
     gtk_widget_show(pause);
 
@@ -959,13 +963,19 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_tool_button_set_label(step, "Step");
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, save, 0);
     // gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, open, -1);
+    gtk_widget_set_margin_left(recents, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, recents, -1);
+    gtk_widget_set_margin_left(sep, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, sep, -1);
 
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, play, -1);
+    gtk_widget_set_margin_left(pause, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, pause, -1);
+    gtk_widget_set_margin_left(step, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, step, -1);
+    gtk_widget_set_margin_left(step_over, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, step_over, -1);
+    gtk_widget_set_margin_left(stop, 5);
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, stop, -1);
 
     g_signal_connect(play, "clicked", G_CALLBACK(play_clicked), win);
