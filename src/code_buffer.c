@@ -450,12 +450,11 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
                                                       gint len)
 {
     gint start_offset;
-    // g_print("here1\n");
+
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
     g_return_if_fail(iter != NULL);
     g_return_if_fail(text != NULL);
     g_return_if_fail(gtk_text_iter_get_buffer(iter) == buffer);
-    // g_print("here2\n");
 
     GTK_TEXT_BUFFER_CLASS(emu_8086_app_code_buffer_parent_class)->insert_text(buffer, iter, text, len);
     buffer = EMU_8086_APP_CODE_BUFFER(buffer);
@@ -466,13 +465,10 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
     start_offset = i - priv->lc;
-    g_print("start %d \n", start_offset);
 
     if (start_offset > 0)
     {
         highlight(buffer, i);
-
-        g_print("here %d \n", i);
     }
     else
         _highlight(buffer, i);
