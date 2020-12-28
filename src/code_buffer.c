@@ -299,100 +299,112 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
                                      &iter,
                                      i);
     start = iter;
+    g_return_if_fail(gtk_text_iter_get_buffer(&start) == buffer);
+    g_return_if_fail(gtk_text_iter_get_buffer(&iter) == buffer);
     gtk_text_iter_forward_to_line_end(&iter);
+    g_return_if_fail(gtk_text_iter_get_buffer(&start) == buffer);
+    g_return_if_fail(gtk_text_iter_get_buffer(&iter) == buffer);
     gchar *line = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE), *p;
     gint v = 0;
-
-    p = line;
-    iter = start;
-    while (*p)
+    if (gtk_text_iter_get_buffer(&iter) == buffer)
     {
-
-        // iter = start;
-        v = 0;
-        // g_print("here %s %d %d\n", gtk_text_buffer_get_text(buffer, &start, &mend, FALSE), v, i + 1);
-        gchar *p2, buf[20];
-        int sep = 0, o = 0;
-        p2 = buf;
-
-        while (*p && isspace(*p))
-        {
-            p++;
-            v++;
-        }
-        sep = v;
-        if (sep > 0)
-            gtk_text_iter_forward_chars(&start, sep - 1);
-        if (*p == ';')
-        {
-
-            gtk_text_iter_forward_to_line_end(&iter);
-            gtk_text_buffer_apply_tag_by_name(buffer, "comment", &start, &iter);
-
-            break;
-        }
+        p = line;
         iter = start;
-        while (*p && !isspace(*p) && *p != ';')
+        while (*p)
         {
-            if (*p == ',')
+
+            // iter = start;
+            v = 0;
+            // g_print("here %s %d %d\n", gtk_text_buffer_get_text(buffer, &start, &mend, FALSE), v, i + 1);
+            gchar *p2, buf[256];
+            int sep = 0, o = 0;
+            p2 = buf;
+
+            while (*p && isspace(*p))
             {
+                p++;
+                v++;
+            }
+            if (!*p)
+                return;
+            sep = v;
+            if (sep > 0)
+                gtk_text_iter_forward_chars(&start, sep - 1);
+            if (*p == ';')
+            {
+
+                gtk_text_iter_forward_to_line_end(&iter);
+                gtk_text_buffer_apply_tag_by_name(buffer, "comment", &start, &iter);
 
                 break;
             }
-            v++;
-            *p2++ = *p++;
-        }
-        o = v;
-        gtk_text_iter_forward_chars(&iter, o);
-        *p2 = '\0';
-        if (*p == ',')
-        {
-            p++;
-            v++;
-        }
-        while (*p && isspace(*p))
-        {
-            p++;
-            v++;
-        }
-        p2 = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE);
-
-        sep = v;
-        if (strlen(buf) > 0)
-        {
-            gint len = strlen(buf) - strlen(p2);
-
-            if (len <= -2)
+            iter = start;
+            while (*p && !isspace(*p) && *p != ';')
             {
-                // printf("%s, %s, %d\n", p2, buf, len);
-                gtk_text_iter_backward_chars(&start, -1 - len);
+                if (*p == ',')
+                {
 
-                gtk_text_iter_backward_chars(&iter, -1 - len);
+                    break;
+                }
+                v++;
+                *p2++ = *p++;
+            }
+            o = v;
+            gtk_text_iter_forward_chars(&iter, o);
+            *p2 = '\0';
+            if (*p == ',')
+            {
+                p++;
+                v++;
+            }
+            while (*p && isspace(*p))
+            {
+                p++;
+                v++;
+            }
+            // g_print("lio\n");
+
+            if (gtk_text_iter_get_buffer(&iter) == buffer)
+                p2 = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE);
+            else
+                return;
+            sep = v;
+            if (strlen(buf) > 0)
+            {
+                gint len = strlen(buf) - strlen(p2);
+
+                if (len <= -2)
+                {
+                    // printf("%s, %s, %d\n", p2, buf, len);
+                    gtk_text_iter_backward_chars(&start, -1 - len);
+
+                    gtk_text_iter_backward_chars(&iter, -1 - len);
+                }
+
+                // g_print("heren %s %d %d\n", p2, v, i + 1);
+                if (getnum_(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "num", &start, &iter);
+                else if (getsp_(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "special", &start, &iter);
+                else if (getstr_(buf))
+
+                    gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
+                else if (getlab_(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &start, &iter);
+                else if (getreg(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "reg", &start, &iter);
+
+                else if (getkeyword(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &start, &iter);
             }
 
-            // g_print("heren %s %d %d\n", p2, v, i + 1);
-            if (getnum_(buf))
-                gtk_text_buffer_apply_tag_by_name(buffer, "num", &start, &iter);
-            else if (getsp_(buf))
-                gtk_text_buffer_apply_tag_by_name(buffer, "special", &start, &iter);
-            else if (getstr_(buf))
-
-                gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
-            else if (getlab_(buf))
-                gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &start, &iter);
-            else if (getreg(buf))
-                gtk_text_buffer_apply_tag_by_name(buffer, "reg", &start, &iter);
-
-            else if (getkeyword(buf))
-                gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &start, &iter);
+            if (sep > 0)
+                gtk_text_iter_forward_chars(&start, sep);
+            // t++;
         }
-
-        if (sep > 0)
-            gtk_text_iter_forward_chars(&start, sep);
-        // t++;
+        // i++;
+        g_free(line);
     }
-    // i++;
-    g_free(line);
 }
 
 typedef struct _Emu8086AppCodeBufferPrivate Emu8086AppCodeBufferPrivate;
@@ -409,7 +421,8 @@ struct _Emu8086AppCodeBufferPrivate
     gint line;
     GtkTextTagTable *table;
     GSettings *settings;
-    Emu8086AppCode *code
+    Emu8086AppCode *code;
+    gint timeout;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
@@ -424,6 +437,7 @@ static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->lc = 0;
     priv->line = 0;
+    priv->timeout = 0;
 }
 
 static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
@@ -433,6 +447,7 @@ static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
     gint i = 0, t = 0;
     // i = line;
 
+    //  gtk_text_buffer_get_iter_at_mark(GTK_TEXT_BUFFER(buffer), m, &iter);
     while (i < (line + 1))
     {
         t = 0;
@@ -444,6 +459,38 @@ static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
     priv->lc = i;
 }
 
+gboolean hl(gpointer user_data)
+{
+    Emu8086AppCodeBuffer *buffer;
+    buffer = EMU_8086_APP_CODE_BUFFER(user_data);
+    GtkTextMark *mark;
+    GtkTextIter iter2;
+    PRIV_CODE_BUFFER;
+
+    mark = gtk_text_buffer_get_mark(buffer, "insert");
+    gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
+    gint i = gtk_text_iter_get_line(&iter2);
+    _highlight(buffer, i);
+    priv->timeout = 0;
+    return G_SOURCE_REMOVE;
+}
+
+void queue_highlight(Emu8086AppCodeBuffer *buffer)
+{
+
+    //  buffer = EMU_8086_APP_CODE_BUFFER(user_data);
+    PRIV_CODE_BUFFER;
+    if (priv->timeout != 0)
+    {
+        g_source_remove(priv->timeout);
+    }
+    priv->timeout = gdk_threads_add_timeout_full(G_PRIORITY_LOW,
+                                                 100,
+                                                 hl,
+                                                 buffer,
+                                                 NULL);
+}
+
 static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
                                                       GtkTextIter *iter,
                                                       const gchar *text,
@@ -452,6 +499,7 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     gint start_offset;
 
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
+
     g_return_if_fail(iter != NULL);
     g_return_if_fail(text != NULL);
     g_return_if_fail(gtk_text_iter_get_buffer(iter) == buffer);
@@ -468,10 +516,13 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
 
     if (start_offset > 0)
     {
+        g_print("lion\n");
         highlight(buffer, i);
     }
     else
-        _highlight(buffer, i);
+    {
+        queue_highlight(buffer);
+    }
 
     update(priv->code);
 }
@@ -480,9 +531,14 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
                                              GtkTextIter *start,
                                              GtkTextIter *end)
 {
+    g_print("herel\n");
     gint start_offset;
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
-
+    g_return_if_fail(start != NULL);
+    g_return_if_fail(end != NULL);
+    g_return_if_fail(gtk_text_iter_get_buffer(start) == buffer);
+    g_return_if_fail(gtk_text_iter_get_buffer(end) == buffer);
+    //
     PRIV_CODE_BUFFER;
     GtkTextMark *mark;
     GtkTextIter iter2;
@@ -491,7 +547,7 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
     update(priv->code);
-    _highlight(buffer, i);
+    queue_highlight(buffer);
 }
 static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
 {
@@ -500,6 +556,7 @@ static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass
 
     text_buffer_class = GTK_TEXT_BUFFER_CLASS(klass);
     text_buffer_class->insert_text = emu_8086_app_code_buffer_insert_text_real;
+    text_buffer_class->delete_range = emu_8086_app_code_buffer_delete_range;
 }
 
 Emu8086AppCodeBuffer *emu_8086_app_code_buffer_new(GtkTextTagTable *table)

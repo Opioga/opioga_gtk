@@ -884,6 +884,7 @@ void populate_tools(Emu8086AppWindow *win)
     GtkMenuToolButton *recents;
     GtkWidget *recents_chooser;
     GtkRecentFilter *filter;
+    GtkActionGroup *action_group;
     recents_chooser = gtk_recent_chooser_menu_new_for_manager(manager);
     filter = gtk_recent_filter_new();
     gtk_recent_filter_add_group(filter, "emu8086");
@@ -897,6 +898,9 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_recent_chooser_set_local_only(GTK_RECENT_CHOOSER(recents_chooser),
                                       TRUE);
     gtk_tool_item_set_is_important(recents, TRUE);
+    gtk_menu_tool_button_set_arrow_tooltip_text(GTK_MENU_TOOL_BUTTON(recents),
+                                                ("Open a recently used file"));
+
     gtk_widget_show(recents);
     play = gtk_tool_button_new(NULL, NULL);
     // gtk_tool_button_set_label(GTK_TOOL_BUTTON(play), ("Run"));
@@ -1001,8 +1005,7 @@ static void populate_win(Emu8086AppWindow *win)
         g_error_free(error);
 #endif
 
-    scrolled = GTK_SCROLLED_WINDOW(priv->stack);
-
+    scrolled = gtk_scrolled_window_new(NULL, NULL);
     box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 15);
     box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
@@ -1018,15 +1021,15 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_set_hexpand(box, TRUE);
     gtk_widget_set_vexpand(box, TRUE);
     gtk_widget_set_hexpand(code, TRUE);
-    gtk_widget_set_vexpand(code, TRUE);
-
+    gtk_widget_set_vexpand(code, FALSE);
     gtk_container_add(GTK_CONTAINER(scrolled), box);
+    gtk_container_add(GTK_CONTAINER(priv->stack), scrolled);
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
+    set_win(code, scrolled);
     gtk_widget_show_all(scrolled);
 
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
-
     priv->code = code;
-    priv->scrolled = scrolled;
+    // priv->scrolled = scrolled;
     priv->tos = 0;
     priv->box = box;
     strcpy(win->state.file_name, "Untitled.asm");
@@ -1081,20 +1084,11 @@ void emu_8086_app_window_update_wids(Emu8086AppWindow *win, struct emu8086 *aCPU
         sprintf(buf, "ON LINE %d", _INSTRUCTIONS->line_number);
         gtk_label_set_text(GTK_LABEL(priv->messages), buf);
         select_line(priv->code, _INSTRUCTIONS->line_number - 1);
-        GtkScrolledWindow *s = GTK_SCROLLED_WINDOW(priv->scrolled);
-        GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(s);
-        gdouble ps = gtk_adjustment_get_page_size(a);
-        gdouble incr = gtk_adjustment_get_step_increment(a);
-
-        gdouble v = 2.5;
-        v = _INSTRUCTIONS->line_number > 300 ? 2.4 : v;
-        gtk_adjustment_set_value(a, (incr * ((_INSTRUCTIONS->line_number) / v)));
-        gtk_scrolled_window_set_vadjustment(s, a);
     }
     else
     {
 
-        select_line(priv->code, 1);
+        select_line(priv->code, 0);
     }
     // sprintf(buf, "SS: %04x", _SS);
     // gtk_label_set_text(GTK_LABEL(priv->SS_), buf);

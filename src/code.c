@@ -57,6 +57,11 @@ struct _Emu8086AppCodePrivate
     gint line;
     GSettings *settings;
     gint fontsize;
+    GtkWidget *scrolled;
+    gint mh;
+    gint sh;
+    GtkAdjustment *vadjustment;
+    GtkTextMark *mark;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
@@ -149,6 +154,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     PRIV_CODE;
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
+    priv->mark = NULL;
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "theme", code, "theme", G_SETTINGS_BIND_GET);
@@ -161,56 +167,60 @@ void select_line(GtkWidget *co, gint line)
     gboolean ret = TRUE;
     // line = line ? line : 1;
     GtkTextIter iter, start;
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
-    gint lc = gtk_text_buffer_get_line_count(GTK_TEXT_BUFFER(buffer));
+
     PRIV_CODE;
-
-    if (line == priv->line && line > 1)
-        return;
-    if (priv->line)
+    Emu8086AppCodeBuffer *buffer = priv->buffer;
+    // g_print("l = %d priv = %d\n", line, priv->line);
+    if (priv->mark == NULL)
     {
-        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
-                                         &iter,
-                                         priv->line);
+        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, line);
+
         start = iter;
         gtk_text_iter_forward_to_line_end(&iter);
 
-        gtk_text_buffer_remove_tag_by_name(buffer, "step", &start, &iter);
-    }
-    else
-    {
-        // g_print("lin: %d\n", priv->line);
-        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
-                                         &iter,
-                                         0);
-        start = iter;
-        gtk_text_iter_forward_to_line_end(&iter);
-        gtk_text_buffer_remove_tag_by_name(buffer, "step", &start, &iter);
-    }
-
-    if (line >= lc)
-    {
-        ret = FALSE;
-        priv->line = lc;
-        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
-                                         &iter,
-                                         lc);
-    }
-    else
-    {
+        priv->mark = gtk_text_buffer_create_mark(GTK_TEXT_BUFFER(buffer),
+                                                 "sel_line",
+                                                 &iter,
+                                                 FALSE);
         priv->line = line;
 
-        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
-                                         &iter,
-                                         line);
+        gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
     }
-    start = iter;
+    else if (GTK_IS_TEXT_MARK(priv->mark))
+    {
+        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, priv->line);
+        start = iter;
+        gtk_text_iter_forward_to_line_end(&iter);
+        // start = iter;
+        // gtk_text_iter_forward_to_line_end(&iter);
+        gtk_text_buffer_remove_tag_by_name(buffer, "step", &start, &iter);
+        // gtk_text_buffer_get_iter_at_line(buffer, &iter, line);
+        gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, line);
+
+        start = iter;
+        gtk_text_iter_forward_to_line_end(&iter);
+
+        priv->line = line;
+
+        gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+        // gtk_text_buffer_move_mark(buffer, m, &iter);
+        // start = iter;
+        // gtk_text_iter_forward_to_line_end(&iter);
+        // start = iter;
+        // gtk_text_iter_forward_to_line_end(&iter);
+        // gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+    }
+
+    // start = iter;
     // gtk_text_iter_forward_to_line_end(&iter);
-    gtk_text_iter_forward_to_line_end(&iter);
     gtk_text_buffer_place_cursor(GTK_TEXT_BUFFER(buffer), &iter);
-    mark = gtk_text_buffer_get_mark(buffer, "insert");
-    gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(code), mark);
-    gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+    //     mark = gtk_text_buffer_get_mark(buffer, "insert");
+    //     gtk_text_buffer_move_mark(buffer, mark, &iter);
+
+    //     // gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(code), mark);
+    //     // gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+    emu_8086_app_code_scroll_to_view(code);
+    //
 }
 
 void reset_code(GtkWidget *co)
@@ -218,6 +228,7 @@ void reset_code(GtkWidget *co)
     Emu8086AppCode *code = EMU_8086_APP_CODE(co);
 
     PRIV_CODE;
+    priv->mark = NULL;
     if (priv->line)
     {
         GtkTextIter iter, start;
@@ -248,6 +259,7 @@ void update(Emu8086AppCode *code)
     lc = gtk_text_buffer_get_line_count(buffer);
     // if (lc == gtk_text_buffer_get_line_count(textbuffer))
     //     return;
+
     s = g_string_new("");
 
     while (i < lc)
@@ -260,6 +272,35 @@ void update(Emu8086AppCode *code)
     }
 
     gtk_text_buffer_set_text(textbuffer, g_string_free(s, FALSE), -1);
+}
+
+void emu_8086_app_code_scroll_to_view(Emu8086AppCode *code)
+{
+
+    PRIV_CODE;
+    // gint mh = gtk_widget_get_allocated_height(code);
+    // priv->mh = mh;
+
+    GtkTextMark *cursor;
+    cursor = gtk_text_buffer_get_insert(priv->buffer);
+    GtkTextIter iter;
+    GdkRectangle visible, location;
+    gtk_text_buffer_get_iter_at_mark(priv->buffer, &iter, cursor);
+    gtk_text_view_get_visible_rect(GTK_TEXT_VIEW(code), &visible);
+    gtk_text_view_get_iter_location(GTK_TEXT_VIEW(code), &iter, &location);
+    if (priv->vadjustment == NULL)
+        priv->vadjustment = gtk_scrolled_window_get_vadjustment(priv->scrolled);
+
+    gdouble v2 = gtk_adjustment_get_value(priv->vadjustment);
+    // if (v2 > va)
+    gdouble a = ((location.y + 32) - priv->sh); //- (priv->sh);
+                                                // if (a < 0)
+
+    if (a > 0)
+        gtk_adjustment_set_value(priv->vadjustment, a + 45.0);
+    // // else if (v2 < va)
+    else
+        gtk_adjustment_set_value(priv->vadjustment, 0.0);
 }
 
 void user_function(GtkTextBuffer *textbuffer,
@@ -276,6 +317,7 @@ void user_function(GtkTextBuffer *textbuffer,
         upd(priv->win);
     else
         priv->isOpen = FALSE;
+    emu_8086_app_code_scroll_to_view(code);
 }
 
 void user_function2(GtkTextBuffer *textbuffer,
@@ -291,6 +333,9 @@ void user_function2(GtkTextBuffer *textbuffer,
         upd(priv->win);
     else
         priv->isOpen = FALSE;
+    //(code);
+    emu_8086_app_code_scroll_to_view(code);
+
     // update(priv->lines, code);
 }
 
@@ -400,6 +445,27 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
 
     //gtk_widget_show(lines);
 }
+
+void resized(GtkWidget *widget,
+             GdkRectangle *allocation,
+             gpointer user_data)
+{
+
+    Emu8086AppCode *code = EMU_8086_APP_CODE(user_data);
+    PRIV_CODE;
+    priv->sh = allocation->height;
+    priv->mh = priv->sh - 10;
+    priv->vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(widget));
+}
+void set_win(Emu8086AppCode *code, GtkWidget *win)
+{
+    PRIV_CODE;
+    priv->scrolled = win;
+    priv->mh = 0;
+    priv->sh = 0;
+    priv->vadjustment = NULL;
+    g_signal_connect(win, "size-allocate", G_CALLBACK(resized), code);
+};
 
 Emu8086AppCode *emu_8086_app_code_new(void)
 {

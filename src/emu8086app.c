@@ -595,7 +595,7 @@ void step_clicked_app(Emu8086App *app, gchar *fname)
             return;
             // exit(1);
         }
-        emu_8086_app_window_update_wids(priv->win, priv->aCPU);
+        //  emu_8086_app_window_update_wids(priv->win, priv->aCPU);
     }
 }
 void step_over(Emu8086App *app, gchar *fname, uint16_t be)
