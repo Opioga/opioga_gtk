@@ -452,7 +452,7 @@ void rev_str_activate_cb(Emu8086AppWindow *win)
     }
 }
 
-static void changeThemeWin(Emu8086AppWindow *win)
+static void emu8086_win_change_theme(Emu8086AppWindow *win)
 {
     PRIV;
     gint a;
@@ -484,8 +484,6 @@ static void changeThemeWin(Emu8086AppWindow *win)
     }
     gtk_widget_override_background_color(priv->box, GTK_STATE_NORMAL, &color);
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
-
-    g_print("%s %d", win->theme, a);
 }
 
 static void
@@ -515,7 +513,7 @@ emu_8086_window_set_property(GObject *object,
         // *v = (gboolean *)value;
 
         self->theme = g_value_get_string(value);
-        changeThemeWin(self);
+        emu8086_win_change_theme(self);
         // g_print("filename: %s\n", self->filename);
         break;
     default:
