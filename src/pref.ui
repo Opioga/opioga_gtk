@@ -2,18 +2,9 @@
 <!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
+  <template class="Emu8086AppPrefs" parent="GtkDialog">
     <property name="can_focus">False</property>
-    <property name="icon_name">help-browser</property>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">window-close</property>
-  </object>
-  <object class="GtkDialog" id="preferences_dialog">
-    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Settings</property>
     <property name="type_hint">dialog</property>
     <child type="titlebar">
       <placeholder/>
@@ -26,46 +17,29 @@
         <child internal-child="action_area">
           <object class="GtkButtonBox" id="dialog-action_area">
             <property name="can_focus">False</property>
+            <property name="margin_bottom">10</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="helpbutton1">
-                <property name="label" translatable="yes">Help</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">image1</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
-              <object class="GtkButton" id="closebutton1">
-                <property name="label" translatable="yes">button</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">image2</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">0</property>
+            <property name="padding">1</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
           <object class="GtkNotebook">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_bottom">96</property>
             <child>
               <object class="GtkBox">
                 <property name="visible">True</property>
@@ -112,7 +86,6 @@
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="use_underline">True</property>
-                            <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -302,7 +275,7 @@
                                 <property name="receives_default">True</property>
                                 <property name="font">Sans 12</property>
                                 <property name="language">en-ng</property>
-                                <property name="preview_text"/>
+                                <property name="preview_text">mov ax, 5</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -374,9 +347,10 @@
                         <property name="orientation">vertical</property>
                         <property name="spacing">6</property>
                         <child>
-                          <object class="GtkComboBox" id="theme">
+                          <object class="GtkComboBoxText" id="theme">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="active">0</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -438,10 +412,16 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
+            <property name="padding">1</property>
             <property name="position">1</property>
           </packing>
         </child>
       </object>
     </child>
+  </template>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">help-browser</property>
   </object>
 </interface>

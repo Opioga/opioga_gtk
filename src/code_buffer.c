@@ -168,7 +168,7 @@ static char *reg1[] = {
     "DS",
     "SS",
     "ES"};
- 
+
 static gboolean getkeyword(gchar *keyword)
 {
     char i = 0, *p;
@@ -395,22 +395,21 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
     g_free(line);
 }
 
- 
 typedef struct _Emu8086AppCodeBufferPrivate Emu8086AppCodeBufferPrivate;
-
 
 struct _Emu8086AppCodeBuffer
 {
     GtkTextBuffer parent;
- };
-
+};
 
 struct _Emu8086AppCodeBufferPrivate
 {
-  
-   gint lc;
+
+    gint lc;
     gint line;
     GtkTextTagTable *table;
+    GSettings *settings;
+    Emu8086AppCode *code
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
@@ -418,15 +417,14 @@ G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, GTK_T
 static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
 {
 
-//  GtkTextTagTable *gtk_text_tag_table_new();
-//  gtk_text_buffer
+    GtkTextTagTable *tag;
+    //  gtk_text_buffer
 
- 
     PRIV_CODE_BUFFER;
+    priv->settings = g_settings_new("com.krc.emu8086app");
     priv->lc = 0;
     priv->line = 0;
 }
- 
 
 static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
 {
@@ -435,10 +433,10 @@ static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
     gint i = 0, t = 0;
     // i = line;
 
-    while (i < (line+1))
+    while (i < (line + 1))
     {
         t = 0;
-// g_print("herrre \n");
+        // g_print("herrre \n");
         _highlight(buffer, i);
         i++;
         // g_free(line);
@@ -473,12 +471,13 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     if (start_offset > 0)
     {
         highlight(buffer, i);
-            
-    g_print("here %d \n", i);
 
+        g_print("here %d \n", i);
     }
     else
         _highlight(buffer, i);
+
+    update(priv->code);
 }
 
 static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
@@ -486,18 +485,16 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
                                              GtkTextIter *end)
 {
     gint start_offset;
-    g_print('gere1\n');
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
-   
-     g_print("here2\n");
 
+    PRIV_CODE_BUFFER;
     GtkTextMark *mark;
     GtkTextIter iter2;
     GTK_TEXT_BUFFER_CLASS(emu_8086_app_code_buffer_parent_class)->delete_range(buffer, start, end);
     mark = gtk_text_buffer_get_mark(buffer, "insert");
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
-
+    update(priv->code);
     _highlight(buffer, i);
 }
 static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
@@ -511,15 +508,19 @@ static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass
 
 Emu8086AppCodeBuffer *emu_8086_app_code_buffer_new(GtkTextTagTable *table)
 {
-	return g_object_new (EMU_8086_APP_CODE_BUFFER_TYPE,
-			     "tag-table", table,
-			     NULL);
+    return g_object_new(EMU_8086_APP_CODE_BUFFER_TYPE,
+                        "tag-table", table,
+                        NULL);
 }
 
-
-void refreshLines(Emu8086AppCodeBuffer *buffer) {
+void refreshLines(Emu8086AppCodeBuffer *buffer)
+{
     PRIV_CODE_BUFFER;
     priv->lc = 0;
 }
 
-
+void setCode(Emu8086AppCodeBuffer *buffer, Emu8086AppCode *code)
+{
+    PRIV_CODE_BUFFER;
+    priv->code = code;
+}

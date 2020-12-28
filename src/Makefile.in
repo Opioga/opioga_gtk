@@ -100,9 +100,10 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_emu8086_OBJECTS = emu8086-emu8086.$(OBJEXT) \
 	emu8086-assembler.$(OBJEXT) emu8086-ops.$(OBJEXT) \
-	emu8086-resources.$(OBJEXT) emu8086-code_buffer.$(OBJEXT) \
-	emu8086-code.$(OBJEXT) emu8086-emu8086win.$(OBJEXT) \
-	emu8086-emu8086app.$(OBJEXT) emu8086-emu8086appprefs.$(OBJEXT) \
+	emu8086-resources.$(OBJEXT) emu8086-pango_css.$(OBJEXT) \
+	emu8086-code_buffer.$(OBJEXT) emu8086-code.$(OBJEXT) \
+	emu8086-emu8086win.$(OBJEXT) emu8086-emu8086app.$(OBJEXT) \
+	emu8086-emu8086appprefs.$(OBJEXT) \
 	emu8086-emu8086aboutwin.$(OBJEXT) emu8086-main.$(OBJEXT)
 emu8086_OBJECTS = $(am_emu8086_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -131,7 +132,8 @@ am__depfiles_remade = ./$(DEPDIR)/emu8086-assembler.Po \
 	./$(DEPDIR)/emu8086-emu8086app.Po \
 	./$(DEPDIR)/emu8086-emu8086appprefs.Po \
 	./$(DEPDIR)/emu8086-emu8086win.Po ./$(DEPDIR)/emu8086-main.Po \
-	./$(DEPDIR)/emu8086-ops.Po ./$(DEPDIR)/emu8086-resources.Po
+	./$(DEPDIR)/emu8086-ops.Po ./$(DEPDIR)/emu8086-pango_css.Po \
+	./$(DEPDIR)/emu8086-resources.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -282,6 +284,7 @@ emu8086.c \
 assembler.c \
 ops.c \
 resources.c \
+pango_css.c \
 code_buffer.c \
 code.c \
 emu8086win.c \
@@ -386,6 +389,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-emu8086win.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-ops.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-pango_css.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-resources.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -463,6 +467,20 @@ emu8086-resources.obj: resources.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='resources.c' object='emu8086-resources.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-resources.obj `if test -f 'resources.c'; then $(CYGPATH_W) 'resources.c'; else $(CYGPATH_W) '$(srcdir)/resources.c'; fi`
+
+emu8086-pango_css.o: pango_css.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-pango_css.o -MD -MP -MF $(DEPDIR)/emu8086-pango_css.Tpo -c -o emu8086-pango_css.o `test -f 'pango_css.c' || echo '$(srcdir)/'`pango_css.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-pango_css.Tpo $(DEPDIR)/emu8086-pango_css.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pango_css.c' object='emu8086-pango_css.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-pango_css.o `test -f 'pango_css.c' || echo '$(srcdir)/'`pango_css.c
+
+emu8086-pango_css.obj: pango_css.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-pango_css.obj -MD -MP -MF $(DEPDIR)/emu8086-pango_css.Tpo -c -o emu8086-pango_css.obj `if test -f 'pango_css.c'; then $(CYGPATH_W) 'pango_css.c'; else $(CYGPATH_W) '$(srcdir)/pango_css.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-pango_css.Tpo $(DEPDIR)/emu8086-pango_css.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pango_css.c' object='emu8086-pango_css.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-pango_css.obj `if test -f 'pango_css.c'; then $(CYGPATH_W) 'pango_css.c'; else $(CYGPATH_W) '$(srcdir)/pango_css.c'; fi`
 
 emu8086-code_buffer.o: code_buffer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-code_buffer.o -MD -MP -MF $(DEPDIR)/emu8086-code_buffer.Tpo -c -o emu8086-code_buffer.o `test -f 'code_buffer.c' || echo '$(srcdir)/'`code_buffer.c
@@ -699,6 +717,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/emu8086-emu8086win.Po
 	-rm -f ./$(DEPDIR)/emu8086-main.Po
 	-rm -f ./$(DEPDIR)/emu8086-ops.Po
+	-rm -f ./$(DEPDIR)/emu8086-pango_css.Po
 	-rm -f ./$(DEPDIR)/emu8086-resources.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -755,6 +774,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/emu8086-emu8086win.Po
 	-rm -f ./$(DEPDIR)/emu8086-main.Po
 	-rm -f ./$(DEPDIR)/emu8086-ops.Po
+	-rm -f ./$(DEPDIR)/emu8086-pango_css.Po
 	-rm -f ./$(DEPDIR)/emu8086-resources.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

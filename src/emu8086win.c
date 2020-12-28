@@ -215,7 +215,7 @@ static void _open(Emu8086AppWindow *win)
             refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
             setOpen(win);
             gtk_text_buffer_set_text(buffer, contents, length);
-            update(buffer, EMU_8086_APP_CODE(priv->code));
+            // update(buffer, EMU_8086_APP_CODE(priv->code));
 
             g_free(contents);
             win->state.isSaved = TRUE;
@@ -249,10 +249,10 @@ emu_8086_window_key_press_event(GtkWidget *widget,
             handled = TRUE;
             Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
             PRIV;
-            if (win->state.fontSize < 30)
+            if (win->state.fontSize < 300)
             {
                 win->state.fontSize++;
-                editFontSize(priv->code, win->state.fontSize);
+                editFontSize(priv->code, 1);
             }
 
             else
@@ -267,10 +267,10 @@ emu_8086_window_key_press_event(GtkWidget *widget,
             Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
             PRIV;
             g_print("here\n");
-            if (win->state.fontSize > 10)
+            if (win->state.fontSize > -100)
             {
                 win->state.fontSize--;
-                editFontSize(priv->code, win->state.fontSize);
+                editFontSize(priv->code, -1);
             }
 
             else
@@ -361,7 +361,7 @@ void arr_sum_activate_cb(Emu8086AppWindow *win)
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
         gtk_text_buffer_set_text(buf, con, len);
-        update(buf, EMU_8086_APP_CODE(priv->code));
+        // update(buf, EMU_8086_APP_CODE(priv->code));
 
         // g_free(contents);
         win->state.isSaved = TRUE;
@@ -399,7 +399,7 @@ void rev_str_activate_cb(Emu8086AppWindow *win)
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
         gtk_text_buffer_set_text(buf, con, len);
-        update(buf, EMU_8086_APP_CODE(priv->code));
+        // update(buf, EMU_8086_APP_CODE(priv->code));
 
         // g_free(contents);
         win->state.isSaved = TRUE;
@@ -835,8 +835,8 @@ static void populate_win(Emu8086AppWindow *win)
 
     scrolled = GTK_SCROLLED_WINDOW(priv->stack);
 
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 15);
+    box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_margin_top(box2, 10);
     gtk_widget_set_margin_left(box2, 10);
 
@@ -851,14 +851,6 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_set_vexpand(box, TRUE);
     gtk_widget_set_hexpand(code, TRUE);
     gtk_widget_set_vexpand(code, TRUE);
-    GdkRGBA color;
-    // lines = gtk_label_new("1");
-    color.red = 0.22;
-    color.green = 0.22;
-    color.blue = 0.22;
-    color.alpha = 1;
-    gtk_widget_override_background_color(box, GTK_STATE_NORMAL, &color);
-    gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
 
     gtk_container_add(GTK_CONTAINER(scrolled), box);
     gtk_widget_show_all(scrolled);
@@ -1036,7 +1028,7 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         setOpen(win);
         gtk_text_buffer_set_text(buf, con, len);
-        update(buf, EMU_8086_APP_CODE(priv->code));
+        // update(buf, EMU_8086_APP_CODE(priv->code));
 
         // g_free(contents);
         win->state.isSaved = TRUE;

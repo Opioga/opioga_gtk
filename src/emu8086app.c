@@ -352,7 +352,9 @@ pref_activated(GSimpleAction *action,
     win = gtk_application_get_active_window(GTK_APPLICATION(app));
     Emu8086AppPrefs *prefs;
     prefs = emu8086_app_prefs_new(EMU_8086_APP_WINDOW(win));
-    gtk_window_present(GTK_WINDOW(prefs));
+    // gtk_window_set_default_size(GTK_WINDOW(prefs), 400, 500);
+    gtk_window_set_title(prefs, "Settings");
+    gtk_widget_show_all(prefs);
 }
 
 static GActionEntry app_entries[] = {

@@ -17,6 +17,7 @@ emu8086.c \
 assembler.c \
 ops.c \
 resources.c \
+pango_css.c \
 code_buffer.c \
 code.c \
 emu8086win.c \

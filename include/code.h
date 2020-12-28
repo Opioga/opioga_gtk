@@ -35,10 +35,8 @@
 
 G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
 
-
-
 Emu8086AppCode *emu_8086_app_code_new(void);
-void update(GtkTextBuffer *textbuffer, Emu8086AppCode *code);
+void update(Emu8086AppCode *code);
 
 void select_line(GtkWidget *code, gint line);
 void reset_code(GtkWidget *co);
