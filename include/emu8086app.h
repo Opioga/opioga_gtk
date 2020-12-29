@@ -35,19 +35,7 @@
 G_DECLARE_FINAL_TYPE(Emu8086App, emu_8086_app, EMU_8086, APP, GtkApplication)
 
 Emu8086App *emu_8086_app_new(void);
-void run_clicked_app(Emu8086App *app, gchar *fname);
-void step_clicked_app(Emu8086App *app, gchar *fname);
-void stop_clicked_app(Emu8086App *app);
-void open_full_window(Emu8086App *app);
-int emu_8086_app_update_usage(Emu8086App *app);
-void init_start_stats(Emu8086App *app);
-void notify_end(Emu8086App *app, uint64_t flag);
-void update_max(Emu8086App *app, gpointer pointer, uint64_t max);
-void emu_8086_app_reset_stats(Emu8086App *app);
-void set_app_state(Emu8086App *app, gint state);
-void step_over_clicked_app(Emu8086App *app, gchar *fname);
-void open_help();
-void _step(Emu8086App *app);
+
 void quit(Emu8086App *app);
 
 typedef struct _theme them;
@@ -57,11 +45,4 @@ struct _theme
     gchar *text;
 };
 
-enum app_state
-{
-    PLAYING,
-    STOPPED,
-
-    STEP
-};
 #endif

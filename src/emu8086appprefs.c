@@ -152,7 +152,7 @@ emu8086_app_prefs_class_init(Emu8086AppPrefsClass *class)
   G_OBJECT_CLASS(class)->dispose = emu8086_app_prefs_dispose;
 
   gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS(class),
-                                              "/com/krc/emu8086app/pref.ui");
+                                              "/com/krc/emu8086app/ui/pref.ui");
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, font);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, theme);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, highlight);

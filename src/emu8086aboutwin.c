@@ -29,7 +29,7 @@ void static clicked_close_button(GtkDialog *dialog,
 static void emu_8086_about_window_class_init(Emu8086AboutWindowClass *class)
 {
     gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS(class),
-                                                "/com/krc/emu8086app/about.ui");
+                                                "/com/krc/emu8086app/ui/about.ui");
     gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(class), data_win_close);
     gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(class), clicked_close_button);
 }

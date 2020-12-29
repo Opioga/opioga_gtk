@@ -29,6 +29,7 @@
 #include <emu8086win.h>
 #include <code.h>
 #include <code_buffer.h>
+#include <emu_8086_app_runner.h>
 
 typedef enum
 {
@@ -72,6 +73,8 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *tool_bar;
     GtkWidget *ES_;
     Emu8086AppCode *code;
+    Emu8086AppCodeRunner *runner;
+
     GtkWidget *messages; //GtkWidget *spinner;
     gchar *fname;
     GtkWidget *revealer;
@@ -113,10 +116,11 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     PRIV;
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2;
-    // g_property_action_new
-    action = (GAction *)g_property_action_new("check-updates", win, "updates");
+    priv->runner = emu_8086_app_code_new()
+        // g_property_action_new
+        action = (GAction *)g_property_action_new("check-updates", win, "updates");
     action2 = (GAction *)g_property_action_new("open_mem", win, "memory");
-    builder = gtk_builder_new_from_resource("/com/krc/emu8086app/gears.ui");
+    builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/gears.ui");
     menu = G_MENU_MODEL(gtk_builder_get_object(builder, "menu"));
     g_action_map_add_action(G_ACTION_MAP(win), action);
     g_action_map_add_action(G_ACTION_MAP(win), action2);
@@ -548,7 +552,7 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
 {
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
     gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS(class),
-                                                "/com/krc/emu8086app/emu8086.ui");
+                                                "/com/krc/emu8086app/ui/emu8086.ui");
     GObjectClass *object_class = G_OBJECT_CLASS(class);
     object_class->set_property = emu_8086_window_set_property;
     object_class->get_property = emu_8086_window_get_property;
