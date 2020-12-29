@@ -28,6 +28,7 @@
 #include <code.h>
 #include <code_buffer.h>
 #include <pango_css.h>
+#include <code_gutter.h>
 
 struct _Emu8086AppCode
 {
@@ -62,6 +63,7 @@ struct _Emu8086AppCodePrivate
     gint sh;
     GtkAdjustment *vadjustment;
     GtkTextMark *mark;
+    Emu8086AppCodeGutter *gutter;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
@@ -121,7 +123,7 @@ emu_8086_app_code_get_property(GObject *object,
                                GParamSpec *pspec)
 {
     Emu8086AppCode *self = EMU_8086_APP_CODE(object);
-    g_print("lion\n");
+    // g_print("lion\n");
     switch ((Emu8086AppCodeProperty)property_id)
     {
     case PROP_FONT:
@@ -135,11 +137,29 @@ emu_8086_app_code_get_property(GObject *object,
     }
 }
 
+static gboolean
+emu_8086_app_code_draw(GtkWidget *widget,
+                       cairo_t *cr)
+{
+    Emu8086AppCode *code = EMU_8086_APP_CODE(widget);
+    PRIV_CODE;
+    gboolean event_handled;
+    event_handled = GTK_WIDGET_CLASS(emu_8086_app_code_parent_class)->draw(widget, cr);
+
+    if (priv->gutter != NULL)
+    {
+        draw(priv->gutter, cr);
+    }
+}
 static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
+
     object_class->set_property = emu_8086_app_code_set_property;
     object_class->get_property = emu_8086_app_code_get_property;
+
+    widget_class->draw = emu_8086_app_code_draw;
 
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
@@ -155,6 +175,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     priv->mark = NULL;
+    priv->gutter = NULL;
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "theme", code, "theme", G_SETTINGS_BIND_GET);
@@ -257,50 +278,48 @@ void update(Emu8086AppCode *code)
     gint lc, i;
     i = 0;
     lc = gtk_text_buffer_get_line_count(buffer);
-    // if (lc == gtk_text_buffer_get_line_count(textbuffer))
+    // if (lc == gtk_text_buffer_get_line_count(buffer))
     //     return;
+    if (lc)
+        recalculate_size(priv->gutter);
 
-    s = g_string_new("");
-
-    while (i < lc)
-    {
-        gchar buf[10];
-        sprintf(buf, "%d\n", i + 1);
-
-        g_string_append(s, buf);
-        i++;
-    }
-
-    gtk_text_buffer_set_text(textbuffer, g_string_free(s, FALSE), -1);
+    //     gtk_text_buffer_set_text(textbuffer, g_string_free(s, FALSE), -1);
 }
 
 void emu_8086_app_code_scroll_to_view(Emu8086AppCode *code)
 {
 
-    PRIV_CODE;
-    // gint mh = gtk_widget_get_allocated_height(code);
-    // priv->mh = mh;
-
+    GtkTextIter mstart, mend;
     GtkTextMark *cursor;
-    cursor = gtk_text_buffer_get_insert(priv->buffer);
-    GtkTextIter iter;
+    Emu8086AppCodeBuffer *buffer;
+    PRIV_CODE;
+    buffer = priv->buffer;
+    cursor = gtk_text_buffer_get_insert(buffer);
+    gtk_text_view_scroll_mark_onscreen(code, cursor);
+    // return;
+    // PRIV_CODE;
+    // // gint mh = gtk_widget_get_allocated_height(code);
+    // // priv->mh = mh;
+
+    // GtkTextIter iter;
     GdkRectangle visible, location;
-    gtk_text_buffer_get_iter_at_mark(priv->buffer, &iter, cursor);
+    // gtk_text_buffer_get_iter_at_mark(priv->buffer, &iter, cursor);
     gtk_text_view_get_visible_rect(GTK_TEXT_VIEW(code), &visible);
-    gtk_text_view_get_iter_location(GTK_TEXT_VIEW(code), &iter, &location);
-    if (priv->vadjustment == NULL)
-        priv->vadjustment = gtk_scrolled_window_get_vadjustment(priv->scrolled);
+    // gtk_text_view_get_iter_location(GTK_TEXT_VIEW(code), &iter, &location);
+    // if (priv->vadjustment == NULL)
+    //     priv->vadjustment = gtk_scrolled_window_get_vadjustment(priv->scrolled);
 
-    gdouble v2 = gtk_adjustment_get_value(priv->vadjustment);
-    // if (v2 > va)
-    gdouble a = ((location.y + 32) - priv->sh); //- (priv->sh);
-                                                // if (a < 0)
+    // gdouble v2 = gtk_adjustment_get_value(priv->vadjustment);
+    // // if (v2 > va)
+    // gdouble a = ((location.y + 32) - priv->sh); //- (priv->sh);
+    //                                             // if (a < 0)
 
-    if (a > 0)
-        gtk_adjustment_set_value(priv->vadjustment, a + 45.0);
-    // // else if (v2 < va)
-    else
-        gtk_adjustment_set_value(priv->vadjustment, 0.0);
+    // if (a > 0)
+    //     gtk_adjustment_set_value(priv->vadjustment, a + 45.0);
+    // // // else if (v2 < va)
+    // else
+    //     gtk_adjustment_set_value(priv->vadjustment, 0.0);
+    g_print("visible: %d %d %d %d\n\n", visible.x, visible.y, visible.height, visible.width);
 }
 
 void user_function(GtkTextBuffer *textbuffer,
@@ -411,11 +430,14 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     gtk_container_add(GTK_CONTAINER(box2), lines);
     gtk_container_add(GTK_CONTAINER(box), box2);
 
-    gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(code));
+    // gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(code));
 
     // GtkTextBuffer *buff = gtk_text_view_get_buffer();
     Emu8086AppCodeBuffer *buffer = emu_8086_app_code_buffer_new(NULL);
     gtk_text_view_set_buffer(GTK_TEXT_VIEW(code), GTK_TEXT_BUFFER(buffer));
+
+    Emu8086AppCodeGutter *gutter;
+    gutter = emu_8086_app_code_gutter_new(code, GTK_TEXT_WINDOW_LEFT);
 
     gtk_text_buffer_create_tag(buffer, "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
     gtk_text_buffer_create_tag(buffer, "keyword", "foreground", "#96CBFE", NULL);
@@ -434,6 +456,7 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     priv->lines = gtk_text_view_get_buffer(lines);
     setCode(buffer, code);
     priv->buffer = buffer;
+    priv->gutter = gutter;
     priv->line = 0;
     priv->win = win;
     // priv->provider = provider;

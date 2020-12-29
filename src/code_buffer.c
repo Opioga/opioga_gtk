@@ -516,7 +516,7 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
 
     if (start_offset > 0)
     {
-        g_print("lion\n");
+        // g_print("lion\n");
         highlight(buffer, i);
     }
     else

@@ -1016,6 +1016,7 @@ static void populate_win(Emu8086AppWindow *win)
 #endif
 
     scrolled = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 15);
     box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
@@ -1029,10 +1030,10 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(code), TRUE);
 
     gtk_widget_set_hexpand(box, TRUE);
-    gtk_widget_set_vexpand(box, TRUE);
+    gtk_widget_set_vexpand(box, FALSE);
     gtk_widget_set_hexpand(code, TRUE);
     gtk_widget_set_vexpand(code, FALSE);
-    gtk_container_add(GTK_CONTAINER(scrolled), box);
+    gtk_container_add(GTK_CONTAINER(scrolled), code);
     gtk_container_add(GTK_CONTAINER(priv->stack), scrolled);
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
     set_win(code, scrolled);

@@ -19,6 +19,7 @@ ops.c \
 resources.c \
 pango_css.c \
 code_buffer.c \
+code_gutter.c \
 code.c \
 emu8086win.c \
 emu8086app.c \

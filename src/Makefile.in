@@ -101,9 +101,9 @@ PROGRAMS = $(bin_PROGRAMS)
 am_emu8086_OBJECTS = emu8086-emu8086.$(OBJEXT) \
 	emu8086-assembler.$(OBJEXT) emu8086-ops.$(OBJEXT) \
 	emu8086-resources.$(OBJEXT) emu8086-pango_css.$(OBJEXT) \
-	emu8086-code_buffer.$(OBJEXT) emu8086-code.$(OBJEXT) \
-	emu8086-emu8086win.$(OBJEXT) emu8086-emu8086app.$(OBJEXT) \
-	emu8086-emu8086appprefs.$(OBJEXT) \
+	emu8086-code_buffer.$(OBJEXT) emu8086-code_gutter.$(OBJEXT) \
+	emu8086-code.$(OBJEXT) emu8086-emu8086win.$(OBJEXT) \
+	emu8086-emu8086app.$(OBJEXT) emu8086-emu8086appprefs.$(OBJEXT) \
 	emu8086-emu8086aboutwin.$(OBJEXT) emu8086-main.$(OBJEXT)
 emu8086_OBJECTS = $(am_emu8086_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -127,6 +127,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/emu8086-assembler.Po \
 	./$(DEPDIR)/emu8086-code.Po ./$(DEPDIR)/emu8086-code_buffer.Po \
+	./$(DEPDIR)/emu8086-code_gutter.Po \
 	./$(DEPDIR)/emu8086-emu8086.Po \
 	./$(DEPDIR)/emu8086-emu8086aboutwin.Po \
 	./$(DEPDIR)/emu8086-emu8086app.Po \
@@ -286,6 +287,7 @@ ops.c \
 resources.c \
 pango_css.c \
 code_buffer.c \
+code_gutter.c \
 code.c \
 emu8086win.c \
 emu8086app.c \
@@ -382,6 +384,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-assembler.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-code.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-code_buffer.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-code_gutter.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-emu8086.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-emu8086aboutwin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emu8086-emu8086app.Po@am__quote@ # am--include-marker
@@ -495,6 +498,20 @@ emu8086-code_buffer.obj: code_buffer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='code_buffer.c' object='emu8086-code_buffer.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-code_buffer.obj `if test -f 'code_buffer.c'; then $(CYGPATH_W) 'code_buffer.c'; else $(CYGPATH_W) '$(srcdir)/code_buffer.c'; fi`
+
+emu8086-code_gutter.o: code_gutter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-code_gutter.o -MD -MP -MF $(DEPDIR)/emu8086-code_gutter.Tpo -c -o emu8086-code_gutter.o `test -f 'code_gutter.c' || echo '$(srcdir)/'`code_gutter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-code_gutter.Tpo $(DEPDIR)/emu8086-code_gutter.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='code_gutter.c' object='emu8086-code_gutter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-code_gutter.o `test -f 'code_gutter.c' || echo '$(srcdir)/'`code_gutter.c
+
+emu8086-code_gutter.obj: code_gutter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-code_gutter.obj -MD -MP -MF $(DEPDIR)/emu8086-code_gutter.Tpo -c -o emu8086-code_gutter.obj `if test -f 'code_gutter.c'; then $(CYGPATH_W) 'code_gutter.c'; else $(CYGPATH_W) '$(srcdir)/code_gutter.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-code_gutter.Tpo $(DEPDIR)/emu8086-code_gutter.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='code_gutter.c' object='emu8086-code_gutter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-code_gutter.obj `if test -f 'code_gutter.c'; then $(CYGPATH_W) 'code_gutter.c'; else $(CYGPATH_W) '$(srcdir)/code_gutter.c'; fi`
 
 emu8086-code.o: code.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-code.o -MD -MP -MF $(DEPDIR)/emu8086-code.Tpo -c -o emu8086-code.o `test -f 'code.c' || echo '$(srcdir)/'`code.c
@@ -710,6 +727,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/emu8086-assembler.Po
 	-rm -f ./$(DEPDIR)/emu8086-code.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_buffer.Po
+	-rm -f ./$(DEPDIR)/emu8086-code_gutter.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086aboutwin.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086app.Po
@@ -767,6 +785,7 @@ maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/emu8086-assembler.Po
 	-rm -f ./$(DEPDIR)/emu8086-code.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_buffer.Po
+	-rm -f ./$(DEPDIR)/emu8086-code_gutter.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086aboutwin.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086app.Po
