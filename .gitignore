@@ -22,3 +22,4 @@ docs/gtkemu8086/node_modules
 docs/gtkemu8086-docs
 
 **/*.o
+emu8086-1.0.1.tar.gz

@@ -159,7 +159,7 @@ CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPPFLAGS = 
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"emu8086\" -DPACKAGE_TARNAME=\"emu8086\" -DPACKAGE_VERSION=\"1.0.0\" -DPACKAGE_STRING=\"emu8086\ 1.0.0\" -DPACKAGE_BUGREPORT=\"allisonkosy@gmail.com\" -DPACKAGE_URL=\"\" -DPACKAGE=\"emu8086\" -DVERSION=\"1.0.0\"
+DEFS = -DPACKAGE_NAME=\"emu8086\" -DPACKAGE_TARNAME=\"emu8086\" -DPACKAGE_VERSION=\"1.0.1\" -DPACKAGE_STRING=\"emu8086\ 1.0.1\" -DPACKAGE_BUGREPORT=\"allisonkosy@gmail.com\" -DPACKAGE_URL=\"\" -DPACKAGE=\"emu8086\" -DVERSION=\"1.0.1\"
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
@@ -184,10 +184,10 @@ OBJEXT = o
 PACKAGE = emu8086
 PACKAGE_BUGREPORT = allisonkosy@gmail.com
 PACKAGE_NAME = emu8086
-PACKAGE_STRING = emu8086 1.0.0
+PACKAGE_STRING = emu8086 1.0.1
 PACKAGE_TARNAME = emu8086
 PACKAGE_URL = 
-PACKAGE_VERSION = 1.0.0
+PACKAGE_VERSION = 1.0.1
 PATH_SEPARATOR = :
 PKG_CONFIG = /usr/bin/pkg-config
 PKG_CONFIG_LIBDIR = 
@@ -195,7 +195,7 @@ PKG_CONFIG_PATH =
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = 
-VERSION = 1.0.0
+VERSION = 1.0.1
 abs_builddir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/pixmaps
 abs_srcdir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/pixmaps
 abs_top_builddir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086
