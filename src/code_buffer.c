@@ -523,8 +523,6 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     {
         queue_highlight(buffer);
     }
-
-    update(priv->code);
 }
 
 static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
@@ -546,7 +544,6 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
     mark = gtk_text_buffer_get_mark(buffer, "insert");
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
-    update(priv->code);
     queue_highlight(buffer);
 }
 static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)

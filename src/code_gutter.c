@@ -27,6 +27,33 @@ typedef enum
     PROP_GUTTER_WINDOW_TYPE
 } Emu8086AppCodeGutterProperty;
 
+typedef struct _LinesInfo LinesInfo;
+
+struct _LinesInfo
+{
+    gint total_height;
+    gint lines_count;
+    GArray *buffer_coords;
+    GArray *line_heights;
+    GArray *line_numbers;
+    GtkTextIter start;
+    GtkTextIter end;
+};
+
+static LinesInfo *
+lines_info_new(void)
+{
+    LinesInfo *info;
+
+    info = g_slice_new0(LinesInfo);
+
+    info->buffer_coords = g_array_new(FALSE, FALSE, sizeof(gint));
+    info->line_heights = g_array_new(FALSE, FALSE, sizeof(gint));
+    info->line_numbers = g_array_new(FALSE, FALSE, sizeof(gint));
+
+    return info;
+}
+
 typedef struct _Emu8086AppCodeGutterPrivate Emu8086AppCodeGutterPrivate;
 
 struct _Emu8086AppCodeGutterPrivate
@@ -41,6 +68,7 @@ struct _Emu8086AppCodeGutterPrivate
     gchar *text;
     gint cl;
     PangoLayout *cached_layout;
+    gboolean is_drawing;
 };
 
 struct _Emu8086AppCodeGutter
@@ -203,7 +231,6 @@ static void measure_text(Emu8086AppCodeGutter *gutter, const gchar *markup, gint
     PangoLayout *layout;
     code = priv->code;
     gint height = 0;
-    // if(priv->cached_layout != NULL )pango_layfr
     layout = gtk_widget_create_pango_layout(GTK_WIDGET(code), NULL);
 
     if (markup != NULL)
@@ -225,7 +252,7 @@ void recalculate_size(Emu8086AppCodeGutter *gutter)
     gint num_digits = 0;
     buffer = priv->buffer;
     num_lines = gtk_text_buffer_get_line_count(buffer);
-    priv->num_lines = num_lines;
+    // priv->num_lines = num_lines;
     num_digits = count_num_digits(num_lines);
 
     if (num_digits != priv->num_line_digits)
@@ -240,6 +267,9 @@ void recalculate_size(Emu8086AppCodeGutter *gutter)
 
         measure_text(gutter, markup, &size);
         priv->size = size;
+        gtk_text_view_set_border_window_size(priv->code,
+                                             GTK_TEXT_WINDOW_LEFT,
+                                             size + 10);
     }
 }
 
@@ -286,21 +316,277 @@ get_last_visible_line_number(Emu8086AppCodeGutter *gutter)
     return gtk_text_iter_get_line(&iter);
 }
 
+static gboolean
+get_clip_rectangle(Emu8086AppCodeGutter *gutter,
+                   Emu8086AppCode *view,
+                   cairo_t *cr,
+                   GdkRectangle *clip)
+{
+    GdkWindow *window = gtk_text_view_get_window(GTK_TEXT_VIEW(view),
+                                                 gutter->priv->window_type);
+
+    if (window == NULL || !gtk_cairo_should_draw_window(cr, window))
+    {
+        if (window == NULL)
+            //  g_print("77lon\n");
+
+            return FALSE;
+    }
+
+    gtk_cairo_transform_to_window(cr, GTK_WIDGET(view), window);
+
+    return gdk_cairo_get_clip_rectangle(cr, clip);
+}
+
+static LinesInfo *
+get_lines_info(Emu8086AppCode *text_view,
+               gint first_y_buffer_coord,
+               gint last_y_buffer_coord)
+{
+    LinesInfo *info;
+    GtkTextIter iter;
+    gint last_line_num = -1;
+
+    info = lines_info_new();
+
+    /* Get iter at first y */
+    gtk_text_view_get_line_at_y(text_view, &iter, first_y_buffer_coord, NULL);
+
+    info->start = iter;
+
+    /* For each iter, get its location and add it to the arrays.
+	 * Stop when we pass last_y_buffer_coord.
+	 */
+    while (!gtk_text_iter_is_end(&iter))
+    {
+        gint y;
+        gint height;
+        gint line_num;
+
+        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+
+        g_array_append_val(info->buffer_coords, y);
+        g_array_append_val(info->line_heights, height);
+
+        info->total_height += height;
+
+        line_num = gtk_text_iter_get_line(&iter);
+        g_array_append_val(info->line_numbers, line_num);
+
+        last_line_num = line_num;
+
+        info->lines_count++;
+
+        if (last_y_buffer_coord <= (y + height))
+        {
+            break;
+        }
+
+        gtk_text_iter_forward_line(&iter);
+    }
+
+    if (gtk_text_iter_is_end(&iter))
+    {
+        gint y;
+        gint height;
+        gint line_num;
+
+        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+
+        line_num = gtk_text_iter_get_line(&iter);
+
+        if (line_num != last_line_num)
+        {
+            g_array_append_val(info->buffer_coords, y);
+            g_array_append_val(info->line_heights, height);
+
+            info->total_height += height;
+
+            g_array_append_val(info->line_numbers, line_num);
+            info->lines_count++;
+        }
+    }
+
+    if (info->lines_count == 0)
+    {
+        gint y = 0;
+        gint n = 0;
+        gint height;
+
+        info->lines_count = 1;
+
+        g_array_append_val(info->buffer_coords, y);
+        g_array_append_val(info->line_numbers, n);
+
+        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+        g_array_append_val(info->line_heights, height);
+
+        info->total_height += height;
+    }
+
+    info->end = iter;
+
+    return info;
+}
+
+static void
+draw_cells(Emu8086AppCodeGutter *gutter,
+           GtkTextView *view,
+           gint renderer_widths,
+           LinesInfo *info,
+           cairo_t *cr)
+{
+    PRIV_CODE_GUTTER;
+    GtkTextBuffer *buffer;
+    GtkTextIter insert_iter;
+    gint cur_line;
+    GtkTextIter selection_start;
+    GtkTextIter selection_end;
+    gint selection_start_line = 0;
+    gint selection_end_line = 0;
+    gboolean has_selection;
+    GtkTextIter start;
+    gint i;
+
+    buffer = priv->buffer;
+
+    gtk_text_buffer_get_iter_at_mark(buffer,
+                                     &insert_iter,
+                                     gtk_text_buffer_get_insert(buffer));
+
+    cur_line = gtk_text_iter_get_line(&insert_iter);
+
+    start = info->start;
+    i = 0;
+    while (i < info->lines_count)
+    {
+        GtkTextIter end;
+        GdkRectangle background_area;
+        gint pos;
+        gint line_to_paint;
+        gint renderer_num;
+        GList *l;
+
+        end = start;
+
+        if (!gtk_text_iter_ends_line(&end))
+        {
+
+            if (gtk_text_iter_forward_line(&end))
+            {
+                gtk_text_iter_backward_char(&end);
+            }
+        }
+        gtk_text_view_buffer_to_window_coords(view,
+                                              gutter->priv->window_type,
+                                              0,
+                                              g_array_index(info->buffer_coords, gint, i),
+                                              NULL,
+                                              &pos);
+
+        line_to_paint = g_array_index(info->line_numbers, gint, i);
+        priv->num_lines = line_to_paint;
+        background_area.y = pos;
+        background_area.height = g_array_index(info->line_heights, gint, i);
+        background_area.x = 0;
+        recalculate_size(gutter);
+        GdkRectangle cell_area;
+        gint width, height, x, y;
+        gint xpad = 5;
+        gint ypad = 0;
+
+        background_area.width = priv->size + 10;
+        // g_print("%s %d", "lion", priv->size);
+        cell_area.y = background_area.y + ypad;
+        cell_area.height = background_area.height - 2 * ypad;
+
+        cell_area.x = background_area.x + xpad;
+        cell_area.width = background_area.width - 2 * xpad;
+        gutter_renderer_query_data(gutter);
+
+        cairo_save(cr);
+
+        gdk_cairo_rectangle(cr, &background_area);
+
+        cairo_clip(cr);
+
+        if (priv->cached_layout == NULL)
+            priv->cached_layout = gtk_widget_create_pango_layout(GTK_WIDGET(priv->code), NULL);
+        pango_layout_set_markup(priv->cached_layout, priv->text, -1);
+
+        pango_layout_get_pixel_size(priv->cached_layout, &width, &height);
+
+        x = cell_area.x; // + (cell_area.width - width)*0
+        y = cell_area.y; // + (cell_area->height - height) * 0;
+        GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(view));
+        gtk_render_layout(context, cr, x, y, priv->cached_layout);
+        cairo_restore(cr);
+
+        // gtk_text_iter_forward_line(&start);
+        i++;
+    }
+}
+
+static void
+lines_info_free(LinesInfo *info)
+{
+    if (info != NULL)
+    {
+        g_array_free(info->buffer_coords, TRUE);
+        g_array_free(info->line_heights, TRUE);
+        g_array_free(info->line_numbers, TRUE);
+
+        g_slice_free(LinesInfo, info);
+    }
+}
+
 void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
 {
     PRIV_CODE_GUTTER;
-    Emu8086AppCode *view;
+    Emu8086AppCode *view = priv->code;
     GtkTextIter start;
     GdkRectangle clip;
-    GtkTextView *text_view;
+    LinesInfo *info;
     gint first_y_window_coord;
     gint last_y_window_coord;
     gint first_y_buffer_coord;
     gint last_y_buffer_coord;
-    GArray *renderer_widths;
-    gutter_renderer_query_data(gutter);
-    g_return_if_fail(priv->text != NULL);
-    g_return_if_fail(priv->cl != priv->num_lines);
-    // g_print("%s\n", priv->text);
-    // priv->cl = priv->num_lines;
+    gint width;
+
+    if (!get_clip_rectangle(gutter, view, cr, &clip))
+    {
+        return;
+    }
+    priv->is_drawing = TRUE;
+
+    first_y_window_coord = clip.y;
+    last_y_window_coord = first_y_window_coord + clip.height;
+
+    gtk_text_view_window_to_buffer_coords(view,
+                                          gutter->priv->window_type,
+                                          0,
+                                          first_y_window_coord,
+                                          NULL,
+                                          &first_y_buffer_coord);
+
+    gtk_text_view_window_to_buffer_coords(view,
+                                          gutter->priv->window_type,
+                                          0,
+                                          last_y_window_coord,
+                                          NULL,
+                                          &last_y_buffer_coord);
+
+    info = get_lines_info(view,
+                          first_y_buffer_coord,
+                          last_y_buffer_coord);
+
+    draw_cells(gutter,
+               view,
+               20,
+               info,
+               cr);
+
+    lines_info_free(info);
+
+    // // GtkTextView *text_view;
 }
