@@ -17,7 +17,7 @@
     <property name="authors">Allison Kosy</property>
     <property name="documenters">Allison Kosy</property>
     <property name="logo_icon_name">image-missing</property>
-    <property name="license_type">mit-x11</property>
+    <property name="license_type">gpl-3-0-only</property>
     <signal name="close" handler="data_win_close" swapped="no"/>
     <signal name="response" handler="clicked_close_button" swapped="no"/>
     <child type="titlebar">
