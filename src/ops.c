@@ -34,8 +34,6 @@
 #include <opcodes.h>
 #include <m_ops.h>
 
-
-
 extern struct instruction *_instruction_list;
 extern struct instruction *_last_instruction;
 extern struct instruction *_current_instruction, *_first_instruction;
@@ -279,7 +277,6 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
     *dest = DATA_SEGMENT;
     if (mod == 0 && r_m == 6)
     {
-        printf("jjjj\n");
         // special
         *dest = DATA_SEGMENT;
         IP++;
@@ -290,7 +287,6 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
     }
     else
     {
-        // printf("22jjjj\n");
         // special
         switch (r_m)
         {
@@ -346,7 +342,6 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
         int d = 0;
         d = *(CODE_SEGMENT_IP);
         displacement |= d << 8;
-        printf("3lio3jjjj %d\n", reg);
     }
 
     *dest += displacement;
@@ -3228,14 +3223,12 @@ void mov_reg16_addr16(struct emu8086 *aCPU, int *handled)
     is_16 = 0;
     unsigned char *op1;
     op1 = DATA_SEGMENT;
-    printf("here\n");
     int *op2 = NULL;
     IP++;
     int opn = *(CODE_SEGMENT_IP);
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
-        printf("here\n");
         int value = *op1++;
         value |= (*op1 << 8);
 
@@ -3289,7 +3282,6 @@ void mov_ax_addr(struct emu8086 *aCPU, int *handled)
 {
     int width = 2;
     IP++;
-    printf("here");
     int offset = *(CODE_SEGMENT_IP);
     if (width > 1)
     {

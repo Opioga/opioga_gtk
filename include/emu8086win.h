@@ -65,6 +65,7 @@ void save_activate_cb(Emu8086AppWindow *win);
 void save_as_activate_cb(Emu8086AppWindow *win);
 void open_activate_cb(Emu8086AppWindow *win);
 void stop_win(Emu8086AppWindow *win);
+void open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data);
 void upd(Emu8086AppWindow *win);
 gchar *write_to_file(gchar *filename, gchar *buffer, char *buff);
 gboolean save_doc(Emu8086AppWindow *win);

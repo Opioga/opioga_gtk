@@ -274,7 +274,9 @@ void message(char *m, int level, int line)
 }
 void _message(char *m, int level)
 {
+#ifdef DEBUG
     fprintf(stdout, m);
+#endif
 };
 
 /*

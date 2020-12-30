@@ -40,5 +40,6 @@
 G_DECLARE_FINAL_TYPE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, EMU_8086, APP_CODE_BUFFER, GtkTextBuffer)
 
 Emu8086AppCodeBuffer *emu_8086_app_code_buffer_new(GtkTextTagTable *table);
+void refreshLines(Emu8086AppCodeBuffer *buffer);
 
 #endif

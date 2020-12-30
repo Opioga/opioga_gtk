@@ -52,6 +52,13 @@ struct _Emu8086AppPrivate
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086App, emu_8086_app, GTK_TYPE_APPLICATION);
 
+static void user_function3(GtkApplication *application,
+                           GtkWindow *window,
+                           gpointer user_data)
+{
+    quit(EMU_8086_APP_WINDOW(window));
+}
+
 static void
 emu_8086_app_init(Emu8086App *app)
 {
@@ -62,35 +69,8 @@ emu_8086_app_init(Emu8086App *app)
     // g_print("%d", g);
     priv = emu_8086_app_get_instance_private(app);
     priv->settings = g_settings_new("com.krc.emu8086app");
-}
-void user_function3(GtkApplication *application,
-                    GtkWindow *window,
-                    gpointer user_data)
-{
-    quit(EMU_8086_APP_WINDOW(window));
-}
-static void emu_8086_app_open(GApplication *app, GFile **files,
-                              gint n_files,
-                              const gchar *hint)
-{
-    GList *windows;
-    Emu8086AppWindow *win;
-    int i;
-    windows = gtk_application_get_windows(GTK_APPLICATION(app));
-    if (windows)
-        win = EMU_8086_APP_WINDOW(windows->data);
-    else
-    {
-
-        win = emu_8086_app_window_new(EMU_8086_APP(app));
-    }
-    // exit(0);
-
-    gtk_window_present(GTK_WINDOW(win));
     g_signal_connect(app, "window-removed", G_CALLBACK(user_function3), NULL);
 }
-
-//
 
 static void
 emu_8086_activate(GApplication *app)
@@ -102,31 +82,50 @@ emu_8086_activate(GApplication *app)
     emu_8086_app_window_up(win);
     emu_8086_app_window_set_app(win, app);
     gtk_window_present(GTK_WINDOW(win));
-    g_signal_connect(app, "window-removed", G_CALLBACK(user_function3), NULL);
 }
+
+void emu_8086_open_file(Emu8086App *app, GFile *file)
+{
+    _PRIV;
+    Emu8086AppWindow *win; // *win;
+
+    win = emu_8086_app_window_new(EMU_8086_APP(app));
+    emu_8086_app_window_open(win, file);
+
+    emu_8086_app_window_set_app(win, app);
+    gtk_window_present(GTK_WINDOW(win));
+
+    priv->win = win;
+}
+
 static void
-emu_8086_open(GApplication *app,
+emu_8086_open(GApplication *appe,
               GFile **files,
               gint n_files,
               const gchar *hint)
 {
-    GList *windows;
-    Emu8086AppWindow *win; // *win;
+    Emu8086App *app;
+    app = EMU_8086_APP(appe); // GList *windows;
+    //Emu8086AppWindow *win;    // *win;
     int i;
     _PRIV;
-    windows = gtk_application_get_windows(GTK_APPLICATION(app));
-    if (windows)
-        win = EMU_8086_APP_WINDOW(windows->data);
-    else
-    {
-        win = emu_8086_app_window_new(EMU_8086_APP(app));
-        emu_8086_app_window_set_app(win, app);
-    }
+    // windows = gtk_application_get_windows(GTK_APPLICATION(app));
+    // if (windows)
+    //     win = EMU_8086_APP_WINDOW(windows->data);
+    // else
+    // {
+    //     win = emu_8086_app_window_new(EMU_8086_APP(app));
+    //     emu_8086_app_window_set_app(win, app);
+    // }
 
     for (i = 0; i < n_files; i++)
-        emu_8086_app_window_open(win, files[i]);
-    priv->win = win;
-    gtk_window_present(GTK_WINDOW(win));
+    {
+        // win = emu_8086_app_window_new(EMU_8086_APP(app));
+
+        emu_8086_open_file(app, files[i]);
+
+        // emu_8086_app_window_set_app(win, app);
+    }
 }
 
 static void
@@ -134,6 +133,20 @@ quit_activated(GSimpleAction *action,
                GVariant *parameter,
                gpointer app)
 {
+
+    GList *windows;
+    Emu8086AppWindow *win; // *win;
+    gint i;
+    _PRIV;
+    windows = gtk_application_get_windows(GTK_APPLICATION(app));
+    i = g_list_length(windows);
+    while (i > 0)
+    {
+        win = EMU_8086_APP_WINDOW(windows->data);
+        windows = windows->next;
+        quit(win);
+        i--;
+    }
     g_application_quit(G_APPLICATION(app));
 }
 
@@ -143,8 +156,9 @@ open_activated(GSimpleAction *action,
                gpointer appe)
 {
     Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-    open_activate_cb(priv->win);
+    // _PRIV;
+    // gtk_application_g
+    emu_8086_activate(app);
 }
 static void
 save_activated(GSimpleAction *action,
@@ -153,6 +167,9 @@ save_activated(GSimpleAction *action,
 {
     Emu8086App *app = EMU_8086_APP(appe);
     _PRIV;
+
+    priv->win = gtk_application_get_active_window(app);
+
     save_activate_cb(priv->win);
 }
 
@@ -163,6 +180,9 @@ save_as_activated(GSimpleAction *action,
 {
     Emu8086App *app = EMU_8086_APP(appe);
     _PRIV;
+
+    priv->win = gtk_application_get_active_window(app);
+
     save_as_activate_cb(priv->win);
 }
 
@@ -183,6 +203,7 @@ ex1_activated(GSimpleAction *action,
     Emu8086App *app = EMU_8086_APP(appe);
 
     _PRIV;
+    priv->win = gtk_application_get_active_window(app);
 
     arr_sum_activate_cb(priv->win);
 }
@@ -193,8 +214,9 @@ ex2_activated(GSimpleAction *action,
               gpointer appe)
 {
     Emu8086App *app = EMU_8086_APP(appe);
-
     _PRIV;
+    priv->win = gtk_application_get_active_window(app);
+
     rev_str_activate_cb(priv->win);
 }
 
@@ -299,7 +321,7 @@ static void emu_8086_startup(GApplication *app)
     GtkBuilder *builder;
     GMenuModel *app_menu;
     const gchar *quit_accels[2] = {"<Ctrl>Q", NULL};
-    const gchar *open_accels[2] = {"<Ctrl>O", NULL};
+    const gchar *open_accels[2] = {"<Ctrl>N", NULL};
     const gchar *save_accels[2] = {"<Ctrl>S", NULL};
 
     G_APPLICATION_CLASS(emu_8086_app_parent_class)->startup(app);
@@ -369,6 +391,6 @@ void open_help()
 static void quit(Emu8086AppWindow *win)
 {
     stop_win(win);
-
-    exit(EXIT_SUCCESS);
+    gtk_widget_destroy(win);
+    // exit(EXIT_SUCCESS);
 }

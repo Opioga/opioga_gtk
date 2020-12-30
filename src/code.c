@@ -137,6 +137,22 @@ emu_8086_app_code_get_property(GObject *object,
     }
 }
 
+static void
+emu_8086_app_code_drag_data_received(GtkWidget *widget,
+                                     GdkDragContext *context,
+                                     gint x,
+                                     gint y,
+                                     GtkSelectionData *selection_data,
+                                     guint info,
+                                     guint timestamp)
+{
+    Emu8086AppCode *code;
+    code = EMU_8086_APP_CODE(widget);
+    PRIV_CODE;
+    // ;
+    open_drag_data(priv->win, selection_data);
+    gtk_drag_finish(context, TRUE, FALSE, timestamp);
+}
 static gboolean
 emu_8086_app_code_draw(GtkWidget *widget,
                        cairo_t *cr)
@@ -160,7 +176,7 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
     object_class->get_property = emu_8086_app_code_get_property;
 
     widget_class->draw = emu_8086_app_code_draw;
-
+    widget_class->drag_data_received = emu_8086_app_code_drag_data_received;
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
                                                         G_PARAM_READWRITE));

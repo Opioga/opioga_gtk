@@ -7,7 +7,7 @@
 
             <section>
                 <item>
-                    <attribute name="label" translatable="yes">_Open</attribute>
+                    <attribute name="label" translatable="yes">_Open New Window</attribute>
                     <attribute name="action">app.open</attribute>
                 </item>
                 <item>
@@ -16,7 +16,12 @@
                 </item>
 
             </section>
-
+            <section>
+                <item>
+                    <attribute name="label" translatable="yes">Close All Windows</attribute>
+                    <attribute name="action">app.quit</attribute>
+                </item>
+            </section>
         </submenu>
 
 

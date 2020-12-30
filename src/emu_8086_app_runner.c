@@ -386,12 +386,16 @@ static int emu_init(Emu8086AppCodeRunner *runner)
     do_assembly(priv->aCPU, fname);
     if (errors > 0)
     {
-        // g_print(first_err->message);
-        g_print("runn: 390\n");
 
-        // emu_8086_app_window_flash(priv->win, first_err->message);
-        set_app_state(runner, STOPPED);
-        emu_free(runner);
+        if (list_err != NULL)
+        {
+
+            if (priv->em != NULL)
+                g_free(priv->em);
+            priv->em = NULL;
+            priv->em = g_strdup(list_err->message);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0);
+        }
         return 0;
     }
     assembler_step = 1;
@@ -435,7 +439,6 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
         return;
     if (priv->aCPU == NULL)
     {
-        g_print("runner: 431\n");
         if (!emu_init(runner))
             return;
     }
