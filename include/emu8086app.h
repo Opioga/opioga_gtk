@@ -36,7 +36,7 @@ G_DECLARE_FINAL_TYPE(Emu8086App, emu_8086_app, EMU_8086, APP, GtkApplication)
 
 Emu8086App *emu_8086_app_new(void);
 
-void quit(Emu8086App *app);
+// void quit(Emu8086AppWindow *app);
 
 typedef struct _theme them;
 struct _theme

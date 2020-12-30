@@ -34,7 +34,7 @@
 #include <emu8086.h>
 #include <assembler.h>
 
-#define PRIV Emu8086AppWindowPrivate *priv = emu_8086_app_window_get_instance_private(win)
+#define PRIV Emu8086AppWindowPrivate *priv = win->priv
 #define EMU_8086_APP_WINDOW_TYPE (emu_8086_app_window_get_type())
 G_DECLARE_FINAL_TYPE(Emu8086AppWindow, emu_8086_app_window, EMU_8086, APP_WINDOW, GtkApplicationWindow)
 
@@ -56,7 +56,6 @@ void emu_8086_app_window_open(Emu8086AppWindow *win,
                               GFile *file);
 void emu_8086_app_window_up(Emu8086AppWindow *win);
 void emu_8086_app_window_set_app(Emu8086AppWindow *win, Emu8086App *app);
-void emu_8086_app_window_update_wids(Emu8086AppWindow *win, struct emu8086 *aCPU);
 
 void setOpen(Emu8086AppWindow *win);
 void arr_sum_activate_cb(Emu8086AppWindow *win);
@@ -65,10 +64,8 @@ void rev_str_activate_cb(Emu8086AppWindow *win);
 void save_activate_cb(Emu8086AppWindow *win);
 void save_as_activate_cb(Emu8086AppWindow *win);
 void open_activate_cb(Emu8086AppWindow *win);
-
-void emu_8086_app_window_flash(Emu8086AppWindow *win, char *_err);
+void stop_win(Emu8086AppWindow *win);
 void upd(Emu8086AppWindow *win);
-void reset_win(Emu8086AppWindow *win);
 gchar *write_to_file(gchar *filename, gchar *buffer, char *buff);
 gboolean save_doc(Emu8086AppWindow *win);
 #endif /* __EXAMPLEAPPWIN_H */

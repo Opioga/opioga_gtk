@@ -21,6 +21,7 @@ pango_css.c \
 code_buffer.c \
 code_gutter.c \
 code.c \
+emu_8086_app_runner.c \
 emu8086win.c \
 emu8086app.c \
 emu8086appprefs.c \

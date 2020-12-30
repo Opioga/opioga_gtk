@@ -529,7 +529,6 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
                                              GtkTextIter *start,
                                              GtkTextIter *end)
 {
-    g_print("herel\n");
     gint start_offset;
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
     g_return_if_fail(start != NULL);

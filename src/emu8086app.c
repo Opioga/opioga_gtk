@@ -35,7 +35,8 @@
 #include <emu8086win.h>
 #include <emu8086aboutwin.h>
 #include <emu8086appprefs.h>
-
+#include <emu_8086_app_runner.h>
+static void quit(Emu8086AppWindow *win);
 struct _Emu8086App
 {
     GtkApplication parent;
@@ -66,7 +67,7 @@ void user_function3(GtkApplication *application,
                     GtkWindow *window,
                     gpointer user_data)
 {
-    g_print("hhh\n");
+    quit(EMU_8086_APP_WINDOW(window));
 }
 static void emu_8086_app_open(GApplication *app, GFile **files,
                               gint n_files,
@@ -101,6 +102,7 @@ emu_8086_activate(GApplication *app)
     emu_8086_app_window_up(win);
     emu_8086_app_window_set_app(win, app);
     gtk_window_present(GTK_WINDOW(win));
+    g_signal_connect(app, "window-removed", G_CALLBACK(user_function3), NULL);
 }
 static void
 emu_8086_open(GApplication *app,
@@ -364,9 +366,9 @@ void open_help()
     gtk_window_present(GTK_WINDOW(window));
 }
 
-void quit(Emu8086App *app)
+static void quit(Emu8086AppWindow *win)
 {
-    stop(app, FALSE);
+    stop_win(win);
 
     exit(EXIT_SUCCESS);
 }

@@ -38,18 +38,18 @@ typedef enum
     PROP_MEM,
     PROP_THEME
 } Emu8086AppWindowProperty;
+typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
 
 struct _Emu8086AppWindow
 {
     GtkApplicationWindow parent;
     Emu8086AppWindowState state;
     gboolean updates;
-
+    Emu8086AppWindowPrivate *priv;
     gchar *theme;
     gboolean memory;
 };
 
-typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
 struct _Emu8086AppWindowPrivate
 {
     guint tos;
@@ -86,6 +86,13 @@ struct _Emu8086AppWindowPrivate
     GSettings *settings;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppWindow, emu_8086_app_window, GTK_TYPE_APPLICATION_WINDOW);
+
+static void emu_8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointer data);
+static void reset_win(Emu8086AppCodeRunner *runner, gpointer user_data);
+
+static void emu_8086_app_window_flash(Emu8086AppCodeRunner *runner, gpointer user_data);
+static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message);
+
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
 {
     //  emu_8086_app_get_type()
@@ -113,12 +120,13 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     GtkBuilder *builder;
     GMenuModel *menu;
     gtk_widget_init_template(GTK_WIDGET(win));
+    win->priv = emu_8086_app_window_get_instance_private(win);
     PRIV;
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2;
-    priv->runner = emu_8086_app_code_new()
-        // g_property_action_new
-        action = (GAction *)g_property_action_new("check-updates", win, "updates");
+    priv->runner = emu_8086_app_code_runner_new(NULL, FALSE);
+    // g_property_action_new
+    action = (GAction *)g_property_action_new("check-updates", win, "updates");
     action2 = (GAction *)g_property_action_new("open_mem", win, "memory");
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/gears.ui");
     menu = G_MENU_MODEL(gtk_builder_get_object(builder, "menu"));
@@ -128,6 +136,10 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     g_object_unref(action);
     g_object_unref(action2);
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(priv->gears), menu);
+    g_signal_connect(priv->runner, "exec_stopped", reset_win, win);
+
+    g_signal_connect(priv->runner, "error_occured", emu_8086_app_window_flash, win);
+    g_signal_connect(priv->runner, "exec_ins", emu_8086_app_window_update_wids, win);
     // gtk_menu_button_get_menu_model;
 
     g_object_unref(builder);
@@ -258,6 +270,7 @@ static void _open(Emu8086AppWindow *win)
             add_recent(uri);
             g_free(uri);
             setOpen(win);
+            set_fname(priv->runner, win->state.file_path);
             gtk_text_buffer_set_text(buffer, contents, length);
             // update(buffer, EMU_8086_APP_CODE(priv->code));
             strcpy(win->state.file_name, base);
@@ -408,6 +421,7 @@ void arr_sum_activate_cb(Emu8086AppWindow *win)
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
+        set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buf, con, len);
         // update(buf, EMU_8086_APP_CODE(priv->code));
 
@@ -446,6 +460,7 @@ void rev_str_activate_cb(Emu8086AppWindow *win)
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
         setOpen(win);
+        set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buf, con, len);
         // update(buf, EMU_8086_APP_CODE(priv->code));
 
@@ -708,6 +723,7 @@ gboolean save_doc(Emu8086AppWindow *win)
         PRIV;
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         char buf2[50];
+        g_print("win: 726\n");
         // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         GtkTextIter start_iter, end_iter;
         gtk_text_buffer_get_start_iter(buffer, &start_iter);
@@ -716,6 +732,8 @@ gboolean save_doc(Emu8086AppWindow *win)
         if (win->state.file_path_set)
         {
             write_to_file(win->state.file_path, con, win->state.file_name);
+            set_fname(priv->runner, win->state.file_path);
+
             gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
             win->state.isSaved = TRUE;
             return TRUE;
@@ -727,6 +745,8 @@ gboolean save_doc(Emu8086AppWindow *win)
 
                 win->state.file_path_set = TRUE;
                 write_to_file(win->state.file_path, con, win->state.file_name);
+                set_fname(priv->runner, win->state.file_path);
+
                 gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
                 win->state.isSaved = TRUE;
                 return TRUE;
@@ -753,10 +773,10 @@ void play_clicked(GtkToolButton *toolbutton,
     {
         gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), FALSE);
         emu_8086_window_set_memory(win, TRUE);
-        run_clicked_app(priv->app, win->state.file_path);
+        run_clicked_app(priv->runner);
     }
     else
-        emu_8086_app_window_flash(win, "Nothing to run");
+        emu_8086_app_window_flash2(win, "Nothing to run");
 }
 
 void pause_clicked(GtkToolButton *toolbutton,
@@ -764,7 +784,7 @@ void pause_clicked(GtkToolButton *toolbutton,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
     PRIV;
-    set_app_state(priv->app, STEP);
+    set_app_state(priv->runner, STEP);
     //
 }
 
@@ -786,11 +806,11 @@ void step_clicked(GtkToolButton *toolbutton,
         gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), FALSE);
         if (!win->memory)
             emu_8086_window_set_memory(win, TRUE);
-        step_clicked_app(priv->app, win->state.file_path);
+        step_clicked_app(priv->runner);
     }
 
     else
-        emu_8086_app_window_flash(win, "Nothing to run");
+        emu_8086_app_window_flash2(win, "Nothing to run");
 }
 void step_over_clicked(GtkToolButton *toolbutton,
                        gpointer user_data)
@@ -810,10 +830,10 @@ void step_over_clicked(GtkToolButton *toolbutton,
         if (!win->memory)
             emu_8086_window_set_memory(win, TRUE);
 
-        step_over_clicked_app(priv->app, win->state.file_path);
+        step_over_clicked_app(priv->runner);
     }
     else
-        emu_8086_app_window_flash(win, "Nothing to run");
+        emu_8086_app_window_flash2(win, "Nothing to run");
 }
 void save_clicked(GtkToolButton *toolbutton,
                   gpointer user_data)
@@ -836,8 +856,8 @@ void stop_clicked(GtkToolButton *toolbutton,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
     PRIV;
-    stop_clicked_app(priv->app);
-    emu_8086_window_set_memory(win, FALSE);
+    stop_clicked_app(priv->runner);
+    // emu_8086_window_set_memory(win, FALSE);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(priv->code), TRUE);
 
     //step_over_clicked_app
@@ -868,6 +888,8 @@ static void open_item(GtkRecentChooser *recents, gpointer user_data)
         add_recent(uri);
         g_free(uri);
         setOpen(win);
+
+        set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buffer, contents, length);
         // update(buffer, EMU_8086_APP_CODE(priv->code));
 
@@ -1073,8 +1095,12 @@ char *milli(GtkWidget *label, char *r, int reg)
     gtk_label_set_text(GTK_LABEL(label), buf);
 }
 
-void emu_8086_app_window_update_wids(Emu8086AppWindow *win, struct emu8086 *aCPU)
+static void emu_8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointer user_data)
 {
+    Emu8086AppWindow *win;
+    win = EMU_8086_APP_WINDOW(user_data);
+    struct emu8086 *aCPU;
+    aCPU = getCPU(runner);
     PRIV;
     milli(priv->AX_, "AX", AX);
     milli(priv->BX_, "BX", BX);
@@ -1105,7 +1131,7 @@ void emu_8086_app_window_update_wids(Emu8086AppWindow *win, struct emu8086 *aCPU
 
         select_line(priv->code, 0);
     }
-    // sprintf(buf, "SS: %04x", _SS);
+    // // sprintf(buf, "SS: %04x", _SS);
     // gtk_label_set_text(GTK_LABEL(priv->SS_), buf);
 };
 
@@ -1114,40 +1140,60 @@ void emu_8086_app_window_set_app(Emu8086AppWindow *win, Emu8086App *app)
     PRIV;
     priv->app = app;
 }
-void clear_message(gpointer user_data)
+static gboolean clear_message(gpointer user_data)
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
     PRIV;
+
     gtk_label_set_text(GTK_LABEL(priv->messages), "  ");
     //
     priv->tos = 0;
+    return 0;
+    return G_SOURCE_REMOVE;
 }
-void emu_8086_app_window_flash(Emu8086AppWindow *win, char *_err)
+
+static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message)
 {
     PRIV;
+    gtk_label_set_text(GTK_LABEL(priv->messages), message);
 
-    //char buf[30];
-    // strcpy(buf, err->message);
-    //  g_print("err->message\n");
-    // g_print();
-
-    if (_err)
+    if (priv->tos != 0)
     {
-        if (priv->tos != 0)
-            return;
-        gtk_label_set_text(GTK_LABEL(priv->messages), _err);
-        priv->tos = g_timeout_add(2500,
-                                  (GSourceFunc)clear_message,
-                                  win);
+        g_source_remove(priv->tos);
     }
-    //  if (err->next == NULL)
-
-    //  errors--;
-    // }
+    priv->tos = gdk_threads_add_timeout_full(G_PRIORITY_LOW,
+                                             1000,
+                                             clear_message,
+                                             win,
+                                             NULL);
 }
 
-void reset_win(Emu8086AppWindow *win)
+static void emu_8086_app_window_flash(Emu8086AppCodeRunner *runner, gpointer user_data)
 {
+    // exit(1);
+    Emu8086AppWindow *win;
+    win = EMU_8086_APP_WINDOW(user_data);
+    PRIV;
+
+    gtk_label_set_text(GTK_LABEL(priv->messages), priv->runner->priv->em);
+
+    if (priv->tos != 0)
+    {
+        g_source_remove(priv->tos);
+    }
+    priv->tos = gdk_threads_add_timeout_full(G_PRIORITY_LOW,
+                                             1000,
+                                             clear_message,
+                                             win,
+                                             NULL);
+}
+
+static void reset_win(Emu8086AppCodeRunner *runner, gpointer user_data)
+{
+    // exit(1);
+    Emu8086AppWindow *win;
+    win = EMU_8086_APP_WINDOW(user_data);
+    g_print("win: 1170\n");
     PRIV;
     // gtk_label_set_text(GTK_LABEL(priv->messages), "ENDED");
 
@@ -1228,4 +1274,9 @@ void setOpen(Emu8086AppWindow *win)
 {
 
     win->state.Open = TRUE;
+}
+
+void stop_win(Emu8086AppWindow *win)
+{
+    stop(win->priv->runner, FALSE);
 }
