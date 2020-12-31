@@ -32,10 +32,10 @@
 struct emu8086;
 struct instruction;
 
-char *match_register(), *match_expression(),
-    *match_expression_level1(), *match_expression_level2(),
-    *match_expression_level3(), *match_expression_level4(),
-    *match_expression_level5(), *match_expression_level6();
+char *match_register(char *p, int width, int *value), *match_expression(char *p, int *value),
+    *match_expression_level1(char *p, int *value), *match_expression_level2(char *p, int *value),
+    *match_expression_level3(char *p, int *value), *match_expression_level4(char *p, int *value),
+    *match_expression_level5(char *p, int *value), *match_expression_level6(char *p, int *value);
 
 struct label
 {
@@ -52,10 +52,10 @@ struct label
 /* 
     assm.c
 */
- 
+
 struct label *define_label(char *name, int value);
 struct label *find_label(char *name);
- 
+
 struct errors_list
 {
     char message[256];

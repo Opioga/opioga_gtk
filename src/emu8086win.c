@@ -96,6 +96,59 @@ static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message);
 static void add_recent(gchar *uri);
 void quick_message(GtkWindow *parent, gchar *message, gchar *title);
 
+static void
+copy_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+    GtkTextBuffer *buffer;
+    buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+    if (gtk_text_buffer_get_has_selection(buffer))
+        g_print("copy\n");
+    //   et_enabled(cp, gtk_text_buffer_get_has_selection(GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)))));
+}
+
+static void
+paste_activated(GSimpleAction *action,
+                GVariant *parameter,
+                gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+}
+
+static void
+select_all_activated(GSimpleAction *action,
+                     GVariant *parameter,
+                     gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+}
+
+static void
+cut_activated(GSimpleAction *action,
+              GVariant *parameter,
+              gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+}
+
+static GActionEntry win_entries[] = {
+
+    {"copy", copy_activated, NULL, NULL, NULL},
+
+    {"cut", cut_activated, NULL, NULL, NULL},
+
+    {"paste", paste_activated, NULL, NULL, NULL},
+
+    {"select_all", select_all_activated, NULL, NULL, NULL}
+
+};
+
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
 {
     //  emu_8086_app_get_type()
@@ -249,6 +302,10 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
 
     g_object_unref(action);
     g_object_unref(action2);
+    g_action_map_add_action_entries(G_ACTION_MAP(win),
+                                    win_entries, G_N_ELEMENTS(win_entries),
+                                    win);
+
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(priv->gears), menu);
 
     gtk_drag_dest_set(GTK_WIDGET(win),
@@ -1208,6 +1265,10 @@ static void populate_win(Emu8086AppWindow *win)
     win->state.fontSize = 16;
     gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
     g_settings_bind(priv->settings, "theme", win, "theme", G_SETTINGS_BIND_GET);
+
+    GtkClipboard *clipboard;
+    clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_can_store(clipboard, NULL, 0);
 }
 
 void emu_8086_app_window_up(Emu8086AppWindow *win)

@@ -67,12 +67,12 @@ int instruction_offset;
 int instruction_offset_width, start_address, address, assembler_step,
     instruction_value;
 
-int line_number, assembler_step, size, data_mem_offset;
+int line_number, size, data_mem_offset;
 
 struct errors_list *define_errors_list(char *name, int line)
 {
     struct errors_list *error;
-    error = malloc(sizeof(struct errors_list) + strlen(name));
+    error = (struct errors_list *)malloc(sizeof(struct errors_list) + strlen(name));
     if (error == NULL)
     {
         printf("Out of memory for label\n");
@@ -96,15 +96,15 @@ struct errors_list *define_errors_list(char *name, int line)
     }
     return error;
 };
-struct label *define_label(name, value) char *name;
-int value;
+struct label *define_label(char *name,
+                           int value)
 {
     struct label *label;
     struct label *explore;
     int c;
 
     /* Allocate label */
-    label = malloc(sizeof(struct label) + strlen(name));
+    label = (struct label *)malloc(sizeof(struct label) + strlen(name));
     if (label == NULL)
     {
         printf("Out of memory for label\n");
@@ -156,7 +156,7 @@ int value;
     current_label = label;
     return label;
 }
-struct label *find_label(name) char *name;
+struct label *find_label(char *name)
 {
     struct label *explore;
     int c;
@@ -180,8 +180,8 @@ struct label *find_label(name) char *name;
     return NULL;
 }
 
-struct variable *define_variable(name, value) char *name;
-int value;
+struct variable *define_variable(char *name,
+                                 int value)
 {
     size = 0;
     struct variable *variable;
@@ -189,7 +189,7 @@ int value;
     // int c;
 
     /* Allocate variable */
-    variable = malloc(sizeof(struct variable) + strlen(name));
+    variable = (struct variable *)malloc(sizeof(struct variable) + strlen(name));
     if (variable == NULL)
     {
         printf("Out of memory for variable\n");
@@ -222,7 +222,7 @@ int value;
         first_variable = variable;
     return variable;
 }
-struct variable *find_variable(name) char *name;
+struct variable *find_variable(char *name)
 {
     struct variable *explore;
     int c;
@@ -271,7 +271,7 @@ void _message(char *m, int level)
 /*
  ** Avoid spaces in input
  */
-char *avoid_spaces(p) char *p;
+char *avoid_spaces(char *p)
 
 {
     while (isspace(*p))
@@ -296,16 +296,16 @@ void seperate()
 }
 struct instruction *define_instruction(int line)
 {
-    struct instruction *new = (struct instruction *)malloc(sizeof(struct instruction));
-    new->line_number = line_number;
-    new->next = NULL;
-    new->prev = NULL;
+    struct instruction *_new = (struct instruction *)malloc(sizeof(struct instruction));
+    _new->line_number = line_number;
+    _new->next = NULL;
+    _new->prev = NULL;
     if (is_first)
     {
-        _first_instruction = new;
+        _first_instruction = _new;
     }
     ic++;
-    return new;
+    return _new;
 }
 
 void emit_byte(int c)
@@ -316,14 +316,15 @@ void emit_byte(int c)
     address++;
 }
 
-int _check__end(p) char *p;
+int _check__end(char *p)
 {
+
     int b = 0;
     p = avoid_spaces(p);
     b = !(*p);
     return b;
 }
-void check_end(p) char *p;
+void check_end(char *p)
 {
     p = avoid_spaces(p);
     if (*p && *p != ';')
@@ -337,8 +338,7 @@ void check_end(p) char *p;
 /*
  ** Read character for string or character literal
  */
-char *read_character(p, c) char *p;
-int *c;
+char *read_character(char *p, int *c)
 {
     if (*p == '\\')
     {
@@ -424,8 +424,7 @@ int *c;
 /*
  ** Match expression (top tier)
  */
-char *match_expression(p, value) char *p;
-int *value;
+char *match_expression(char *p, int *value)
 {
     int value1;
 
@@ -454,8 +453,7 @@ int *value;
 /*
  ** Match expression
  */
-char *match_expression_level1(p, value) char *p;
-int *value;
+char *match_expression_level1(char *p, int *value)
 {
     int value1;
 
@@ -484,8 +482,7 @@ int *value;
 /*
  ** Match expression
  */
-char *match_expression_level2(p, value) char *p;
-int *value;
+char *match_expression_level2(char *p, int *value)
 {
     int value1;
 
@@ -514,8 +511,7 @@ int *value;
 /*
  ** Match expression
  */
-char *match_expression_level3(p, value) char *p;
-int *value;
+char *match_expression_level3(char *p, int *value)
 {
     int value1;
 
@@ -553,8 +549,7 @@ int *value;
 /*
  ** Match expression
  */
-char *match_expression_level4(p, value) char *p;
-int *value;
+char *match_expression_level4(char *p, int *value)
 {
     int value1;
 
@@ -592,8 +587,7 @@ int *value;
 /*
  ** Match expression
  */
-char *match_expression_level5(p, value) char *p;
-int *value;
+char *match_expression_level5(char *p, int *value)
 {
     int value1;
 
@@ -652,8 +646,7 @@ int *value;
 /*
  ** Match expression (bottom tier)
  */
-char *match_expression_level6(p, value) char *p;
-int *value;
+char *match_expression_level6(char *p, int *value)
 {
     int number;
     int c;
@@ -826,9 +819,7 @@ int *value;
     return NULL;
 }
 
-char *match_register(p, width, value) char *p;
-int width;
-int *value;
+char *match_register(char *p, int width, int *value)
 {
     char reg[3];
     int c;
@@ -864,8 +855,7 @@ int *value;
     return NULL;
 }
 
-char *match_addressing(p, width) char *p;
-int width;
+char *match_addressing(char *p, int width)
 {
     int reg;
     int reg2;

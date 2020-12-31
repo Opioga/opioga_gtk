@@ -221,59 +221,6 @@ ex2_activated(GSimpleAction *action,
 }
 
 static void
-copy_activated(GSimpleAction *action,
-               GVariant *parameter,
-               gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-
-static void
-redo_activated(GSimpleAction *action,
-               GVariant *parameter,
-               gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-
-static void
-paste_activated(GSimpleAction *action,
-                GVariant *parameter,
-                gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-
-static void
-select_all_activated(GSimpleAction *action,
-                     GVariant *parameter,
-                     gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-
-static void
-undo_activated(GSimpleAction *action,
-               GVariant *parameter,
-               gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-
-static void
-cut_activated(GSimpleAction *action,
-              GVariant *parameter,
-              gpointer appe)
-{
-    Emu8086App *app = EMU_8086_APP(appe);
-    _PRIV;
-}
-static void
 pref_activated(GSimpleAction *action,
                GVariant *parameter,
                gpointer app)
@@ -299,18 +246,6 @@ static GActionEntry app_entries[] = {
     {"ex1", ex1_activated, NULL, NULL, NULL},
 
     {"ex2", ex2_activated, NULL, NULL, NULL},
-
-    {"copy", copy_activated, NULL, NULL, NULL},
-
-    {"redo", redo_activated, NULL, NULL, NULL},
-
-    {"undo", undo_activated, NULL, NULL, NULL},
-
-    {"cut", cut_activated, NULL, NULL, NULL},
-
-    {"paste", paste_activated, NULL, NULL, NULL},
-
-    {"select_all", select_all_activated, NULL, NULL, NULL},
 
     {"pref", pref_activated, NULL, NULL, NULL},
 

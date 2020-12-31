@@ -28,35 +28,30 @@
         <submenu id="EditMenu">
             <attribute name="label" translatable="yes">_Edit</attribute>
             <section>
-                <item>
-                    <attribute name="label" translatable="yes">_Undo</attribute>
-                    <attribute name="action">app.undo</attribute>
-                </item>
-                <item>
-                    <attribute name="label" translatable="yes">_Redo</attribute>
-                    <attribute name="action">app.redo</attribute>
-                </item>
 
                 <item>
                     <attribute name="label" translatable="yes">_Cut</attribute>
-                    <attribute name="action">app.cut</attribute>
+                    <attribute name="action">win.cut</attribute>
+                    <attribute name="accel">&lt;Primary&gt;x</attribute>
                 </item>
 
 
                 <item>
                     <attribute name="label" translatable="yes">_Copy</attribute>
-                    <attribute name="action">app.copy</attribute>
+                    <attribute name="action">win.copy</attribute>
+                    <attribute name="accel">&lt;Primary&gt;c</attribute>
                 </item>
 
 
 
                 <item>
                     <attribute name="label" translatable="yes">_Paste</attribute>
-                    <attribute name="action">app.paste</attribute>
+                    <attribute name="action">win.paste</attribute>
+                    <attribute name="accel">&lt;Primary&gt;v</attribute>
                 </item>
                 <item>
                     <attribute name="label" translatable="yes">_Select all</attribute>
-                    <attribute name="action">app.select_all</attribute>
+                    <attribute name="action">win.select_all</attribute>
                 </item>
 
             </section>
