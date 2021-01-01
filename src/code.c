@@ -208,7 +208,7 @@ static gboolean emu_8086_app_code_button_press_event(GtkWidget *widget, GdkEvent
             // priv->break_points_len++;
         }
     }
-    return GTK_WIDGET_CLASS(emu_8086_app_code_parent_class)->key_press_event(widget, event);
+    return GTK_WIDGET_CLASS(emu_8086_app_code_parent_class)->button_press_event(widget, event);
 }
 
 static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
@@ -222,6 +222,7 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
     widget_class->draw = emu_8086_app_code_draw;
     widget_class->drag_data_received = emu_8086_app_code_drag_data_received;
     widget_class->button_press_event = emu_8086_app_code_button_press_event;
+    // widget_class->key_press_event = emu_8086_app_code_key_press_event;
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
                                                         G_PARAM_READWRITE));
@@ -333,7 +334,6 @@ void reset_code(GtkWidget *co)
 
 void emu_8086_app_code_scroll_to_view(Emu8086AppCode *code)
 {
-
     GtkTextIter mstart, mend;
     GtkTextMark *cursor;
     Emu8086AppCodeBuffer *buffer;
@@ -352,11 +352,6 @@ void user_function(GtkTextBuffer *textbuffer,
 
     Emu8086AppCode *code = EMU_8086_APP_CODE(user_data);
     PRIV_CODE;
-
-    if (!priv->isOpen)
-        upd(priv->win);
-    else
-        priv->isOpen = FALSE;
     emu_8086_app_code_scroll_to_view(code);
 }
 
@@ -369,11 +364,6 @@ void user_function2(GtkTextBuffer *textbuffer,
     Emu8086AppCode *code = EMU_8086_APP_CODE(user_data);
     PRIV_CODE;
 
-    if (!priv->isOpen)
-        upd(priv->win);
-    else
-        priv->isOpen = FALSE;
-    //(code);
     emu_8086_app_code_scroll_to_view(code);
 }
 

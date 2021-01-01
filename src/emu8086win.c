@@ -83,6 +83,7 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *gears;
     Emu8086App *app;
     GSettings *settings;
+    gint open;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppWindow, emu_8086_app_window, GTK_TYPE_APPLICATION_WINDOW);
 
@@ -440,7 +441,7 @@ static void _open(Emu8086AppWindow *win)
     gboolean ret = FALSE;
     PRIV;
     dialog = gtk_file_chooser_dialog_new("Open File",
-                                         EMU_8086_APP_WINDOW(win),
+                                         win,
                                          action,
                                          "_Cancel",
                                          GTK_RESPONSE_CANCEL,
@@ -480,12 +481,14 @@ static void _open(Emu8086AppWindow *win)
         //g_file_get_contents(filename, )
         if (g_file_load_contents(file, NULL, &contents, &length, NULL, NULL))
         {
-            PRIV;
             GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+
             refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
             uri = gtk_file_chooser_get_uri(chooser);
             add_recent(uri);
             g_free(uri);
+            setOpen(win);
+
             setOpen(win);
             set_fname(priv->runner, win->state.file_path);
             gtk_text_buffer_set_text(buffer, contents, length);
@@ -494,7 +497,7 @@ static void _open(Emu8086AppWindow *win)
             //win->state.file_name[strlen(base) - 1] = '\0';
             gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
 
-            strcpy(win->state.file_path, filename);
+            // strcpy(win->state.file_path, filename);
             g_free(contents);
             win->state.isSaved = TRUE;
             win->state.file_path_set = TRUE;
@@ -839,17 +842,17 @@ void char_ins(GtkTextView *text_view,
 
 void upd(Emu8086AppWindow *win)
 {
-    if (win->state.isSaved && (win->state.Open == 0))
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(win->priv->code));
+    gboolean modified = gtk_text_buffer_get_modified(buffer);
+    if (win->state.isSaved && (win->priv->open == 0) && modified)
     {
         char buf[20];
         sprintf(buf, "%s*", win->state.file_name);
         gtk_window_set_title(GTK_WINDOW(win), buf);
         win->state.isSaved = FALSE;
     }
-    if (win->state.Open == 1)
-    {
-        win->state.Open = 0;
-    }
+    unsetOpen(win);
+    gtk_text_buffer_set_modified(buffer, FALSE);
 }
 
 gchar *write_to_file(gchar *filename, gchar *buffer, char *buff)
@@ -1105,7 +1108,6 @@ static void open_item(GtkRecentChooser *recents, gpointer user_data)
         add_recent(uri);
         g_free(uri);
         setOpen(win);
-
         set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buffer, contents, length);
         // update(buffer, EMU_8086_APP_CODE(priv->code));
@@ -1229,6 +1231,12 @@ void populate_tools(Emu8086AppWindow *win)
     g_signal_connect(recents_chooser, "item-activated", G_CALLBACK(open_item), win);
 }
 
+static modified_changed(GtkTextBuffer *textbuffer,
+                        gpointer user_data)
+{
+    upd(EMU_8086_APP_WINDOW(user_data));
+}
+
 static void populate_win(Emu8086AppWindow *win)
 {
 
@@ -1261,7 +1269,7 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_set_hexpand(scrolled, TRUE);
     gtk_widget_set_vexpand(scrolled, TRUE);
 
-    code = create_new();
+    code = create_new(win);
 
     gtk_text_view_set_editable(GTK_TEXT_VIEW(code), TRUE);
     gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(code), TRUE);
@@ -1272,7 +1280,8 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_show_all(scrolled);
 
     priv->code = code;
-
+    // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+    g_signal_connect(buffer, "modified-changed", G_CALLBACK(modified_changed), win);
     // priv->scrolled = scrolled;
     priv->tos = 0;
     strcpy(win->state.file_name, "Untitled.asm");
@@ -1483,7 +1492,13 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
 void setOpen(Emu8086AppWindow *win)
 {
 
-    win->state.Open = TRUE;
+    win->priv->open = 1;
+}
+
+void unsetOpen(Emu8086AppWindow *win)
+{
+
+    win->priv->open = 0;
 }
 
 void stop_win(Emu8086AppWindow *win)

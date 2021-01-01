@@ -497,7 +497,7 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
                                                       gint len)
 {
     gint start_offset;
-
+    // return;
     g_return_if_fail(EMU_8086_IS_APP_CODE_BUFFER(buffer));
 
     g_return_if_fail(iter != NULL);

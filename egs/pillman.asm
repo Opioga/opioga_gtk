@@ -21,7 +21,7 @@
         ;
 
       com_file:       equ 0
-   
+    
 
 base:           equ 0xf9fe      ; Memory base (same segment as video)
 intended_dir:   equ base+0x00   ; Next direction for player
@@ -373,8 +373,4 @@ ders:
         db 0x00
         db 0x04         ; 0x50 = Down arrow
 
-    %if com_file
-    %else
-        times 510-($-$$) db 0x4f
-        db 0x55,0xaa            ; Make it a bootable sector
-    %endif
+ 
