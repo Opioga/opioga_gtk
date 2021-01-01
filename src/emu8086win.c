@@ -1263,7 +1263,6 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_set_hexpand(code, TRUE);
     gtk_widget_set_vexpand(code, FALSE);
     gtk_container_add(GTK_CONTAINER(scrolled), code);
-    // gtk_container_add(GTK_CONTAINER(priv->stack), scrolled);
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
     gtk_widget_show_all(scrolled);
 
