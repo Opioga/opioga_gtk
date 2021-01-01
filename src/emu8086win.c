@@ -82,7 +82,6 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *scrolled;
     GtkWidget *gears;
     Emu8086App *app;
-    GtkWidget *box;
     GSettings *settings;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppWindow, emu_8086_app_window, GTK_TYPE_APPLICATION_WINDOW);
@@ -106,7 +105,11 @@ copy_activated(GSimpleAction *action,
     GtkTextBuffer *buffer;
     buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
     if (gtk_text_buffer_get_has_selection(buffer))
-        g_print("copy\n");
+    {
+        GtkClipboard *clipboard;
+        clipboard = gtk_widget_get_clipboard(priv->code, GDK_SELECTION_CLIPBOARD);
+        gtk_text_buffer_copy_clipboard(buffer, clipboard);
+    }
     //   et_enabled(cp, gtk_text_buffer_get_has_selection(GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)))));
 }
 
@@ -117,6 +120,13 @@ paste_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     PRIV;
+    GtkTextBuffer *buffer;
+    buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+
+    GtkClipboard *clipboard;
+    clipboard = gtk_widget_get_clipboard(priv->code, GDK_SELECTION_CLIPBOARD);
+
+    gtk_text_buffer_paste_clipboard(buffer, clipboard, NULL, TRUE);
 }
 
 static void
@@ -126,6 +136,12 @@ select_all_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     PRIV;
+    GtkTextBuffer *buffer;
+    buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+    GtkTextIter start;
+    GtkTextIter end;
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    gtk_text_buffer_select_range(buffer, &start, &end);
 }
 
 static void
@@ -135,6 +151,14 @@ cut_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     PRIV;
+    GtkTextBuffer *buffer;
+    buffer = GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+    if (gtk_text_buffer_get_has_selection(buffer))
+    {
+        GtkClipboard *clipboard;
+        clipboard = gtk_widget_get_clipboard(priv->code, GDK_SELECTION_CLIPBOARD);
+        gtk_text_buffer_cut_clipboard(buffer, clipboard, TRUE);
+    }
 }
 
 static GActionEntry win_entries[] = {
@@ -145,7 +169,7 @@ static GActionEntry win_entries[] = {
 
     {"paste", paste_activated, NULL, NULL, NULL},
 
-    {"select_all", select_all_activated, NULL, NULL, NULL}
+    {"select", select_all_activated, NULL, NULL, NULL}
 
 };
 
@@ -691,7 +715,6 @@ static void emu8086_win_change_theme(Emu8086AppWindow *win)
         color.green = 1.0;
         color.blue = 1.0;
     }
-    gtk_widget_override_background_color(priv->box, GTK_STATE_NORMAL, &color);
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
 }
 
@@ -768,7 +791,7 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
 
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, tool_bar);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, stack);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, code);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, scrolled);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, messages);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, FLAGS_);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, AX_);
@@ -1123,13 +1146,14 @@ void populate_tools(Emu8086AppWindow *win)
 
     gtk_widget_show(recents);
     play = gtk_tool_button_new(NULL, NULL);
-    // gtk_tool_button_set_label(GTK_TOOL_BUTTON(play), ("Run"));
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(play), ("Run"));
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(play), "media-playback-start");
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(play), TRUE);
     gtk_tool_item_set_is_important(play, TRUE);
     gtk_widget_show(play);
 
     sep = gtk_separator_tool_item_new();
+    gtk_tool_item_set_is_important(sep, TRUE);
 
     gtk_separator_tool_item_set_draw(sep, TRUE);
     gtk_widget_show(sep);
@@ -1138,20 +1162,19 @@ void populate_tools(Emu8086AppWindow *win)
 
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(stop), "media-playback-stop");
     gtk_widget_show(stop);
-    gtk_tool_button_set_label(stop, "Stop");
+    gtk_tool_item_set_tooltip_text(stop, "Stop Executing");
 
     pause = gtk_tool_button_new(NULL, NULL);
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(pause), "media-playback-pause");
-    gtk_tool_button_set_label(GTK_TOOL_BUTTON(pause), ("Halt"));
+    gtk_tool_item_set_tooltip_text(pause, "Halt Execution");
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(pause), TRUE);
 
     gtk_widget_show(pause);
 
     step = gtk_tool_button_new(NULL, NULL);
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(step), "media-skip-forward");
-    gtk_tool_button_set_label(GTK_TOOL_BUTTON(step), ("Step"));
+    gtk_tool_item_set_tooltip_text(step, "Step to next instruction");
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(step), TRUE);
-    gtk_tool_item_set_is_important(step, TRUE);
     gtk_widget_show(step);
 
     save = gtk_tool_button_new(NULL, NULL);
@@ -1170,12 +1193,10 @@ void populate_tools(Emu8086AppWindow *win)
     //
 
     step_over = gtk_tool_button_new(NULL, NULL);
-    // gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(step_over), "media-skip-forward");
-    gtk_tool_button_set_label(GTK_TOOL_BUTTON(step_over), ("Step Over"));
-    gtk_tool_item_set_is_important(step_over, TRUE);
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(step_over), "forward");
+    gtk_tool_item_set_tooltip_text(step_over, "Step Over to breakpoint");
     gtk_widget_show(step_over);
     // GtkToolItemGroup
-    gtk_tool_button_set_label(step, "Step");
     gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, save, 0);
     // gtk_toolbar_insert((GtkToolbar *)priv->tool_bar, open, -1);
     gtk_widget_set_margin_left(recents, 5);
@@ -1210,7 +1231,7 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_window_set_default_size(GTK_WINDOW(win), 800, 600);
 
     GtkWidget *scrolled;
-    GtkWidget *box, *code, *box2;
+    GtkWidget *code;
     int be = 0;
 
 #ifdef __linux__
@@ -1230,35 +1251,26 @@ static void populate_win(Emu8086AppWindow *win)
         g_error_free(error);
 #endif
 
-    scrolled = gtk_scrolled_window_new(NULL, NULL);
+    scrolled = GTK_SCROLLED_WINDOW(priv->scrolled);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 15);
-    box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-
-    gtk_widget_set_hexpand(box, TRUE);
-    gtk_widget_set_vexpand(box, TRUE);
     gtk_widget_set_hexpand(scrolled, TRUE);
     gtk_widget_set_vexpand(scrolled, TRUE);
 
-    code = create_new(box, box2, win);
+    code = create_new();
+
     gtk_text_view_set_editable(GTK_TEXT_VIEW(code), TRUE);
     gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(code), TRUE);
-
-    gtk_widget_set_hexpand(box, TRUE);
-    gtk_widget_set_vexpand(box, FALSE);
     gtk_widget_set_hexpand(code, TRUE);
     gtk_widget_set_vexpand(code, FALSE);
     gtk_container_add(GTK_CONTAINER(scrolled), code);
-    gtk_container_add(GTK_CONTAINER(priv->stack), scrolled);
+    // gtk_container_add(GTK_CONTAINER(priv->stack), scrolled);
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
-    set_win(code, scrolled);
     gtk_widget_show_all(scrolled);
 
     priv->code = code;
 
     // priv->scrolled = scrolled;
     priv->tos = 0;
-    priv->box = box;
     strcpy(win->state.file_name, "Untitled.asm");
     win->state.isSaved = TRUE;
     win->state.file_path_set = FALSE;

@@ -5,8 +5,6 @@
 *
 */
 
-
-
 #include <code.h>
 #include <code_buffer.h>
 #include <pango_css.h>
@@ -31,7 +29,6 @@ typedef struct _Emu8086AppCodePrivate Emu8086AppCodePrivate;
 struct _Emu8086AppCodePrivate
 {
 
-    GtkTextBuffer *lines;
     GtkWidget *code;
     Emu8086AppWindow *win;
     gboolean isOpen;
@@ -345,13 +342,10 @@ void editFontSize(Emu8086AppCode *code, gint size)
     return;
 }
 
-Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *win)
+Emu8086AppCode *create_new(Emu8086AppWindow *win)
 {
-    GtkWidget *lines;
     Emu8086AppCode *code;
     GtkStyleProvider *provider;
-    lines = gtk_text_view_new();
-    gtk_widget_show(lines);
     code = emu_8086_app_code_new();
     GdkRGBA _color;
     _color.alpha = 1.0;
@@ -361,28 +355,17 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     PRIV_CODE;
     provider = priv->provider;
     //
-    gtk_style_context_add_provider(gtk_widget_get_style_context(lines), provider, G_MAXUINT);
     GdkRGBA color;
     // lines = gtk_label_new("1");
     color.red = 0.22;
     color.green = 0.22;
     color.blue = 0.22;
     color.alpha = 1;
-    gtk_widget_override_background_color(box, GTK_STATE_NORMAL, &color);
     gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
-    gtk_widget_override_background_color(lines, GTK_STATE_NORMAL, &_color);
-    gtk_widget_override_background_color(box2, GTK_STATE_NORMAL, &_color);
 
     // getCss(size, priv->provider);
-    gtk_widget_set_margin_top(GTK_WIDGET(lines), 10);
-    gtk_widget_set_margin_right(GTK_WIDGET(lines), 5);
-    gtk_widget_set_margin_left(GTK_WIDGET(lines), 5);
 
     // gtk_widget_override_symbolic_color
-    gtk_widget_set_margin_top(GTK_WIDGET(code), 10);
-
-    gtk_container_add(GTK_CONTAINER(box2), lines);
-    gtk_container_add(GTK_CONTAINER(box), box2);
 
     // gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(code));
 
@@ -402,12 +385,10 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
     gtk_text_buffer_create_tag(buffer, "special", "foreground", "#C586C0", "weight", PANGO_WEIGHT_BOLD, NULL);
     // gtk_text_tag_    // #b5cea8
 
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(lines), FALSE);
     gtk_text_buffer_create_tag(buffer, "comment", "foreground", "#6A9955", "style", PANGO_STYLE_ITALIC, NULL);
     // gtk_text_buffer_set_text(buffer, "1 ", 1);
     // priv->code = code;
     priv->isOpen = FALSE;
-    priv->lines = gtk_text_view_get_buffer(lines);
     setCode(buffer, code);
     priv->buffer = buffer;
     priv->gutter = gutter;
@@ -422,27 +403,6 @@ Emu8086AppCode *create_new(GtkWidget *box, GtkWidget *box2, Emu8086AppWindow *wi
 
     //gtk_widget_show(lines);
 }
-
-void resized(GtkWidget *widget,
-             GdkRectangle *allocation,
-             gpointer user_data)
-{
-
-    Emu8086AppCode *code = EMU_8086_APP_CODE(user_data);
-    PRIV_CODE;
-    priv->sh = allocation->height;
-    priv->mh = priv->sh - 10;
-    priv->vadjustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(widget));
-}
-void set_win(Emu8086AppCode *code, GtkWidget *win)
-{
-    PRIV_CODE;
-    priv->scrolled = win;
-    priv->mh = 0;
-    priv->sh = 0;
-    priv->vadjustment = NULL;
-    g_signal_connect(win, "size-allocate", G_CALLBACK(resized), code);
-};
 
 Emu8086AppCode *emu_8086_app_code_new(void)
 {

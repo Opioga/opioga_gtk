@@ -50,8 +50,10 @@
                     <attribute name="accel">&lt;Primary&gt;v</attribute>
                 </item>
                 <item>
-                    <attribute name="label" translatable="yes">_Select all</attribute>
-                    <attribute name="action">win.select_all</attribute>
+                    <attribute name="label" translatable="yes">Select all</attribute>
+                    <attribute name="action">win.select</attribute>
+                    <attribute name="accel">&lt;Primary&gt;a</attribute>
+
                 </item>
 
             </section>
