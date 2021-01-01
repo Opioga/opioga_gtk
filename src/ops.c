@@ -43,14 +43,15 @@ enum err_index
 {
     MAX_CALL,
     INVALID_RET,
-    UNDEFINED
+    UNDEFINED,
+    UNIMPLEMENTED
 
 };
 
 static char *errors_str[] = {
     "Max call stack on line %d",
     "Invalid ret on line %d",
-    "Undefined label: on line %d"
+    "Undefined label: on line %d", "Unimplemented instruction: on line %d"
 
 };
 
@@ -4712,7 +4713,14 @@ void std(struct emu8086 *aCPU, int *handled)
     IP++;
     *handled = 1;
 }
-
+void unimp(struct emu8086 *aCPU, int *handled)
+{
+    IP = _INSTRUCTIONS->end_address + 1;
+    char buf[35];
+    sprintf(buf, errors_str[UNIMPLEMENTED], _INSTRUCTIONS->line_number);
+    massage(buf, ERR);
+    *handled = 1;
+}
 // end ops
 #ifdef DEBUG
 void dump_memory(struct emu8086 *aCPU)
@@ -4778,7 +4786,8 @@ void dump_registers(struct emu8086 *aCPU)
 
 void op_setptrs(struct emu8086 *aCPU)
 {
-
+    for (int i = 0; i < 256; i++)
+        aCPU->op[i] = &unimp;
     aCPU->op[NOP] = &nop;
 
     aCPU->op[INT_I8] = &int_;
