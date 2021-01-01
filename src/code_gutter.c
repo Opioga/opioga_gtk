@@ -289,6 +289,7 @@ gutter_renderer_query_data(Emu8086AppCodeGutter *gutter)
         priv->text = NULL;
     }
     line = line + 1;
+
     len = g_snprintf(text, sizeof text, "<b>%d</b>", line);
     priv->text = len >= 0 ? g_strndup(text, len) : g_strdup(text);
 }
@@ -512,7 +513,15 @@ draw_cells(Emu8086AppCodeGutter *gutter,
 
         if (priv->cached_layout == NULL)
             priv->cached_layout = gtk_widget_create_pango_layout(GTK_WIDGET(priv->code), NULL);
-        pango_layout_set_markup(priv->cached_layout, priv->text, -1);
+
+        if (check_for_break_points(priv->code, line_to_paint, FALSE))
+
+        {
+            pango_layout_set_markup(priv->cached_layout, "<span foreground=\"red\">•</span>", -1);
+        }
+
+        else
+            pango_layout_set_markup(priv->cached_layout, priv->text, -1);
 
         pango_layout_get_pixel_size(priv->cached_layout, &width, &height);
 

@@ -37,12 +37,12 @@ struct _Emu8086AppCodePrivate
     gint line;
     GSettings *settings;
     gint fontsize;
-    GtkWidget *scrolled;
-    gint mh;
-    gint sh;
+
     GtkAdjustment *vadjustment;
     GtkTextMark *mark;
     Emu8086AppCodeGutter *gutter;
+    int *break_points[100];
+    int break_points_len;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
@@ -146,6 +146,71 @@ emu_8086_app_code_draw(GtkWidget *widget,
         draw(priv->gutter, cr);
     }
 }
+
+gboolean check_for_break_points(Emu8086AppCode *code, gint line_num,
+                                gboolean toggle)
+{
+    PRIV_CODE;
+    gint len = priv->break_points_len;
+
+    for (gint i = 0; i < len; i++)
+    {
+        int *l = priv->break_points + i;
+        if (line_num == *l)
+        {
+            if (toggle)
+                *l = -1;
+            return TRUE;
+        }
+    }
+    return FALSE;
+};
+
+static gboolean emu_8086_app_code_button_press_event(GtkWidget *widget, GdkEventButton *event)
+{
+    Emu8086AppCode *code;
+    code = EMU_8086_APP_CODE(widget);
+    PRIV_CODE;
+    GdkWindow *window = event->window;
+    GtkTextView *view = GTK_TEXT_VIEW(code);
+    if (GTK_TEXT_WINDOW_LEFT == gtk_text_view_get_window_type(GTK_TEXT_VIEW(code), window) &&
+        event->type == GDK_2BUTTON_PRESS)
+    {
+        gint first_y_buffer_coord;
+        gint last_y_buffer_coord;
+        GtkTextBuffer *buffer = GTK_TEXT_BUFFER(priv->buffer);
+        GtkTextIter iter;
+        gint line_num;
+        gtk_text_view_window_to_buffer_coords(view,
+                                              GTK_TEXT_WINDOW_LEFT, 0,
+                                              event->y,
+                                              NULL,
+                                              &first_y_buffer_coord);
+        gtk_text_view_get_line_at_y(view, &iter, first_y_buffer_coord, NULL);
+        line_num = gtk_text_iter_get_line(&iter);
+        if (!check_for_break_points(code, line_num, TRUE))
+
+        {
+            gint len = priv->break_points_len;
+            gboolean has_set_bp = FALSE;
+            for (gint i = 0; i < len; i++)
+            {
+                int *l = priv->break_points + i;
+                if (*l == -1)
+                {
+                    *l = line_num;
+                    has_set_bp = TRUE;
+                }
+            }
+
+            if (!has_set_bp)
+                priv->break_points[priv->break_points_len++] = line_num;
+            // priv->break_points_len++;
+        }
+    }
+    return GTK_WIDGET_CLASS(emu_8086_app_code_parent_class)->key_press_event(widget, event);
+}
+
 static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -156,6 +221,7 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
 
     widget_class->draw = emu_8086_app_code_draw;
     widget_class->drag_data_received = emu_8086_app_code_drag_data_received;
+    widget_class->button_press_event = emu_8086_app_code_button_press_event;
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
                                                         G_PARAM_READWRITE));
@@ -177,6 +243,8 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "theme", code, "theme", G_SETTINGS_BIND_GET);
+    //priv->break_points = g_array_new(FALSE, FALSE, sizeof(gint));
+    priv->break_points_len = 0;
 }
 
 void select_line(GtkWidget *co, gint line)
@@ -407,4 +475,13 @@ Emu8086AppCode *create_new(Emu8086AppWindow *win)
 Emu8086AppCode *emu_8086_app_code_new(void)
 {
     return g_object_new(EMU_8086_APP_CODE_TYPE, NULL);
+}
+
+void get_break_points(Emu8086AppCode *code, gint *bps, gint *len)
+{
+    PRIV_CODE;
+    *len = priv->break_points_len;
+
+    for (int i = 0; i < *len; i++)
+        bps[i] = priv->break_points[i];
 }

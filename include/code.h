@@ -36,12 +36,13 @@
 G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
 
 Emu8086AppCode *emu_8086_app_code_new(void);
-
+gboolean check_for_break_points(Emu8086AppCode *code, gint line_num,
+                                gboolean toggle);
 void select_line(GtkWidget *code, gint line);
 void reset_code(GtkWidget *co);
 void editFontSize(Emu8086AppCode *code, gint size);
 void set_win(Emu8086AppCode *code, GtkWidget *win);
-// GtkWidget *create();
+void get_break_points(Emu8086AppCode *code, gint *bps, gint *len);
 Emu8086AppCode *create_new();
 
 #endif // MACRO

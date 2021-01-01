@@ -1,3 +1,4 @@
+
 #include <assembler.h>
 #include <emu8086.h>
 #include <emu_8086_app_runner.h>
@@ -93,6 +94,20 @@ Emu8086AppCodeRunner *emu_8086_app_code_runner_new(gchar *fname, gboolean can_ru
                         "filename", fname,
                         "can_run", can_run,
                         NULL);
+};
+
+static gboolean is_at_break_point(gint *bps, gint len, gint lnum)
+{
+    //    gint len = priv->break_points_len;
+    for (gint i = 0; i < len; i++)
+    {
+        int *l = bps + i;
+        if ((lnum - 1) == *l)
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
 };
 
 static void emu_8086_app_code_runner_exec_ins(Emu8086AppCodeRunner *runner)
@@ -484,20 +499,34 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
         //  emu_8086_app_window_update_wids(priv->win, priv->aCPU);
     }
 }
-void step_over(Emu8086AppCodeRunner *runner, uint16_t be)
+static void step_over(Emu8086AppCodeRunner *runner, gint *bps, gint len)
 {
     PRIV_CODE_RUNNER;
     struct emu8086 *aCPU = priv->aCPU;
 
     if (aCPU != NULL)
     {
-
-        aCPU->last_ip = be;
-        while (IP == aCPU->last_ip && IP < aCPU->end_address - 1)
-
+        if (IP >= aCPU->end_address - 1)
         {
+            stop(runner, FALSE);
+
+            return;
+        }
+        int f = 1;
+        while (IP < aCPU->end_address - 1)
+        {
+            if (_INSTRUCTIONS != NULL)
+            {
+                if (!f && is_at_break_point(bps, len, _INSTRUCTIONS->line_number))
+                {
+                    break;
+                }
+                else
+                    f = 0;
+            }
 
             errors = 0;
+
             execute(priv->aCPU);
             if (errors > 0)
             {
@@ -524,7 +553,7 @@ void step_over(Emu8086AppCodeRunner *runner, uint16_t be)
     }
 }
 
-void step_over_clicked_app(Emu8086AppCodeRunner *runner)
+void step_over_clicked_app(Emu8086AppCodeRunner *runner, gint *bps, gint len)
 {
     PRIV_CODE_RUNNER;
     struct emu8086 *aCPU = NULL;
@@ -552,16 +581,10 @@ void step_over_clicked_app(Emu8086AppCodeRunner *runner)
     {
         return;
     }
-    if (aCPU->is_first == 1)
-    {
-        g_signal_emit(runner, signals[EXEC_INS], 0);
-        ;
-        // emu_8086_app_window_update_wids(priv->win, priv->aCPU);
-        aCPU->is_first = 0;
-        return;
-    }
+
     errors = 0;
-    step_over(runner, IP);
+
+    step_over(runner, bps, len);
     if (errors > 0)
     {
 

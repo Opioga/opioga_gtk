@@ -1042,7 +1042,12 @@ void step_over_clicked(GtkToolButton *toolbutton,
         if (!win->memory)
             emu_8086_window_set_memory(win, TRUE);
 
-        step_over_clicked_app(priv->runner);
+        gint bps[100], len;
+        len = 0;
+        // bps[100];
+        get_break_points(priv->code, bps, &len);
+
+        step_over_clicked_app(priv->runner, bps, len);
     }
     else
         emu_8086_app_window_flash2(win, "Nothing to run");

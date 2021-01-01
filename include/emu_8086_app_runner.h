@@ -95,7 +95,7 @@ void run_clicked_app(Emu8086AppCodeRunner *runner);
 void step_clicked_app(Emu8086AppCodeRunner *runner);
 void stop_clicked_app(Emu8086AppCodeRunner *runner);
 void set_app_state(Emu8086AppCodeRunner *runner, gint state);
-void step_over_clicked_app(Emu8086AppCodeRunner *runner);
+void step_over_clicked_app(Emu8086AppCodeRunner *runner, gint *bps, gint len);
 void open_help();
 void _step(Emu8086AppCodeRunner *runner);
 void stop(Emu8086AppCodeRunner *runner, gboolean reset);
