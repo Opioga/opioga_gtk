@@ -376,6 +376,16 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
                                                          G_PARAM_READWRITE));
 }
 
+static void _refreshLines(GtkTextView *text_view,
+                          gpointer user_data)
+
+{
+
+    Emu8086AppCodeBuffer *b;
+    b = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(text_view));
+    refreshLines(b);
+}
+
 static void emu_8086_app_code_init(Emu8086AppCode *code)
 {
     code->priv = emu_8086_app_code_get_instance_private(code);
@@ -398,6 +408,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "theme", code, "theme", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "ai", code, "auto_indent", G_SETTINGS_BIND_GET);
+    g_signal_connect(GTK_TEXT_VIEW(code), "paste-clipboard", G_CALLBACK(_refreshLines), NULL);
 
     priv->break_points_len = 0;
 }

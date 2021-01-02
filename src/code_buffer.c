@@ -374,12 +374,38 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             else
                 return;
             sep = v;
+            if (*p2 == '"')
+            {
+                while (gtk_text_iter_get_char(&iter) != '"')
+                {
+
+                    if (gtk_text_iter_ends_line(&iter))
+                    {
+                        gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
+
+                        return;
+                    }
+                    gtk_text_iter_forward_char(&iter);
+                    sep++;
+                    p++;
+                }
+                gtk_text_iter_forward_char(&iter);
+
+                gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
+                if (sep > 0)
+                    gtk_text_iter_forward_chars(&start, sep);
+
+                continue;
+
+                g_print(p2);
+            }
             if (strlen(buf) > 0)
             {
                 gint len = strlen(buf) - strlen(p2);
 
                 if (len <= -2)
                 {
+
                     // printf("%s, %s, %d\n", p2, buf, len);
                     gtk_text_iter_backward_chars(&start, -1 - len);
 
@@ -477,7 +503,6 @@ static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
         i++;
         // g_free(line);
     }
-    priv->lc = i;
 }
 
 gboolean hl(gpointer user_data)
@@ -533,17 +558,19 @@ static void emu_8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     mark = gtk_text_buffer_get_mark(buffer, "insert");
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
-    start_offset = i - priv->lc;
+    start_offset = i - (priv->lc);
 
-    if (start_offset > 0)
+    if (start_offset > 0 || start_offset < -1)
     {
         // g_print("lion\n");
         highlight(buffer, i);
     }
+
     else
     {
         queue_highlight(buffer);
     }
+    priv->lc = gtk_text_buffer_get_line_count(buffer);
 }
 
 static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
@@ -594,6 +621,24 @@ void setCode(Emu8086AppCodeBuffer *buffer, Emu8086AppCode *code)
     PRIV_CODE_BUFFER;
     priv->code = code;
 }
+gboolean check_for_indent(gchar *line)
+{
+    if (*line == ';')
+        return TRUE;
+    gchar *p = line;
+
+    while (*p)
+    {
+        if (*p == ':')
+        {
+
+            return FALSE;
+        }
+        p++;
+    }
+    //  g_print("%s\n", line);
+    return TRUE;
+}
 
 void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
 {
@@ -602,7 +647,6 @@ void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
     if (end < 0)
         return;
     gtk_text_buffer_begin_user_action(_buffer);
-    g_print("lion %d\n", end);
 
     for (gint i = 0; i < end; i++)
     {
@@ -611,7 +655,6 @@ void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
         GtkTextIter iter2, iter3;
         guint replaced_spaces = 0;
         gboolean lin = FALSE;
-
         gtk_text_buffer_get_iter_at_line(_buffer, &iter, i);
         if (gtk_text_iter_ends_line(&iter))
         {
@@ -619,16 +662,13 @@ void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
         }
         if (gtk_text_iter_get_char(&iter) == '\t')
         {
-            continue;
-        }
-        if (gtk_text_iter_get_char(&iter) == ';')
-        {
-            gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
+            // g_print("lines: %d\n", i);
             continue;
         }
 
         while (gtk_text_iter_get_char(&iter) == ' ')
         {
+            replaced_spaces++;
             gtk_text_iter_forward_char(&iter);
         }
 
@@ -636,24 +676,39 @@ void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
         {
             continue;
         }
-        iter3 = iter;
-        if (g_ascii_isalpha(gtk_text_iter_get_char(&iter)))
+
+        if (replaced_spaces > 0)
         {
-            while (gtk_text_iter_forward_char(&iter3))
-            {
-                if (gtk_text_iter_get_char(&iter3) == ':')
-                {
-                    lin = TRUE;
-                    // i++;
-                    break;
-                }
-            }
-            if (lin)
-                continue;
-            else
-                gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
-            g_print("lion\n");
+            iter2 = iter;
+            gtk_text_iter_backward_chars(&iter2, replaced_spaces);
+            gtk_text_buffer_delete(buffer, &iter2, &iter);
+            gtk_text_buffer_get_iter_at_line(buffer, &iter, i);
         }
+
+        iter3 = iter;
+        gtk_text_iter_forward_to_line_end(&iter3);
+        gchar *line = gtk_text_buffer_get_text(buffer, &iter, &iter3, FALSE);
+        if (check_for_indent(line))
+            gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
+
+        g_free(line);
+        // if (g_ascii_isalpha(gtk_text_iter_get_char(&iter)))
+        // {
+        //     while (gtk_text_iter_forward_char(&iter3))
+        //     {
+        //         if (gtk_text_iter_get_char(&iter3) == ':')
+        //         {
+        //             lin = TRUE;
+        //             // i++;
+        //             break;
+        //         }
+        //     }
+        //     if (lin)
+        //         continue;
+        //     else
+        //         gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
+        //     g_print("lion\n");
+        // }
     }
     gtk_text_buffer_end_user_action(_buffer);
 }
