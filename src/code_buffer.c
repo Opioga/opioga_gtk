@@ -293,7 +293,7 @@ static gboolean getnum_(gchar *keyword)
 
 static void _highlight(GtkTextBuffer *buffer, gint i)
 {
-    GtkTextIter iter, start;
+    GtkTextIter iter, start, end;
     // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
     gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
                                      &iter,
@@ -305,7 +305,9 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
     g_return_if_fail(gtk_text_iter_get_buffer(&start) == buffer);
     g_return_if_fail(gtk_text_iter_get_buffer(&iter) == buffer);
     gchar *line = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE), *p;
+
     gint v = 0;
+    end = iter;
     if (gtk_text_iter_get_buffer(&iter) == buffer)
     {
         p = line;
@@ -338,6 +340,9 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
 
                 break;
             }
+            else
+                gtk_text_buffer_remove_tag_by_name(buffer, "comment", &start, &end);
+
             iter = start;
             while (*p && !isspace(*p) && *p != ';')
             {
@@ -396,6 +401,22 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
 
                 else if (getkeyword(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &start, &iter);
+
+                else if (strlen(line) > 0)
+                {
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "num", &start, &iter);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "special", &start, &iter);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "string", &start, &iter);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "label_def", &start, &iter);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &start, &iter);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "keyword", &start, &iter);
+                }
             }
 
             if (sep > 0)
@@ -485,7 +506,7 @@ void queue_highlight(Emu8086AppCodeBuffer *buffer)
         g_source_remove(priv->timeout);
     }
     priv->timeout = gdk_threads_add_timeout_full(G_PRIORITY_LOW,
-                                                 100,
+                                                 250,
                                                  hl,
                                                  buffer,
                                                  NULL);
@@ -572,4 +593,67 @@ void setCode(Emu8086AppCodeBuffer *buffer, Emu8086AppCode *code)
 {
     PRIV_CODE_BUFFER;
     priv->code = code;
+}
+
+void emu_8086_app_code_buffer_indent(Emu8086AppCode *buffer)
+{
+    GtkTextBuffer *_buffer = GTK_TEXT_BUFFER(buffer);
+    gint end = gtk_text_buffer_get_line_count(_buffer);
+    if (end < 0)
+        return;
+    gtk_text_buffer_begin_user_action(_buffer);
+    g_print("lion %d\n", end);
+
+    for (gint i = 0; i < end; i++)
+    {
+
+        GtkTextIter iter;
+        GtkTextIter iter2, iter3;
+        guint replaced_spaces = 0;
+        gboolean lin = FALSE;
+
+        gtk_text_buffer_get_iter_at_line(_buffer, &iter, i);
+        if (gtk_text_iter_ends_line(&iter))
+        {
+            continue;
+        }
+        if (gtk_text_iter_get_char(&iter) == '\t')
+        {
+            continue;
+        }
+        if (gtk_text_iter_get_char(&iter) == ';')
+        {
+            gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
+            continue;
+        }
+
+        while (gtk_text_iter_get_char(&iter) == ' ')
+        {
+            gtk_text_iter_forward_char(&iter);
+        }
+
+        if (gtk_text_iter_ends_line(&iter))
+        {
+            continue;
+        }
+        iter3 = iter;
+        if (g_ascii_isalpha(gtk_text_iter_get_char(&iter)))
+        {
+            while (gtk_text_iter_forward_char(&iter3))
+            {
+                if (gtk_text_iter_get_char(&iter3) == ':')
+                {
+                    lin = TRUE;
+                    // i++;
+                    break;
+                }
+            }
+            if (lin)
+                continue;
+            else
+                gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
+            g_print("lion\n");
+        }
+    }
+    gtk_text_buffer_end_user_action(_buffer);
 }

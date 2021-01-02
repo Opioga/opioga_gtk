@@ -174,7 +174,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="hexpand">True</property>
-                                <property name="label" translatable="yes">License File</property>
+                                <property name="label" translatable="yes">label</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>

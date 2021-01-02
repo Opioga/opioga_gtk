@@ -38,7 +38,7 @@ extern struct instruction *_instruction_list;
 extern struct instruction *_last_instruction;
 extern struct instruction *_current_instruction, *_first_instruction;
 extern struct variable *variable_list, *first_variable, *v_ordered_list;
-
+#define DEBUG 1
 enum err_index
 {
     MAX_CALL,

@@ -31,7 +31,7 @@
 #include "emu8086win.h"
 
 #define EMU_8086_APP_CODE_TYPE (emu_8086_app_code_get_type())
-#define PRIV_CODE Emu8086AppCodePrivate *priv = emu_8086_app_code_get_instance_private(code)
+#define PRIV_CODE Emu8086AppCodePrivate *priv = code->priv
 
 G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
 

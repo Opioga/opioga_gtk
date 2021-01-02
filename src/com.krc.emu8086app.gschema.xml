@@ -12,7 +12,12 @@
             <summary>Highlight current _line</summary>
             <description>If current line should be highlighted</description>
         </key>
+        <key name="ai" type="b">
 
+            <default>true</default>
+            <summary>Auto indent code lines</summary>
+            <description>If code should be indented automatically</description>
+        </key>
 
         <key name="ul" type="b">
 

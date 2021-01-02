@@ -34,6 +34,7 @@ struct _Emu8086AppPrefsPrivate
   GtkWidget *fcb;
   GtkListStore *themes_treeview_model;
   GtkWidget *themes_treeview;
+  GtkWidget *indent;
 };
 struct _Emu8086AppPrefs
 {
@@ -103,6 +104,9 @@ emu8086_app_prefs_init(Emu8086AppPrefs *prefs)
   g_settings_bind(priv->settings, "highlight",
                   priv->highlight, "active",
                   G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind(priv->settings, "ai",
+                  priv->indent, "active",
+                  G_SETTINGS_BIND_DEFAULT);
 
   g_settings_bind(priv->settings, "ul",
                   priv->ul, "active",
@@ -158,6 +162,7 @@ emu8086_app_prefs_class_init(Emu8086AppPrefsClass *class)
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, highlight);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, ul);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, lf);
+  gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, indent);
 }
 
 Emu8086AppPrefs *
