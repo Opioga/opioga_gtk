@@ -439,7 +439,7 @@ static int emu_init(Emu8086AppCodeRunner *runner)
     BX = 5;
     BP = 15;
     SP = 128;
-    _SS = ((CS * 0x10) - 0x20000) / 0x10;
+    _SS = 0xff00;
     //  g_print("knnkk\n");
     return 1;
 }

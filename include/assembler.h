@@ -31,7 +31,7 @@
 #define MAX_SIZE 256
 struct emu8086;
 struct instruction;
-
+#define DEBUG 1
 char *match_register(char *p, int width, int *value), *match_expression(char *p, int *value),
     *match_expression_level1(char *p, int *value), *match_expression_level2(char *p, int *value),
     *match_expression_level3(char *p, int *value), *match_expression_level4(char *p, int *value),

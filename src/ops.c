@@ -38,7 +38,6 @@ extern struct instruction *_instruction_list;
 extern struct instruction *_last_instruction;
 extern struct instruction *_current_instruction, *_first_instruction;
 extern struct variable *variable_list, *first_variable, *v_ordered_list;
-#define DEBUG 1
 enum err_index
 {
     MAX_CALL,
@@ -89,14 +88,19 @@ void compare_set_flags(struct emu8086 *aCPU, int v1, int v2)
         FLAGS |= 64;
     }
 }
-
-void find_instruction(struct emu8086 *aCPU)
+void find_instruction16(struct emu8086 *aCPU)
 {
     if (_INSTRUCTIONS == NULL)
     {
     }
 
-    char off = *(CODE_SEGMENT + IP);
+    short off = *(CODE_SEGMENT_IP);
+    //__uint128_t add = 0;
+
+    IP++;
+    off |= *(CODE_SEGMENT_IP) << 8;
+    IP++;
+
     // off = off < 0 ? 0 - off : off;
     __uint128_t add = 0;
     // char is_back = off >> 7;
@@ -104,17 +108,18 @@ void find_instruction(struct emu8086 *aCPU)
     struct instruction *prev = _current_instruction->prev;
     struct instruction *next = _current_instruction->next;
 
-    if (_current_instruction->starting_address == *(CODE_SEGMENT + IP))
-    {
+    // if (_current_instruction->starting_address == *(CODE_SEGMENT + IP))
+    // {
+    //     printf("leen: n%d\n", off);
 
-        IP = *(CODE_SEGMENT_IP);
-        return;
-    }
+    //     IP = *(CODE_SEGMENT_IP);
+    //     return;
+    // }
     if (off > 0)
         prev = NULL;
     else
         next = NULL;
-    int b = IP + off + 1;
+    int b = IP + off;
     while (1)
     {
         if (prev != NULL)
@@ -151,7 +156,90 @@ void find_instruction(struct emu8086 *aCPU)
         }
     }
     // IP++;
-    IP = add;
+    printf("l: \n\n%x\n\n", add);
+
+    IP = add + 2;
+    _INSTRUCTIONS = _current_instruction;
+    // if ()
+}
+
+void find_instruction(struct emu8086 *aCPU)
+{
+    if (_INSTRUCTIONS == NULL)
+    {
+    }
+
+    char off = *(CODE_SEGMENT + IP);
+    printf("lee: \n\n%d\n\n", off);
+    IP++;
+    // off = off < 0 ? 0 - off : off;
+    __uint128_t add = 0;
+    // char is_back = off >> 7;
+    _current_instruction = _INSTRUCTIONS;
+    struct instruction *prev = _current_instruction->prev;
+    struct instruction *next = _current_instruction->next;
+    if (off > 0)
+        prev = NULL;
+    else
+        next = NULL;
+    int b = IP + off;
+    printf("l: \n\n%x %d , %x\n\n", b, off, _current_instruction->end_address);
+    if (_current_instruction->starting_address == b)
+    {
+
+        IP = b;
+        return;
+    }
+    IP = _current_instruction->end_address;
+    // printf("lee: \n\n%x %d , %x\n\n", b, off, _current_instruction->end_address);
+    if (_current_instruction->end_address == b)
+    { //  if(_current_instruction->end_address)
+
+        IP = (b + 1);
+        _INSTRUCTIONS = _current_instruction->next;
+        return;
+    }
+    while (1)
+    {
+        if (prev != NULL)
+        {
+            if (prev->starting_address == b)
+            {
+
+                _current_instruction = prev;
+                add = b; //+ 1;
+                break;
+            }
+            else
+                prev = prev->prev;
+        }
+        if (next != NULL)
+        {
+            if (next->starting_address == b)
+            {
+
+                _current_instruction = next;
+                add = b;
+                break;
+            }
+            else
+                next = next->next;
+        }
+        if ((prev == NULL) && (next == NULL))
+        {
+
+            char buf[256];
+            sprintf(buf, errors_str[UNDEFINED], _INSTRUCTIONS->line_number);
+            massage(buf, ERR);
+            break;
+        }
+    }
+    // IP++;
+
+    printf("l: \n\n%x %d , %x\n\n", IP + 29, off, _current_instruction->end_address);
+    IP += off;
+    //    / if (off > 0)
+    //         IP++;
     _INSTRUCTIONS = _current_instruction;
     // if ()
 }
@@ -160,7 +248,7 @@ void find_instruction_call(struct emu8086 *aCPU)
 {
     IP++;
     short value = *(CODE_SEGMENT_IP);
-    __uint128_t add = 0;
+    int add = 0;
 
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
@@ -174,7 +262,7 @@ void find_instruction_call(struct emu8086 *aCPU)
         prev = NULL;
     else
         next = NULL;
-    int b = IP + value + 1;
+    int b = IP + value;
     if (SP == 0)
     {
         char buf[256];
@@ -190,7 +278,7 @@ void find_instruction_call(struct emu8086 *aCPU)
 
         return;
     }
-    if (_current_instruction->starting_address == b)
+    if (_current_instruction->starting_address == b + 1)
     {
         add = b;
     }
@@ -201,7 +289,7 @@ void find_instruction_call(struct emu8086 *aCPU)
             if (prev != NULL)
             {
 
-                if (prev->starting_address == b)
+                if (prev->starting_address == b + 1)
                 {
                     add = b;
 
@@ -213,7 +301,7 @@ void find_instruction_call(struct emu8086 *aCPU)
             }
             if (next != NULL)
             {
-                if (next->starting_address == b)
+                if (next->starting_address == b + 1)
                 {
                     add = b;
                     _current_instruction = next;
@@ -226,13 +314,15 @@ void find_instruction_call(struct emu8086 *aCPU)
             {
                 char buf[256];
                 sprintf(buf, errors_str[UNDEFINED],
-                        _current_instruction->line_number);
+                        _INSTRUCTIONS->line_number);
                 massage(buf, ERR);
+                break;
             }
         }
     }
     // IP++;
-    IP = add;
+    IP = add < 16 ? add + 2 : add + 1;
+    printf("nn: %x\n", add);
     push_to_stack(aCPU, _next);
     //  }
 
@@ -250,6 +340,7 @@ int get_ops_reg_8(struct emu8086 *aCPU, unsigned char opn, int **ops, int **dest
     if (mod != 3)
         return 0;
     high_reg = 0;
+
     if (!is_16)
     {
         if (r_m > 3)
@@ -265,6 +356,7 @@ int get_ops_reg_8(struct emu8086 *aCPU, unsigned char opn, int **ops, int **dest
     }
     *dest = SFRS + r_m;
     *ops = SFRS + reg;
+
     return 1;
 }
 
@@ -335,7 +427,6 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
     {
         IP++;
         displacement = *(CODE_SEGMENT_IP);
-        printf("3o999 %d\n", reg);
     }
     if (width > 1)
     {
@@ -380,12 +471,16 @@ O  D  I  T  S Z  A  P  C
         CLEAR_FLAG(6);
     }
     if (value < 0)
-        FLAGS |= ((1 << 11) | (1 << 7));
+    {
+        FLAGS |= ((1 << 11) | (1 << 7) | 1);
+        // FLAGS |= 1;
+    }
 
     else
     {
         CLEAR_FLAG(11);
         CLEAR_FLAG(7);
+        CLEAR_FLAG(0);
     }
 }
 // add
@@ -561,7 +656,45 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
     int value, *op4;
 
     unsigned char reg = (opn & 0b00111000) >> 3;
+    if (get_ops_reg_8(aCPU, opn, &op3, &op4))
+    {
+        // opn = opn - 0x20;
+        value = 0;
+        IP++;
+        value = *(CODE_SEGMENT_IP);
+        high_reg = high_reg == 1;
+        if (opn < 0xc8)
+            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+        else if (opn < 0xd0)
+            value |= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+        else if (opn < 0xd8)
+        {
+            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+            value += (FLAGS & 1);
+        }
+        else if (opn < 0xe0)
+            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value - (FLAGS & 1);
+        else if (opn < 0xe8)
+            value &= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+        else if (opn < 0xf0)
+            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value;
+        else if (opn < 0xf8)
+            value ^= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+        else
+        {
+            printf("hr: %d\n", high_reg);
+            compare_set_flags(aCPU, (high_reg ? (*op4 >> 8) : (*op4 & 0xff)), value);
+            *handled = 1;
+            IP++;
+            return;
+        }
+        setFlags(aCPU, value);
+        *op4 = high_reg ? ((*op4 & 0xff) | ((value & 0xff) << 8)) : ((*op4 & 0xff00) | (value & 0xff));
 
+        *handled = 1;
+        IP++;
+        return;
+    }
     if (reg == 1)
         return or_addr8_i8(aCPU, handled);
     else if (reg == 2)
@@ -589,44 +722,6 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
         op1 += offset;
         // IP++;
         // offset = INSTRUCTIONS->value;
-    }
-    else if (get_ops_reg_8(aCPU, opn, &op3, &op4))
-    {
-        // opn = opn - 0x20;
-        value = 0;
-        IP++;
-        value = *(CODE_SEGMENT_IP);
-
-        if (opn < 0xc8)
-            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-        else if (opn < 0xd0)
-            value |= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-        else if (opn < 0xd8)
-        {
-            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-            value += (FLAGS & 1);
-        }
-        else if (opn < 0xe0)
-            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value - (FLAGS & 1);
-        else if (opn < 0xe8)
-            value &= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-        else if (opn < 0xf0)
-            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value;
-        else if (opn < 0xf8)
-            value ^= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-        else
-        {
-            compare_set_flags(aCPU, (high_reg ? (*op4 >> 8) : (*op4 & 0xff)), value);
-            *handled = 1;
-            IP++;
-            return;
-        }
-        setFlags(aCPU, value);
-        *op4 = high_reg ? ((*op4 & 0xff) | ((value & 0xff) << 8)) : ((*op4 & 0xff00) | (value & 0xff));
-
-        *handled = 1;
-        IP++;
-        return;
     }
 
     else if (get_ops_reg_8_addr(aCPU, opn, &op4, &op1))
@@ -922,6 +1017,8 @@ void or_reg8_addr8(struct emu8086 *aCPU, int *handled)
 
 void or_addr8_reg8(struct emu8086 *aCPU, int *handled)
 {
+    printf("hhh:\n");
+    exit(1);
     int b = 0;
     is_16 = 0;
     // int _value = INSTRUCTIONS->value;
@@ -930,8 +1027,7 @@ void or_addr8_reg8(struct emu8086 *aCPU, int *handled)
     int opn = *(CODE_SEGMENT + IP);
 
     int *op2, *op3;
-    b = get_ops_reg_8(aCPU, opn, &op3, &op2);
-    if (b)
+    if (get_ops_reg_8(aCPU, opn, &op3, &op2))
     {
         int value;
         if (high_reg == 0)
@@ -941,23 +1037,21 @@ void or_addr8_reg8(struct emu8086 *aCPU, int *handled)
         }
         else if (high_reg == 1)
         {
-            value = (*op2 >> 8) | (*op3 >> 8);
+            value = (*op2 >> 8) | (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else if (high_reg == 2)
         {
-            value = (*op2 >> 8) | (*op3 & 0xff);
-            *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
-        }
-        else
-        {
             value = (*op2 & 0xff) | (*op3 >> 8);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        high_reg = 0;
-        setFlags(aCPU, value);
-
+        else
+        {
+            value = (*op2 >> 8) | (*op3 >> 8);
+            *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
+        }
         IP += 1;
+        setFlags(aCPU, value);
         *handled = 1;
         return;
     }
@@ -1030,7 +1124,7 @@ void or_addr8_i8(struct emu8086 *aCPU, int *handled)
         // offset = INSTRUCTIONS->value;
     }
 
-    else if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
+    if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
         IP++;
         value = *(CODE_SEGMENT + IP);
@@ -1250,12 +1344,12 @@ void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op2 & 0xff) + (*op3 & 0xff) + (FLAGS & 1);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) + (*op3 & 0xff) + (FLAGS & 1);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 & 0xff) + (*op3 >> 8) + (FLAGS & 1);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
@@ -1553,12 +1647,12 @@ void sbb_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op2 & 0xff) - (*op3 & 0xff) - (FLAGS & 1);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) - (*op3 >> 8) - (FLAGS & 1);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 >> 8) - (*op3 & 0xff) - (FLAGS & 1);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -1752,7 +1846,16 @@ void jmp_8(struct emu8086 *aCPU, int *handled)
     aCPU->skip_next = 1;
     *handled = 1;
 }
+void jmp_16(struct emu8086 *aCPU, int *handled)
+{
 
+    IP++;
+
+    find_instruction16(aCPU);
+
+    aCPU->skip_next = 1;
+    *handled = 1;
+}
 void jcxz_8(struct emu8086 *aCPU, int *handled)
 {
 
@@ -1865,7 +1968,7 @@ void ja_8(struct emu8086 *aCPU, int *handled)
 
     int CF = GET_FLAG(0);
 
-    if (!(CF && ZF))
+    if (!(CF | ZF))
     {
         jmp_8(aCPU, handled);
         return;
@@ -2153,12 +2256,12 @@ void and_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op2 & 0xff) & (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) & (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 >> 8) & (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -2474,12 +2577,12 @@ void sub_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op2 & 0xff) - (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) - (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 >> 8) - (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -2783,12 +2886,12 @@ void xor_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op2 & 0xff) ^ (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) ^ (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 >> 8) ^ (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -3069,12 +3172,12 @@ void mov_reg8_addr8(struct emu8086 *aCPU, int *handled)
             value = (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -3124,13 +3227,13 @@ void mov_reg8_i8(struct emu8086 *aCPU, int *handled)
     int op = *(CODE_SEGMENT + IP);
     IP++;
     int reg_offset = op - 176;
-    int value = *(CODE_SEGMENT + IP);
+    unsigned char value = *(CODE_SEGMENT + IP);
     IP++;
     int *op1 = aCPU->mSFR + (reg_offset < 4 ? reg_offset : reg_offset - 4);
     if (reg_offset < 4)
-        *op1 = (*op1 & 0xff00) | (value & 0xff);
+        *op1 = (*op1 & 0xff00) | (value);
     else
-        *op1 = (*op1 & 0xff) | ((value & 0xff) << 8);
+        *op1 = (*op1 & 0xff) | ((value) << 8);
 
     *handled = 1;
 }
@@ -3168,12 +3271,12 @@ void mov_addr8_reg8(struct emu8086 *aCPU, int *handled)
             value = (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
@@ -4099,11 +4202,11 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
         {
             value = (*op2 & 0xff) - (*op3 & 0xff);
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = (*op2 >> 8) - (*op3 >> 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = (*op2 >> 8) - (*op3 & 0xff);
         }
@@ -4111,6 +4214,8 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
         {
             value = (*op2 & 0xff) - (*op3 >> 8);
         }
+        // printf("p5: %d\n", *oop2);
+
         high_reg = 0;
         setFlags(aCPU, value);
 
@@ -4365,7 +4470,7 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
             *op3 = (*op3 & 0xff00) | value2;
             *op2 = (*op2 & 0xff00) | value;
         }
-        else if (high_reg == 1)
+        else if (high_reg == 3)
         {
             value = *op3 >> 8;
             value2 = *op2 >> 8;
@@ -4373,7 +4478,7 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
             *op3 = (*op3 & 0xff) | (value2 << 8);
             *op2 = (*op2 & 0xff) | (value << 8);
         }
-        else if (high_reg == 2)
+        else if (high_reg == 1)
         {
             value = *op3 >> 8;
             value2 = *op2 & 0xff;
@@ -4832,6 +4937,8 @@ void op_setptrs(struct emu8086 *aCPU)
     // JMP
 
     aCPU->op[JMP_A8] = &jmp_8;
+    aCPU->op[JMP_A16] = &jmp_16;
+
     aCPU->op[JCXZ_A8] = &jcxz_8;
     aCPU->op[JC_A8] = &jc_8;
     aCPU->op[JNC_A8] = &jnc_8;

@@ -482,13 +482,15 @@ void reset_code(GtkWidget *co)
 
     PRIV_CODE;
     priv->mark = NULL;
-    if (priv->line)
+    if (priv->line > -1)
     {
         GtkTextIter iter, start;
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
                                          &iter,
                                          priv->line);
+        g_return_if_fail(gtk_text_iter_get_buffer(&iter) == buffer);
+
         gtk_text_iter_forward_to_line_end(&iter);
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
                                          &start,

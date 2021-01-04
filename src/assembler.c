@@ -118,6 +118,7 @@ struct label *define_label(char *name,
     label->value = value;
 
     strcpy(label->name, name);
+
     label->label_identifier = label_identifier;
     label_identifier++;
 
@@ -170,6 +171,7 @@ struct label *find_label(char *name)
         c = strcmp(name, explore->name);
         if (c == 0)
         {
+
             return explore;
         }
         if (c < 0)
@@ -292,6 +294,7 @@ void seperate()
     *p2 = '\0';
     while (*p && isspace(*p))
         p++;
+
     p2 = part;
 }
 struct instruction *define_instruction(int line)
@@ -713,6 +716,7 @@ char *match_expression_level6(char *p, int *value)
             number = (number << 4) | c;
             p++;
         }
+
         *value = number;
         return p;
     }
@@ -748,17 +752,112 @@ char *match_expression_level6(char *p, int *value)
         }
         return p;
     }
-    if (isdigit(*p))
+    if (isdigit(*p) || isxdigit(*p))
     { /* Decimal */
         number = 0;
-        while (isdigit(p[0]))
+        char buf[15];
+        char *p4 = buf;
+        char *former_p = p;
+        int isLabel = 0;
+        while (isalpha(*p) || *p == '_' || *p == '.' || isdigit(*p))
         {
-            c = p[0] - '0';
-            number = number * 10 + c;
+            *p4 = p[0];
+            // c = p[0] - '0';
+
+            // number = number * 10 + c;
             p++;
+            p4++;
+            // if (isalpha(p4[0]))
+            //     isLabel = 1;
         }
-        *value = number;
-        return p;
+
+        *p4 = '\0';
+        p4--;
+
+        if (*p4 == 'H' && (isxdigit(*(p4 - 1)) || isdigit(*(p4 - 1))))
+        {
+
+            // p++;
+            number = 0;
+            p4 = buf;
+            while (isxdigit(p4[0]) || isdigit(p4[0]))
+            {
+                c = toupper(p4[0]);
+                c = c - '0';
+                if (c > 9)
+                    c -= 7;
+                number = (number << 4) | c;
+                p4++;
+            }
+        }
+        else if (*p4 == 'O' && isdigit(*(p4 - 1)))
+        {
+            // p++;
+            number = 0;
+            p4 = buf;
+            while (isdigit(p4[0]))
+            {
+                c = p4[0];
+                c = c - '0';
+                number = (number << 3) | c;
+                p4++;
+            }
+        }
+
+        else if (*p4 == 'B' && isdigit(*(p4 - 1)))
+        {
+
+            *p4 = '\0';
+            number = 0;
+            p4 = buf;
+            while (p4[0] == '0' || p4[0] == '1' || p[0] == '_')
+            {
+                if (p4[0] != '_')
+                {
+                    number <<= 1;
+                    if (p4[0] == '1')
+                        number |= 1;
+                }
+                p4++;
+            }
+
+            if (isalpha(p4[0]))
+                return NULL;
+        }
+        else if (isdigit(former_p[0]))
+        {
+            p4 = buf;
+            number = 0;
+
+            // if(buf)
+            while (isdigit(p4[0]))
+            {
+                c = p4[0] - '0';
+                number = number * 10 + c;
+                //p++;
+                p4++;
+            }
+            if (isalpha(p4[0]))
+                return NULL;
+            //
+        }
+        else
+        {
+            isLabel = 1;
+        }
+        p = avoid_spaces(p);
+        if (!isLabel)
+        {
+            *value = number;
+            return p;
+        }
+        else
+        {
+            p = former_p;
+            printf("%s\n", p);
+            if (isdigit(*p))
+                return NULL;
+        }
     }
     if (*p == '$' && p[1] == '$')
     { /* Start address */
@@ -788,6 +887,24 @@ char *match_expression_level6(char *p, int *value)
         while (isalpha(*p) || isdigit(*p) || *p == '_' || *p == '.')
             *p2++ = *p++;
         *p2 = '\0';
+        if (strlen(expr_name) > 0 && strcmp(expr_name, "OFFSET") == 0)
+        {
+            p = avoid_spaces(p);
+            char *check;
+            check = p;
+            p2 = expr_name;
+            while (isalpha(*check) || isdigit(*check) || *check == '_' || *check == '.')
+                *p2++ = *check++;
+            *p2 = '\0';
+            if (strlen(p) == 0 || isdigit(p[0]))
+            {
+                return NULL;
+            }
+            if (strcmp(expr_name, "OFFSET") == 0)
+                return NULL;
+            return match_expression_level6(p, value);
+        }
+
         for (c = 0; c < 16; c++)
             if (strcmp(expr_name, reg1[c]) == 0)
                 return NULL;
@@ -1180,6 +1297,8 @@ char *decode;
                         return NULL;
                     if (qualifier == 0)
                     {
+                        printf("%d\n", instruction_value);
+
                         c = instruction_value - (address + 2);
                         if (undefined == 0 && (c < -128 || c > 127) && memcmp(decode, "xeb", 3) == 0)
                             return NULL;
@@ -1468,10 +1587,127 @@ void process_instr()
                     printf("Error: bad expression at line %d\n", line_number);
                     break;
                 }
-                emit_byte(instruction_value);
 
-                size++;
                 p = p2;
+                p = avoid_spaces(p);
+                char buf[4];
+                strncpy(buf, p, 3);
+                if (strcmp(buf, "DUP") == 0)
+                {
+                    p += 3;
+                    p = avoid_spaces(p);
+                    char *ip = p;
+                    if (*p != '(')
+                    {
+                        char m[100];
+                        sprintf(m, "Bad expression  '%s' on line %d\n", ip, line_number);
+                        message(m, ERR, line_number);
+                        break;
+                    }
+                    p++;
+                    p = avoid_spaces(p);
+
+                    if (*p && *p == '\'')
+                    {
+                        p++;
+                        p = read_character(p, &c);
+
+                        if (!*p || *p != '\'')
+                        {
+                            char m[100];
+                            sprintf(m, "Extra Characters in char literal '%s %s' on line %d\n", part, ip, line_number);
+                            message(m, ERR, line_number);
+                            break;
+                        }
+                        p++;
+
+                        while (instruction_value > 0)
+                        {
+                            emit_byte(c);
+                            instruction_value--;
+                        }
+                        //  continue;
+                    }
+                    else if (*p && *p == '"')
+                    {
+                        p++;
+                        char *lp = p;
+                        printf("%s\n", p);
+
+                        while (instruction_value > 0)
+                        {
+                            p = lp;
+                            while (*p && *p != '"')
+                            {
+                                p = read_character(p, &c);
+                                emit_byte(c);
+                            }
+                            instruction_value--;
+                        }
+                        if (!*p || *p != '"')
+                        {
+                            char m[100];
+                            sprintf(m, "Unterminated String '%s %s' on line %d\n", part, ip, line_number);
+                            message(m, ERR, line_number);
+                            break;
+                        }
+                        p = avoid_spaces(p);
+                        p++;
+
+                        printf("%s\n", p);
+
+                        // exit(1);
+                    }
+
+                    else if (*p && *p == '?')
+                    {
+                        p++;
+                        printf("p: %s\n", p);
+
+                        // exit(1);
+
+                        while (instruction_value > 0)
+                        {
+                            emit_byte(0);
+                            instruction_value--;
+                        }
+                    }
+                    else if (*p)
+                    {
+                        int v = instruction_value;
+                        printf("pen: %s\n", p);
+
+                        p2 = match_expression_level6(p, &instruction_value);
+                        while (v > 0)
+                        {
+                            emit_byte(instruction_value);
+                            v--;
+                        }
+                        p = p2;
+
+                        // exit(1);
+                    }
+                    else
+                    {
+                        char m[100];
+                        sprintf(m, "Bad expression  '%s' on line %d\n", p, line_number);
+                        message(m, ERR, line_number);
+                        break;
+                    }
+                    p = avoid_spaces(p);
+                    // p++;
+                    if (*p && *p == ')')
+                        p++;
+                    else
+                    {
+                        char m[100];
+                        sprintf(m, "Bad expression  '%s %s' on line %d\n", part, ip, line_number);
+                        message(m, ERR, line_number);
+                        break;
+                    }
+                }
+                else
+                    emit_byte(instruction_value);
             }
             p = avoid_spaces(p);
             if (*p == ',')
@@ -1516,6 +1752,7 @@ void process_instr()
         c = 0;
         while (instruction_set[c] != NULL)
         {
+
             if (strcmp(part, instruction_set[c]) == 0)
             {
                 p2 = instruction_set[c];
@@ -1539,7 +1776,7 @@ void process_instr()
         {
             char m[MAX_SIZE + 31];
 
-            sprintf(m, "Undefined instruction '%s %s'\n", part, p);
+            sprintf(m, "Undefined instruction '%s %s' on line %d\n", part, p, line_number);
             message(m, ERR, line_number);
 
             break;
@@ -1547,6 +1784,7 @@ void process_instr()
         else
         {
             p = p2;
+
             seperate();
         }
     }
@@ -1562,12 +1800,12 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
     }
     char *p2;
     int i = 0;
-    int starting_address = 0;
+    int starting_address = 0, first_time = 0;
     _INSTRUCTIONS = NULL;
-    starting_address = 0x7F000;
+    starting_address = 0x100;
     address = 0;
     data_mem_offset = 0;
-    CS = 0x7F00;
+    CS = 0x10;
     is_first = 1;
     line_number = 0;
     aCPU->code_start_addr = starting_address;
@@ -1679,6 +1917,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
                     nu->is_addr = 1;
                     // exit(1);
                 }
+
                 else if (assembler_step == 0)
                 {
                     last_label = define_label(name, address);
@@ -1687,7 +1926,6 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
                     last_label->value = address;
                 }
             }
-
             if (part[0])
             {
 
