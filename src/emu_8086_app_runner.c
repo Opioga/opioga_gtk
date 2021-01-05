@@ -96,24 +96,7 @@ Emu8086AppCodeRunner *emu_8086_app_code_runner_new(gchar *fname, gboolean can_ru
                         NULL);
 };
 
-static gboolean is_at_break_point(gint *bps, gint len, gint lnum)
-{
-    //    gint len = priv->break_points_len;
-    for (gint i = 0; i < len; i++)
-    {
-        int *l = bps + i;
 
-        g_print("ll %d\n", *l);
-
-        if ((lnum - 1) == *l)
-        {
-            g_print("eee %d\n", *l);
-
-            return TRUE;
-        }
-    }
-    return FALSE;
-};
 
 static void emu_8086_app_code_runner_exec_ins(Emu8086AppCodeRunner *runner)
 {
@@ -371,7 +354,6 @@ int emu_run(Emu8086AppCodeRunner *runner)
         {
             priv->to = 0;
             set_app_state(runner, STEP);
-            g_print("ll\n");
 
             return G_SOURCE_REMOVE;
         }
