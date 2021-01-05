@@ -49,14 +49,21 @@ struct _Emu8086AppCodePrivate
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
-static void
-menu_item_activate_indent_cb(GSimpleAction *action,
-                             GVariant *parameter,
-                             gpointer appe);
+
+static void emu_8086_app_code_remove_all_break_points(Emu8086AppCode *code);
+
+static void menu_item_activate_indent_cb(GSimpleAction *action,
+                                         GVariant *parameter,
+                                         gpointer appe);
+
+static void menu_item_activate_rem_bps_cb(GSimpleAction *action,
+                                          GVariant *parameter,
+                                          gpointer user_data);
 
 static GActionEntry code_entries[] = {
 
     {"format", menu_item_activate_indent_cb, NULL, NULL, NULL},
+    {"remove_bps", menu_item_activate_rem_bps_cb, NULL, NULL, NULL}
 
 };
 static void
@@ -74,6 +81,17 @@ menu_item_activate_indent_cb(GSimpleAction *action,
     }
     emu_8086_app_code_buffer_indent(EMU_8086_APP_CODE_BUFFER(buffer));
 }
+
+static void
+menu_item_activate_rem_bps_cb(GSimpleAction *action,
+                              GVariant *parameter,
+                              gpointer user_data)
+{
+    Emu8086AppCode *code;
+    code = EMU_8086_APP_CODE(user_data);
+    emu_8086_app_code_remove_all_break_points(code);
+}
+
 static gboolean emu_8086_app_code_popup_menu(GtkTextView *text_view,
                                              GtkWidget *popup)
 {
@@ -105,10 +123,17 @@ static gboolean emu_8086_app_code_popup_menu(GtkTextView *text_view,
     gtk_actionable_set_action_name(GTK_ACTIONABLE(menu_item), "code.format");
 
     gtk_widget_show(menu_item);
+
+    menu_item = gtk_menu_item_new_with_mnemonic(("_Remove All Breakpoints"));
+    gtk_menu_shell_append(menu, menu_item);
+    gtk_actionable_set_action_name(GTK_ACTIONABLE(menu_item), "code.remove_bps");
+
+    gtk_widget_show(menu_item);
 };
 
 static void changeTheme(Emu8086AppCode *code)
 {
+    // TODO
     gint a;
     a = g_strcmp0("dark+", code->theme);
 }
@@ -205,6 +230,16 @@ emu_8086_app_code_draw(GtkWidget *widget,
     if (priv->gutter != NULL)
     {
         draw(priv->gutter, cr);
+    }
+}
+
+static void emu_8086_app_code_remove_all_break_points(Emu8086AppCode *code)
+{
+    PRIV_CODE;
+    gint len = priv->break_points_len;
+    for (gint i = 0; i < len; i++)
+    {
+        priv->break_points[i] = -1;
     }
 }
 
@@ -418,12 +453,10 @@ void select_line(GtkWidget *co, gint line)
     Emu8086AppCode *code = EMU_8086_APP_CODE(co);
     GtkTextMark *mark;
     gboolean ret = TRUE;
-    // line = line ? line : 1;
     GtkTextIter iter, start;
 
     PRIV_CODE;
     Emu8086AppCodeBuffer *buffer = priv->buffer;
-    // g_print("l = %d priv = %d\n", line, priv->line);
     if (priv->mark == NULL)
     {
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, line);
@@ -444,10 +477,7 @@ void select_line(GtkWidget *co, gint line)
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, priv->line);
         start = iter;
         gtk_text_iter_forward_to_line_end(&iter);
-        // start = iter;
-        // gtk_text_iter_forward_to_line_end(&iter);
         gtk_text_buffer_remove_tag_by_name(buffer, "step", &start, &iter);
-        // gtk_text_buffer_get_iter_at_line(buffer, &iter, line);
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, line);
 
         start = iter;
@@ -456,19 +486,9 @@ void select_line(GtkWidget *co, gint line)
         priv->line = line;
 
         gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
-        // gtk_text_buffer_move_mark(buffer, m, &iter);
-        // start = iter;
-        // gtk_text_iter_forward_to_line_end(&iter);
-        // start = iter;
-        // gtk_text_iter_forward_to_line_end(&iter);
-        // gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
     }
 
-    // start = iter;
-    // gtk_text_iter_forward_to_line_end(&iter);
     gtk_text_buffer_place_cursor(GTK_TEXT_BUFFER(buffer), &iter);
-    //     mark = gtk_text_buffer_get_mark(buffer, "insert");
-    //     gtk_text_buffer_move_mark(buffer, mark, &iter);
 
     //     // gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(code), mark);
     //     // gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
@@ -642,6 +662,5 @@ void get_break_points(Emu8086AppCode *code, gint *bps, gint *len)
     PRIV_CODE;
     *len = priv->break_points_len;
 
-    for (int i = 0; i < *len; i++)
-        bps[i] = priv->break_points[i];
+    bps = priv->break_points;
 }

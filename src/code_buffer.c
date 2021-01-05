@@ -246,6 +246,15 @@ static gboolean getsp_(gchar *keyword)
     {
         ret = TRUE;
     }
+    else if (strcmp(p, "OFFSET") == 0)
+    {
+        ret = TRUE;
+    }
+
+    else if (strcmp(p, "DUP") == 0)
+    {
+        ret = TRUE;
+    }
     return ret;
 }
 static gboolean getstr_(gchar *keyword)
@@ -291,9 +300,22 @@ static gboolean getnum_(gchar *keyword)
     return ret;
 }
 
+static void skip_space(GtkTextIter *iter)
+{
+    while (g_ascii_isspace(gtk_text_iter_get_char(iter)))
+    {
+        gtk_text_iter_forward_char(iter);
+    }
+}
+
+static gboolean ends_line(GtkTextIter *iter)
+{
+    return gtk_text_iter_ends_line(iter);
+}
+
 static void _highlight(GtkTextBuffer *buffer, gint i)
 {
-    GtkTextIter iter, start, end;
+    GtkTextIter iter, start, end, iter2;
     // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
     gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer),
                                      &iter,
@@ -305,151 +327,161 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
     g_return_if_fail(gtk_text_iter_get_buffer(&start) == buffer);
     g_return_if_fail(gtk_text_iter_get_buffer(&iter) == buffer);
     gchar *line = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE), *p;
+    gtk_text_buffer_remove_tag_by_name(buffer, "string", &start, &iter);
 
-    gint v = 0;
+    gint v = 0, t = 0, offset = 0;
     end = iter;
     if (gtk_text_iter_get_buffer(&iter) == buffer)
     {
+
+        iter = start;
         p = line;
         iter = start;
         while (*p)
         {
-
-            // iter = start;
             v = 0;
-            // g_print("here %s %d %d\n", gtk_text_buffer_get_text(buffer, &start, &mend, FALSE), v, i + 1);
             gchar *p2, buf[256];
             int sep = 0, o = 0;
             p2 = buf;
-
-            while (*p && isspace(*p))
+            iter = start;
+            iter2 = start;
+            while (*p && isspace(*p) || *p == ',' || *p == '(' || *p == ')' || *p == '[' || *p == ']')
             {
                 p++;
                 v++;
+                offset++;
             }
             if (!*p)
                 return;
             sep = v;
-            if (sep > 0)
-                gtk_text_iter_forward_chars(&start, sep - 1);
+            // offset = v;
             if (*p == ';')
             {
 
-                gtk_text_iter_forward_to_line_end(&iter);
-                gtk_text_buffer_apply_tag_by_name(buffer, "comment", &start, &iter);
+                gtk_text_iter_forward_chars(&iter, offset);
+                gtk_text_iter_forward_to_line_end(&iter2);
+                gtk_text_buffer_apply_tag_by_name(buffer, "comment", &iter, &iter2);
 
                 break;
             }
             else
                 gtk_text_buffer_remove_tag_by_name(buffer, "comment", &start, &end);
 
-            iter = start;
-            while (*p && !isspace(*p) && *p != ';')
-            {
-                if (*p == ',')
-                {
+            int len = 0;
+            gboolean isString = FALSE;
+            gboolean isString2 = FALSE;
 
-                    break;
-                }
+            isString = (*p == '"');
+            isString2 = (*p == '\'');
+
+            if (isString || isString2)
+            {
+
                 v++;
                 *p2++ = *p++;
             }
+            while (*p && *p != ';')
+            {
+                //
+                //if ()
+                if ((!isString && !isString2) && (isspace(*p) || *p == '"' || *p == ',' || *p == '(' || *p == ')' || *p == '[' || *p == ']' || *p == '\''))
+                {
+                    break;
+                }
+                else if (isString && *p == '"')
+                {
+
+                    v++;
+                    *p2++ = *p++;
+                    len += 2;
+                    break;
+                }
+                else if (isString2 && *p == '\'')
+                {
+
+                    v++;
+                    *p2++ = *p++;
+                    len += 2;
+                    break;
+                }
+
+                v++;
+                *p2++ = *p++;
+                len++;
+            }
+            // gtk_text_buffer_remove_tag_by_name(buffer, "string", &start, &end);
             o = v;
-            gtk_text_iter_forward_chars(&iter, o);
             *p2 = '\0';
-            if (*p == ',')
+            p2 = buf;
+            // if (t == 1)
+            //     g_print(gtk_text_buffer_get_text(buffer, &start, &iter, FALSE));
+            // gtk_text_iter_forward_chars(&)
+            gtk_text_iter_forward_chars(&iter, offset);
+            iter2 = iter;
+            gtk_text_iter_forward_chars(&iter2, len);
+            offset += len;
+            if (isString)
             {
-                p++;
-                v++;
-            }
-            while (*p && isspace(*p))
-            {
-                p++;
-                v++;
-            }
-            // g_print("lio\n");
+                if (p2[len - 1] = '"')
+                    gtk_text_buffer_apply_tag_by_name(buffer, "string", &iter, &iter2);
+                else
+                {
 
-            if (gtk_text_iter_get_buffer(&iter) == buffer)
-                p2 = gtk_text_buffer_get_text(buffer, &start, &iter, FALSE);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "num", &iter, &iter2);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "special", &iter, &iter2);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "string", &iter, &iter2);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "label_def", &iter, &end);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &end);
+
+                    gtk_text_buffer_remove_tag_by_name(buffer, "keyword", &iter, &end);
+                    gtk_text_buffer_apply_tag_by_name(buffer, "string", &iter, &end);
+                    break;
+                }
+            }
             else
-                return;
-            sep = v;
-            if (*p2 == '"')
+                gtk_text_buffer_remove_tag_by_name(buffer, "string", &iter, &iter2);
+            if (strlen(buf) > 0 && !isString)
             {
-                while (gtk_text_iter_get_char(&iter) != '"')
-                {
-
-                    if (gtk_text_iter_ends_line(&iter))
-                    {
-                        gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
-
-                        return;
-                    }
-                    gtk_text_iter_forward_char(&iter);
-                    sep++;
-                    p++;
-                }
-                gtk_text_iter_forward_char(&iter);
-
-                gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
-                if (sep > 0)
-                    gtk_text_iter_forward_chars(&start, sep);
-
-                continue;
-
-                g_print(p2);
-            }
-            if (strlen(buf) > 0)
-            {
-                gint len = strlen(buf) - strlen(p2);
-
-                if (len <= -2)
-                {
-
-                    // printf("%s, %s, %d\n", p2, buf, len);
-                    gtk_text_iter_backward_chars(&start, -1 - len);
-
-                    gtk_text_iter_backward_chars(&iter, -1 - len);
-                }
-
-                // g_print("heren %s %d %d\n", p2, v, i + 1);
+                // g_print(buf);
                 if (getnum_(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "num", &start, &iter);
+                    gtk_text_buffer_apply_tag_by_name(buffer, "num", &iter, &iter2);
                 else if (getsp_(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "special", &start, &iter);
+                    gtk_text_buffer_apply_tag_by_name(buffer, "special", &iter, &iter2);
+                else if (getlab_(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &iter, &iter2);
+                else if (getreg(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "reg", &iter, &iter2);
+
                 else if (getstr_(buf))
 
-                    gtk_text_buffer_apply_tag_by_name(buffer, "string", &start, &iter);
-                else if (getlab_(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &start, &iter);
-                else if (getreg(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "reg", &start, &iter);
-
+                {
+                    gtk_text_buffer_apply_tag_by_name(buffer, "string", &iter, &iter2);
+                }
                 else if (getkeyword(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &start, &iter);
+                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &iter, &iter2);
 
                 else if (strlen(line) > 0)
                 {
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "num", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "num", &iter, &iter2);
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "special", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "special", &iter, &iter2);
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "string", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "string", &iter, &iter2);
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "label_def", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "label_def", &iter, &iter2);
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
 
-                    gtk_text_buffer_remove_tag_by_name(buffer, "keyword", &start, &iter);
+                    gtk_text_buffer_remove_tag_by_name(buffer, "keyword", &iter, &iter2);
                 }
             }
-
-            if (sep > 0)
-                gtk_text_iter_forward_chars(&start, sep);
-            // t++;
+            t++;
         }
-        // i++;
         g_free(line);
     }
 }

@@ -100,6 +100,7 @@ void find_instruction16(struct emu8086 *aCPU)
     IP++;
     off |= *(CODE_SEGMENT_IP) << 8;
     IP++;
+    printf("leen: n%x\n", off);
 
     // off = off < 0 ? 0 - off : off;
     __uint128_t add = 0;
@@ -110,12 +111,12 @@ void find_instruction16(struct emu8086 *aCPU)
 
     // if (_current_instruction->starting_address == *(CODE_SEGMENT + IP))
     // {
-    //     printf("leen: n%d\n", off);
+    printf("leen: n%d\n", off);
 
     //     IP = *(CODE_SEGMENT_IP);
     //     return;
     // }
-    if (off > 0)
+    if (off >= 0)
         prev = NULL;
     else
         next = NULL;
@@ -156,9 +157,9 @@ void find_instruction16(struct emu8086 *aCPU)
         }
     }
     // IP++;
-    printf("l: \n\n%x\n\n", add);
+    printf("l: \n\n%x\n\n", _current_instruction->starting_address);
 
-    IP = add + 2;
+    IP = off < 0 ? b : b > 0xff ? b + 2 : b + 1;
     _INSTRUCTIONS = _current_instruction;
     // if ()
 }
@@ -178,12 +179,11 @@ void find_instruction(struct emu8086 *aCPU)
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
     struct instruction *next = _current_instruction->next;
-    if (off > 0)
+    if (off >= 0)
         prev = NULL;
     else
         next = NULL;
-    int b = IP + off;
-    printf("l: \n\n%x %d , %x\n\n", b, off, _current_instruction->end_address);
+    int b = _current_instruction->end_address + off;
     if (_current_instruction->starting_address == b)
     {
 
@@ -195,9 +195,9 @@ void find_instruction(struct emu8086 *aCPU)
     if (_current_instruction->end_address == b)
     { //  if(_current_instruction->end_address)
 
-        IP = (b + 1);
+        // IP = (b + 1);
         _INSTRUCTIONS = _current_instruction->next;
-        return;
+        // return;
     }
     while (1)
     {
@@ -236,8 +236,8 @@ void find_instruction(struct emu8086 *aCPU)
     }
     // IP++;
 
-    printf("l: \n\n%x %d , %x\n\n", IP + 29, off, _current_instruction->end_address);
-    IP += off;
+    IP = b;
+    printf("l: b = %x %d , %x\n\n", IP, off, _current_instruction->end_address);
     //    / if (off > 0)
     //         IP++;
     _INSTRUCTIONS = _current_instruction;
@@ -321,7 +321,7 @@ void find_instruction_call(struct emu8086 *aCPU)
         }
     }
     // IP++;
-    IP = add < 16 ? add + 2 : add + 1;
+    IP = add > 0xff ? add + 2 : add + 1;
     printf("nn: %x\n", add);
     push_to_stack(aCPU, _next);
     //  }

@@ -29,6 +29,7 @@
 #ifndef _EMU_CODE_RUNNER_C
 #define _EMU_CODE_RUNNER_C
 #include <gtk/gtk.h>
+#include <code.h>
 
 G_BEGIN_DECLS
 struct emu8086;
@@ -38,19 +39,20 @@ struct emu8086;
 #define EMU_8086_APP_CODE_RUNNER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU_8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunner))
 #define EMU_8086_APP_CODE_RUNNER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU_8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunnerClass))
 #define EMU_8086_CODE_RUNNER_IS_RUNNER_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_CODE_RUNNER_TYPE)
-typedef struct _Emu8086AppCodeRunnerPrivate Emu8086AppCodeRunnerPrivate;
 
+typedef struct _Emu8086AppCodeRunnerPrivate Emu8086AppCodeRunnerPrivate;
 struct _Emu8086AppCodeRunnerPrivate
 {
     struct emu8086 *aCPU;
     char *fname;
-    gint to;
+    guint to;
     gint state;
     gboolean can_run;
     gint ie;
     gchar *em;
+    gint f;
+    Emu8086AppCode *code;
 };
-
 typedef struct _Emu8086AppCodeRunner Emu8086AppCodeRunner;
 struct _Emu8086AppCodeRunner
 {
@@ -83,7 +85,8 @@ typedef enum
     PLAYING,
     STOPPED,
 
-    STEP
+    STEP,
+    STEP_OVER
 } Emu8086AppCodeRunnerState;
 
 GType emu_8086_app_code_runner_get_type(void) G_GNUC_CONST;
@@ -95,7 +98,7 @@ void run_clicked_app(Emu8086AppCodeRunner *runner);
 void step_clicked_app(Emu8086AppCodeRunner *runner);
 void stop_clicked_app(Emu8086AppCodeRunner *runner);
 void set_app_state(Emu8086AppCodeRunner *runner, gint state);
-void step_over_clicked_app(Emu8086AppCodeRunner *runner, gint *bps, gint len);
+void step_over_clicked_app(Emu8086AppCodeRunner *runner, Emu8086AppCode *code);
 void open_help();
 void _step(Emu8086AppCodeRunner *runner);
 void stop(Emu8086AppCodeRunner *runner, gboolean reset);

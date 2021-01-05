@@ -854,7 +854,6 @@ char *match_expression_level6(char *p, int *value)
         else
         {
             p = former_p;
-            printf("%s\n", p);
             if (isdigit(*p))
                 return NULL;
         }
@@ -914,17 +913,16 @@ char *match_expression_level6(char *p, int *value)
             *value = 0;
             undefined++;
             strcpy(undefined_name, expr_name);
-            // if (assembler_step)
-            // {
-            //     //     // if (!nu->is_defined)
+            if (assembler_step)
+            {
 
-            //     if ((!strcmp(expr_name, "WORD") == 0))
-            //     {
-            //         char m[25 + MAX_SIZE];
-            //         sprintf(m, "Undefined label '%s' on line %d\n", expr_name, line_number);
-            //         message(m, ERR, line_number);
-            //     }
-            // }
+                if ((!strcmp(expr_name, "WORD") == 0))
+                {
+                    char m[25 + MAX_SIZE];
+                    sprintf(m, "Undefined label '%s' on line %d\n", expr_name, line_number);
+                    message(m, ERR, line_number);
+                }
+            }
         }
         // (() )
         else
@@ -1662,7 +1660,7 @@ void process_instr()
                     else if (*p && *p == '?')
                     {
                         p++;
-                        printf("p: %s\n", p);
+                        // printf("p: %s\n", p);
 
                         // exit(1);
 
@@ -1928,30 +1926,36 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
             }
             if (part[0])
             {
-
-                if (!assembler_step)
-                    _current_instruction = define_instruction(line_number);
-                if (!assembler_step)
-                    _current_instruction->starting_address = address;
-
-                process_instr();
-                if (!assembler_step)
-                    _current_instruction->end_address = address;
-                if (!assembler_step)
+                if (strcmp(part, "DB") == 0 || strcmp(part, "DW") == 0)
                 {
-                    if (is_first)
-                    {
-                        _instruction_list = _current_instruction;
-                        is_first = 0;
-                    }
-                    else
-                    {
-                        _instruction_list->next = _current_instruction;
-                        _current_instruction->prev = _instruction_list;
-                        _instruction_list = _current_instruction;
-                    }
+                    process_instr();
                 }
 
+                else
+                {
+                    if (!assembler_step)
+                        _current_instruction = define_instruction(line_number);
+                    if (!assembler_step)
+                        _current_instruction->starting_address = address;
+
+                    process_instr();
+                    if (!assembler_step)
+                        _current_instruction->end_address = address;
+                    if (!assembler_step)
+                    {
+                        if (is_first)
+                        {
+                            _instruction_list = _current_instruction;
+                            is_first = 0;
+                        }
+                        else
+                        {
+                            _instruction_list->next = _current_instruction;
+                            _current_instruction->prev = _instruction_list;
+                            _instruction_list = _current_instruction;
+                        }
+                    }
+                }
                 // _current_instruction = _current_instruction->next;
             }
             break;
