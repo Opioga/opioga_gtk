@@ -4927,7 +4927,7 @@ void les(struct emu8086 *aCPU, int *handled)
 
 // rol_sar_8
 
-void rol_8(struct emu8086 *aCPU, int *handled)
+void rol_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -4942,13 +4942,14 @@ void rol_8(struct emu8086 *aCPU, int *handled)
     {
         unsigned char value;
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        int cf = IS_SET(value, 7);
+        int shift = cl ? (CX & 7) : 1;
+        int cf = IS_SET(value, (8 - shift));
 
         if (cf)
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         value |= cf;
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
@@ -4964,14 +4965,15 @@ void rol_8(struct emu8086 *aCPU, int *handled)
         unsigned char value;
 
         value = *op3;
-        int cf = IS_SET(value, 7);
+        int shift = cl ? (CX & 7) : 1;
+        int cf = IS_SET(value, (8 - shift));
 
         if (cf)
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
-        value = (value & 0xfe) | cf;
+        value <<= shift;
+        value |= cf;
 
         *op3 = value;
     }
@@ -4980,7 +4982,7 @@ void rol_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void ror_8(struct emu8086 *aCPU, int *handled)
+void ror_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -4997,12 +4999,13 @@ void ror_8(struct emu8086 *aCPU, int *handled)
         unsigned char value;
 
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        int cf = IS_SET(value, 0);
+        int shift = cl ? (CX & 7) : 1;
+        int cf = IS_SET(value, (shift - 1));
         if (cf)
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         value |= (cf << 7);
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
@@ -5018,13 +5021,13 @@ void ror_8(struct emu8086 *aCPU, int *handled)
         unsigned char value;
 
         value = *op3;
-        int cf = IS_SET(value, 0);
-
+        int shift = cl ? (CX & 7) : 1;
+        int cf = IS_SET(value, (shift - 1));
         if (cf)
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         value = (value & 0x7f) | (cf << 7);
 
         *op3 = value;
@@ -5034,7 +5037,7 @@ void ror_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void rcl_8(struct emu8086 *aCPU, int *handled)
+void rcl_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5050,11 +5053,13 @@ void rcl_8(struct emu8086 *aCPU, int *handled)
         unsigned char value;
         int cf = GET_FLAG(0);
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        if (IS_SET(value, 7))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         value |= cf;
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
@@ -5071,12 +5076,15 @@ void rcl_8(struct emu8086 *aCPU, int *handled)
         int cf = GET_FLAG(0);
 
         value = *op3;
-        if (IS_SET(value, 7))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
-        value = (value & 0xfe) | cf;
+        value <<= shift;
+
+        value |= cf;
 
         *op3 = value;
     }
@@ -5085,7 +5093,7 @@ void rcl_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void rcr_8(struct emu8086 *aCPU, int *handled)
+void rcr_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5102,7 +5110,9 @@ void rcr_8(struct emu8086 *aCPU, int *handled)
         unsigned char value;
         int cf = GET_FLAG(0);
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        if (IS_SET(value, 0))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
@@ -5123,11 +5133,13 @@ void rcr_8(struct emu8086 *aCPU, int *handled)
         int cf = GET_FLAG(0);
 
         value = *op3;
-        if (IS_SET(value, 0))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         value = (value & 0x7f) | (cf << 7);
 
         *op3 = value;
@@ -5137,7 +5149,7 @@ void rcr_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void shl_8(struct emu8086 *aCPU, int *handled)
+void shl_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5153,11 +5165,14 @@ void shl_8(struct emu8086 *aCPU, int *handled)
         printf("%x", high_reg);
         unsigned char value;
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        if (IS_SET(value, 7))
+
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
 
@@ -5171,11 +5186,13 @@ void shl_8(struct emu8086 *aCPU, int *handled)
             exit(1);
         unsigned char value;
         value = *op3;
-        if (IS_SET(value, 7))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         *op3 = value;
     }
     IP++;
@@ -5183,7 +5200,7 @@ void shl_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void shr_8(struct emu8086 *aCPU, int *handled)
+void shr_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5199,11 +5216,14 @@ void shr_8(struct emu8086 *aCPU, int *handled)
         printf("%x", high_reg);
         unsigned char value;
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
-        if (IS_SET(value, 0))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
+
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
 
@@ -5217,11 +5237,13 @@ void shr_8(struct emu8086 *aCPU, int *handled)
             exit(1);
         unsigned char value;
         value = *op3;
-        if (IS_SET(value, 0))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         *op3 = value;
     }
     IP++;
@@ -5229,7 +5251,7 @@ void shr_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void sal_8(struct emu8086 *aCPU, int *handled)
+void sal_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5246,11 +5268,13 @@ void sal_8(struct emu8086 *aCPU, int *handled)
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
         int cf = IS_SET(value, 0);
 
-        if (IS_SET(value, 7))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         value |= cf;
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
@@ -5267,12 +5291,13 @@ void sal_8(struct emu8086 *aCPU, int *handled)
 
         value = *op3;
         int cf = IS_SET(value, 0);
+        int shift = cl ? (CX & 0x7) : 1;
 
-        if (IS_SET(value, 7))
+        if (IS_SET(value, (8 - shift)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value <<= 1;
+        value <<= shift;
         value |= cf;
 
         *op3 = value;
@@ -5282,7 +5307,7 @@ void sal_8(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-void sar_8(struct emu8086 *aCPU, int *handled)
+void sar_8(struct emu8086 *aCPU, int *handled, int cl)
 {
 
     int *op2, value = 0;
@@ -5300,11 +5325,13 @@ void sar_8(struct emu8086 *aCPU, int *handled)
 
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
         int cf = IS_SET(value, 7);
-        if (IS_SET(value, 0))
+        int shift = cl ? (CX & 0x7) : 1;
+
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         value |= (cf << 7);
         *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
     }
@@ -5321,12 +5348,13 @@ void sar_8(struct emu8086 *aCPU, int *handled)
 
         value = *op3;
         int cf = IS_SET(value, 7);
+        int shift = cl ? (CX & 0x7) : 1;
 
-        if (IS_SET(value, 0))
+        if (IS_SET(value, (shift - 1)))
             SET_FLAG(0);
         else
             CLEAR_FLAG(0);
-        value >>= 1;
+        value >>= shift;
         value |= (cf << 7);
 
         *op3 = value;
@@ -5338,38 +5366,39 @@ void sar_8(struct emu8086 *aCPU, int *handled)
 
 void rol_sar_8(struct emu8086 *aCPU, int *handled)
 {
+    int cl = *(CODE_SEGMENT + IP) == 0xd2;
     IP++;
     unsigned char opn = *(CODE_SEGMENT + IP);
     int ins = (opn & 0b111000) >> 3;
     switch (ins)
     {
     case 0:
-        rol_8(aCPU, handled);
+        rol_8(aCPU, handled, cl);
         break;
     case 1:
-        ror_8(aCPU, handled);
+        ror_8(aCPU, handled, cl);
         break;
     case 2:
-        rcl_8(aCPU, handled);
+        rcl_8(aCPU, handled, cl);
         break;
     case 3:
-        rcr_8(aCPU, handled);
+        rcr_8(aCPU, handled, cl);
         break;
     case 4:
 
-        shl_8(aCPU, handled);
+        shl_8(aCPU, handled, cl);
         break;
     case 5:
 
-        shr_8(aCPU, handled);
+        shr_8(aCPU, handled, cl);
         break;
 
     case 6:
 
-        sal_8(aCPU, handled);
+        sal_8(aCPU, handled, cl);
         break;
     default:
-        sar_8(aCPU, handled);
+        sar_8(aCPU, handled, cl);
 
         break;
     }
