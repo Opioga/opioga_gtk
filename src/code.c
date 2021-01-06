@@ -231,6 +231,7 @@ emu_8086_app_code_draw(GtkWidget *widget,
     {
         draw(priv->gutter, cr);
     }
+    return event_handled;
 }
 
 static void emu_8086_app_code_remove_all_break_points(Emu8086AppCode *code)

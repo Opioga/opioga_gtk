@@ -267,7 +267,8 @@ enum instruction_set_enum
     CLD = 0xfc,
     STD = 0xfD,
     INC_DB8 = 0xfe,
-
+    ROL_8_SAR_8 = 0xd0,
+    ROL_8_SAR_16 = 0xd1,
     DEC_DB8 = 0xfe,
     INC_DW16 = 0xff,
     DEC_DW16 = 0xff,

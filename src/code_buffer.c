@@ -345,7 +345,9 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             p2 = buf;
             iter = start;
             iter2 = start;
-            while (*p && isspace(*p) || *p == ',' || *p == '(' || *p == ')' || *p == '[' || *p == ']')
+            while (*p && isspace(*p) || *p == ',' || *p == '/' ||
+                   *p == '*' || *p == '(' || *p == ')' || *p == '[' || *p == ']' || *p == '+' ||
+                   *p == '-')
             {
                 p++;
                 v++;
@@ -384,7 +386,9 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             {
                 //
                 //if ()
-                if ((!isString && !isString2) && (isspace(*p) || *p == '"' || *p == ',' || *p == '(' || *p == ')' || *p == '[' || *p == ']' || *p == '\''))
+                if ((!isString && !isString2) && (isspace(*p) || *p == '+' || *p == '/' ||
+                                                  *p == '*' || *p == '-' || *p == '"' || *p == ',' ||
+                                                  *p == '(' || *p == ')' || *p == '[' || *p == ']' || *p == '\''))
                 {
                     break;
                 }

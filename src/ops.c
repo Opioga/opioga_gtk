@@ -4400,21 +4400,16 @@ void nop(struct emu8086 *aCPU, int *handled)
 
 void xchg_ax_r16(struct emu8086 *aCPU, int *handled)
 {
-    int reg_offset = *(CODE_SEGMENT_IP)-0x90;
-    if (reg_offset == 0)
-    {
-        IP++;
-        *handled = 1;
-        return;
-    }
-    int *op = SFRS + reg_offset, value1, value2;
-    value1 = AX;
-    value2 = *op;
-    AX = value2;
-    *op = value1;
-    IP++;
+    // IP++;
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    unsigned char reg = opn & 0b111;
+    op2 = SFRS + reg;
+    value = AX;
+    AX = *op2;
+    *op2 = value;
     *handled = 1;
-    return;
+    IP++;
 }
 void xchg_r16_d16(struct emu8086 *aCPU, int *handled)
 {
@@ -4461,16 +4456,17 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
     if (b)
     {
         int value, value2;
-
-        if (high_reg == 0)
+        printf("%d \n", high_reg);
+        if (high_reg == 0 && (op3 != op2))
         {
+
             value = *op3 & 0xff;
             value2 = *op2 & 0xff;
 
             *op3 = (*op3 & 0xff00) | value2;
             *op2 = (*op2 & 0xff00) | value;
         }
-        else if (high_reg == 3)
+        else if (high_reg == 3 && (op3 != op2))
         {
             value = *op3 >> 8;
             value2 = *op2 >> 8;
@@ -4478,38 +4474,44 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
             *op3 = (*op3 & 0xff) | (value2 << 8);
             *op2 = (*op2 & 0xff) | (value << 8);
         }
-        else if (high_reg == 1)
-        {
-            value = *op3 >> 8;
-            value2 = *op2 & 0xff;
 
-            *op3 = (*op3 & 0xff) | (value2 << 8);
-            *op2 = (*op2 & 0xff00) | (value);
-        }
         else
         {
             value2 = *op2 >> 8;
             value = *op3 & 0xff;
 
-            *op2 = (*op2 & 0xff) | (value << 8);
-            *op3 = (*op3 & 0xff00) | (value2);
+            if (op3 == op2 || high_reg == 1)
+            {
+                *op2 = (*op2 & 0xff) | (value << 8);
+                *op3 = (*op3 & 0xff00) | (value2);
+            }
+            else
+            {
+                value2 = *op2 & 0xff;
+                value = *op3 >> 8;
+
+                *op2 = (*op2 & 0xff00) | (value);
+                *op3 = (*op3 & 0xff) | (value2 << 8);
+            }
         }
 
         IP += 1;
         *handled = 1;
         is_16 = 0;
+        return;
     }
     opn = opn > 0x79 ? opn - 0x40 : opn;
+    high_reg = 0;
     if (get_ops_reg_8_addr(aCPU, opn, &op3, &op1))
     {
-        int value = high_reg ? ((*op1 & 0xff00) >> 8) : (*op1 & 0xff);
+        unsigned int value = *op1;
         //  IP++;
         //  value += *(op1);
         int value2 = *op3;
-        *op1 = high_reg ? ((*op1 & 0xff) | (value2 << 8))
-                        : ((*op1 & 0xff00) | value2);
+        printf("%d %x %x\n", high_reg, value2 & 0xff, value2 >> 8);
+        *op1 = high_reg ? value2 >> 8 : value2 & 0xff;
         // *(op1) = value & 0xff;
-        *op3 = value;
+        *op3 = high_reg ? (*op3 & 0xff) | (value << 8) : (*op3 & 0xff00) | value;
         *handled = 1;
         IP++;
     }
@@ -4818,6 +4820,1075 @@ void std(struct emu8086 *aCPU, int *handled)
     IP++;
     *handled = 1;
 }
+
+// lea
+void lea(struct emu8086 *aCPU, int *handled)
+{
+    IP++;
+    unsigned char opn;
+    int *dest;
+    dest = NULL;
+    opn = *(CODE_SEGMENT_IP);
+    unsigned char mod = (opn & 0b11000000) >> 6,
+                  reg = (opn & 0b00111000) >> 3,
+                  r_m = opn & 0b111;
+    dest = SFRS + reg;
+    if (mod == 0 && r_m == 6)
+    {
+        // special
+        *dest = 0;
+        IP++;
+        int v = *(CODE_SEGMENT_IP);
+        IP++;
+        v |= *(CODE_SEGMENT_IP) << 8;
+        *dest = v;
+    }
+    else
+    {
+        // special
+        switch (r_m)
+        {
+        case 0:
+            *dest = BX + SI;
+
+            break;
+        case 1:
+            *dest = BX + DI;
+            break;
+        case 2:
+            *dest = BP + SI;
+            break;
+        case 3:
+            *dest = BP + DI;
+            break;
+        case 4:
+            // printf("33jjjj\n");
+            // special
+            *dest = SI;
+            // printf("33jjjj\n, %d\n", **dest);
+
+            break;
+        case 5:
+            *dest = DI;
+            break;
+        case 6:
+            *dest = BP;
+            break;
+        case 7:
+            *dest = BX;
+            break;
+        }
+
+        int width = mod, displacement = 0;
+        if (width > 0)
+        {
+            IP++;
+            displacement = *(CODE_SEGMENT_IP);
+        }
+        if (width > 1)
+        {
+            IP++;
+            int d = 0;
+            d = *(CODE_SEGMENT_IP);
+            displacement |= d << 8;
+        }
+
+        *dest += displacement;
+    }
+    *handled = 1;
+    IP++;
+}
+
+// les
+void les(struct emu8086 *aCPU, int *handled)
+{
+    is_16 = 1;
+    IP++;
+    unsigned char *op1;
+    int *op2; // *op3;
+    op1 = NULL;
+    op2 = NULL;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
+    int value = 0;
+    value = *op1;
+    op1++;
+    value = value | (*op1 << 8);
+    op1++;
+    *op2 = value;
+    value = *op1;
+    op1++;
+    value = value | (*op1 << 8);
+    op1++;
+    ES = value;
+    *handled = 1;
+    IP++;
+}
+
+// rol_sar_8
+
+void rol_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned char value;
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        int cf = IS_SET(value, 7);
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value |= cf;
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+
+        value = *op3;
+        int cf = IS_SET(value, 7);
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value = (value & 0xfe) | cf;
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void ror_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned char value;
+
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        int cf = IS_SET(value, 0);
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 7);
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+
+        value = *op3;
+        int cf = IS_SET(value, 0);
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value = (value & 0x7f) | (cf << 7);
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rcl_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned char value;
+        int cf = GET_FLAG(0);
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value |= cf;
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+        int cf = GET_FLAG(0);
+
+        value = *op3;
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value = (value & 0xfe) | cf;
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rcr_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        printf("%x", high_reg);
+        unsigned char value;
+        int cf = GET_FLAG(0);
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 7);
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+        int cf = GET_FLAG(0);
+
+        value = *op3;
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value = (value & 0x7f) | (cf << 7);
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void shl_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        printf("%x", high_reg);
+        unsigned char value;
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+        value = *op3;
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void shr_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        printf("%x", high_reg);
+        unsigned char value;
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+        value = *op3;
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void sal_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned char value;
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        int cf = IS_SET(value, 0);
+
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value |= cf;
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+
+        value = *op3;
+        int cf = IS_SET(value, 0);
+
+        if (IS_SET(value, 7))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= 1;
+        value |= cf;
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void sar_8(struct emu8086 *aCPU, int *handled)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 0;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned char value;
+
+        value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
+        int cf = IS_SET(value, 7);
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 7);
+        *op1 = (high_reg) ? (*op1 & 0xff) | (value << 8) : (*op1 & 0xff00) | (value);
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned char value;
+
+        value = *op3;
+        int cf = IS_SET(value, 7);
+
+        if (IS_SET(value, 0))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 7);
+
+        *op3 = value;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rol_sar_8(struct emu8086 *aCPU, int *handled)
+{
+    IP++;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int ins = (opn & 0b111000) >> 3;
+    switch (ins)
+    {
+    case 0:
+        rol_8(aCPU, handled);
+        break;
+    case 1:
+        ror_8(aCPU, handled);
+        break;
+    case 2:
+        rcl_8(aCPU, handled);
+        break;
+    case 3:
+        rcr_8(aCPU, handled);
+        break;
+    case 4:
+
+        shl_8(aCPU, handled);
+        break;
+    case 5:
+
+        shr_8(aCPU, handled);
+        break;
+
+    case 6:
+
+        sal_8(aCPU, handled);
+        break;
+    default:
+        sar_8(aCPU, handled);
+
+        break;
+    }
+}
+
+void rol_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    printf("here %x \n", 3);
+
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned short value;
+        value = *op1;
+        int shift = cl ? (CX & 0xf) : 1;
+
+        int cf = IS_SET(value, (16 - shift));
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int shift = cl ? (CX & 0xf) : 1;
+
+        int cf = IS_SET(value, (16 - shift));
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        printf("%x \n", value);
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void ror_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned short value;
+
+        value = *op1;
+
+        int shift = cl ? (CX & 0xf) : 1;
+        int cf = IS_SET(value, (shift - 1));
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+        value |= (cf << 15);
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int shift = cl ? (CX & 0xf) : 1;
+        int cf = IS_SET(value, (shift - 1));
+
+        if (cf)
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+        value |= (cf << 15);
+
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rcl_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    printf("here %x \n", 3);
+
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned short value;
+        value = *op1;
+        int cf = GET_FLAG(0);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+        int cf = GET_FLAG(0);
+
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        printf("%x \n", value);
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rcr_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned short value;
+
+        value = *op1;
+        int cf = GET_FLAG(0);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+        value |= (cf << 15);
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int cf = GET_FLAG(0);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+        value |= (cf << 15);
+
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void shl_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned short value;
+        value = *op1;
+
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        printf("%x, \n", value);
+        *op1 = value & 0xffff;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        printf("%x \n", value);
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void shr_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned short value;
+
+        value = *op1;
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= shift;
+
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void sal_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    printf("here %x \n", 3);
+
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+        unsigned short value;
+        value = *op1;
+        int cf = IS_SET(value, 0);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int cf = IS_SET(value, 0);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (16 - shift)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value <<= shift;
+        value |= cf;
+        printf("%x \n", value);
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void sar_16(struct emu8086 *aCPU, int *handled, int cl)
+{
+
+    int *op2, value = 0;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int b = 0;
+    int *op1;
+    op2 = op1 = NULL;
+    is_16 = 1;
+    high_reg = 0;
+    b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
+    if (b)
+    {
+
+        unsigned short value;
+
+        value = *op1;
+        int cf = IS_SET(value, 15);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 15);
+        *op1 = value;
+    }
+
+    else
+    {
+        unsigned char *op3;
+        op3 = NULL;
+        get_ops_reg_8_addr(aCPU, (opn & 0xc7), &op2, &op3);
+        // TODO - Warn error
+        if (op3 == NULL)
+            exit(1);
+        unsigned short value;
+
+        value = *op3;
+        value |= *(op3 + 1) << 8;
+
+        int cf = IS_SET(value, 15);
+        int shift = cl ? (CX & 0xf) : 1;
+
+        if (IS_SET(value, (shift - 1)))
+            SET_FLAG(0);
+        else
+            CLEAR_FLAG(0);
+        value >>= 1;
+        value |= (cf << 15);
+
+        *op3++ = value & 0xff;
+        *op3 = value >> 8;
+    }
+    IP++;
+
+    *handled = 1;
+}
+
+void rol_sar_16(struct emu8086 *aCPU, int *handled)
+{
+    int cl = *(CODE_SEGMENT + IP) == 0xd3;
+    IP++;
+    unsigned char opn = *(CODE_SEGMENT + IP);
+    int ins = (opn & 0b111000) >> 3;
+    switch (ins)
+    {
+    case 0:
+        rol_16(aCPU, handled, cl);
+        break;
+    case 1:
+        ror_16(aCPU, handled, cl);
+        break;
+    case 2:
+        rcl_16(aCPU, handled, cl);
+        break;
+    case 3:
+        rcr_16(aCPU, handled, cl);
+        break;
+    case 4:
+
+        shl_16(aCPU, handled, cl);
+        break;
+    case 5:
+
+        shr_16(aCPU, handled, cl);
+        break;
+
+    case 6:
+
+        sal_16(aCPU, handled, cl);
+        break;
+    default:
+        sar_16(aCPU, handled, cl);
+
+        break;
+    }
+}
+
+// ANCHOR
+
+// unimplemented instructions
 void unimp(struct emu8086 *aCPU, int *handled)
 {
     IP = _INSTRUCTIONS->end_address + 1;
@@ -5035,7 +6106,6 @@ void op_setptrs(struct emu8086 *aCPU)
     // XCHG
     aCPU->op[XCHG_D8_R8] = &xchg_r8_d8;
     aCPU->op[XCHG_D16_R16] = &xchg_r16_d16;
-    aCPU->op[XCHG_R16_AX] = &xchg_ax_r16;
     // AAA
     aCPU->op[AAA] = &aaa;
 
@@ -5091,14 +6161,31 @@ void op_setptrs(struct emu8086 *aCPU)
 
     // STC
     aCPU->op[STD] = &std;
+
+    // LEA
+    aCPU->op[LEA_R16_D16] = &lea;
+
+    // LES
+    aCPU->op[LES_R16_D16] = &les;
+
+    // ROL TO SAR
+    aCPU->op[ROL_8_SAR_8] = &rol_sar_8;
+    aCPU->op[ROL_8_SAR_16] = &rol_sar_16;
+    aCPU->op[ROL_8_SAR_8 + 1] = &rol_sar_8;
+    aCPU->op[0xd3] = &rol_sar_16;
+    // aCPU->op[ROL_8_SAR_8]
+
     for (int i = 0; i < 8; i++)
     {
         /* code */
+
         aCPU->op[64 + i] = &inc_reg16;
         aCPU->op[72 + i] = &dec_reg16;
         aCPU->op[80 + i] = &push_reg16;
         aCPU->op[88 + i] = &pop_reg16;
         aCPU->op[176 + i] = &mov_reg8_i8;
+        if (i < 7)
+            aCPU->op[145 + i] = &xchg_ax_r16;
         aCPU->op[184 + i] = &mov_reg16_i16;
     }
 
