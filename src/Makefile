@@ -15,6 +15,7 @@
 
 
 
+
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
     false; \
@@ -86,6 +87,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = x86_64-pc-linux-gnu
+host_triplet = x86_64-pc-linux-gnu
 bin_PROGRAMS = emu8086$(EXEEXT)
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -96,21 +99,60 @@ DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_emu8086_OBJECTS = emu8086-emu8086.$(OBJEXT) \
-	emu8086-assembler.$(OBJEXT) emu8086-ops.$(OBJEXT) \
-	emu8086-resources.$(OBJEXT) emu8086-pango_css.$(OBJEXT) \
-	emu8086-code_buffer.$(OBJEXT) emu8086-code_gutter.$(OBJEXT) \
-	emu8086-code.$(OBJEXT) emu8086-emu_8086_app_runner.$(OBJEXT) \
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+LTLIBRARIES = $(lib_LTLIBRARIES)
+libemu8086_la_LIBADD =
+am_libemu8086_la_OBJECTS = libemu8086_la-emu8086.lo \
+	libemu8086_la-ops.lo libemu8086_la-assembler.lo
+libemu8086_la_OBJECTS = $(am_libemu8086_la_OBJECTS)
+AM_V_lt = $(am__v_lt_$(V))
+am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+libemu8086_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libemu8086_la_CFLAGS) \
+	$(CFLAGS) $(libemu8086_la_LDFLAGS) $(LDFLAGS) -o $@
+am_emu8086_OBJECTS = emu8086-resources.$(OBJEXT) \
+	emu8086-pango_css.$(OBJEXT) emu8086-code_buffer.$(OBJEXT) \
+	emu8086-code_gutter.$(OBJEXT) emu8086-code.$(OBJEXT) \
+	emu8086-emu_8086_app_runner.$(OBJEXT) \
 	emu8086-emu8086win.$(OBJEXT) emu8086-emu8086app.$(OBJEXT) \
 	emu8086-emu8086appprefs.$(OBJEXT) \
 	emu8086-emu8086aboutwin.$(OBJEXT) emu8086-main.$(OBJEXT)
 emu8086_OBJECTS = $(am_emu8086_OBJECTS)
 am__DEPENDENCIES_1 =
-emu8086_DEPENDENCIES = $(am__DEPENDENCIES_1)
-emu8086_LINK = $(CCLD) $(emu8086_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+emu8086_DEPENDENCIES = $(am__DEPENDENCIES_1) libemu8086.la
+emu8086_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(emu8086_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -126,37 +168,40 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/emu8086-assembler.Po \
-	./$(DEPDIR)/emu8086-code.Po ./$(DEPDIR)/emu8086-code_buffer.Po \
+am__depfiles_remade = ./$(DEPDIR)/emu8086-code.Po \
+	./$(DEPDIR)/emu8086-code_buffer.Po \
 	./$(DEPDIR)/emu8086-code_gutter.Po \
-	./$(DEPDIR)/emu8086-emu8086.Po \
 	./$(DEPDIR)/emu8086-emu8086aboutwin.Po \
 	./$(DEPDIR)/emu8086-emu8086app.Po \
 	./$(DEPDIR)/emu8086-emu8086appprefs.Po \
 	./$(DEPDIR)/emu8086-emu8086win.Po \
 	./$(DEPDIR)/emu8086-emu_8086_app_runner.Po \
-	./$(DEPDIR)/emu8086-main.Po ./$(DEPDIR)/emu8086-ops.Po \
-	./$(DEPDIR)/emu8086-pango_css.Po \
-	./$(DEPDIR)/emu8086-resources.Po
+	./$(DEPDIR)/emu8086-main.Po ./$(DEPDIR)/emu8086-pango_css.Po \
+	./$(DEPDIR)/emu8086-resources.Po \
+	./$(DEPDIR)/libemu8086_la-assembler.Plo \
+	./$(DEPDIR)/libemu8086_la-emu8086.Plo \
+	./$(DEPDIR)/libemu8086_la-ops.Plo
 am__mv = mv -f
-AM_V_lt = $(am__v_lt_$(V))
-am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
-am__v_lt_0 = --silent
-am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_$(V))
 am__v_CC_ = $(am__v_CC_$(AM_DEFAULT_VERBOSITY))
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(emu8086_SOURCES)
-DIST_SOURCES = $(emu8086_SOURCES)
+SOURCES = $(libemu8086_la_SOURCES) $(emu8086_SOURCES)
+DIST_SOURCES = $(libemu8086_la_SOURCES) $(emu8086_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -186,6 +231,7 @@ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = ${SHELL} /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/missing aclocal-1.16
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
+AR = ar
 AUTOCONF = ${SHELL} /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/missing autoconf
 AUTOHEADER = ${SHELL} /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/missing autoheader
 AUTOMAKE = ${SHELL} /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/missing automake-1.16
@@ -193,30 +239,48 @@ AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
+CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"emu8086\" -DPACKAGE_TARNAME=\"emu8086\" -DPACKAGE_VERSION=\"1.0.1\" -DPACKAGE_STRING=\"emu8086\ 1.0.1\" -DPACKAGE_BUGREPORT=\"allisonkosy@gmail.com\" -DPACKAGE_URL=\"\" -DPACKAGE=\"emu8086\" -DVERSION=\"1.0.1\"
+DEFS = -DPACKAGE_NAME=\"emu8086\" -DPACKAGE_TARNAME=\"emu8086\" -DPACKAGE_VERSION=\"1.0.1\" -DPACKAGE_STRING=\"emu8086\ 1.0.1\" -DPACKAGE_BUGREPORT=\"allisonkosy@gmail.com\" -DPACKAGE_URL=\"\" -DPACKAGE=\"emu8086\" -DVERSION=\"1.0.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
+DLLTOOL = false
+DSYMUTIL = 
+DUMPBIN = 
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
+EGREP = /bin/grep -E
 EMU8086_CFLAGS = -pthread -I/usr/include/gtk-3.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/gtk-3.0 -I/usr/include/gio-unix-2.0 -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/fribidi -I/usr/include/harfbuzz -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libmount -I/usr/include/blkid -I/usr/include/uuid -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
 EMU8086_LIBS = -lgtk-3 -lgdk-3 -lpangocairo-1.0 -lpango-1.0 -lharfbuzz -latk-1.0 -lcairo-gobject -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 EXEEXT = 
+FGREP = /bin/grep -F
 GLIB_COMPILE_SCHEMAS = /usr/lib/x86_64-linux-gnu/glib-2.0/glib-compile-schemas
+GREP = /bin/grep
 GSETTINGS_DISABLE_SCHEMAS_COMPILE = 
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
+LD = /usr/bin/ld -m elf_x86_64
 LDFLAGS = 
 LIBOBJS = 
 LIBS = 
+LIBTOOL = $(SHELL) $(top_builddir)/libtool
+LIPO = 
+LN_S = ln -s
 LTLIBOBJS = 
+LT_SYS_LIBRARY_PATH = 
 MAKEINFO = ${SHELL} /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/missing makeinfo
+MANIFEST_TOOL = :
 MKDIR_P = /bin/mkdir -p
+NM = /usr/bin/nm -B
+NMEDIT = 
+OBJDUMP = objdump
 OBJEXT = o
+OTOOL = 
+OTOOL64 = 
 PACKAGE = emu8086
 PACKAGE_BUGREPORT = allisonkosy@gmail.com
 PACKAGE_NAME = emu8086
@@ -228,22 +292,30 @@ PATH_SEPARATOR = :
 PKG_CONFIG = /usr/bin/pkg-config
 PKG_CONFIG_LIBDIR = 
 PKG_CONFIG_PATH = 
+RANLIB = ranlib
+SED = /bin/sed
 SET_MAKE = 
 SHELL = /bin/bash
-STRIP = 
+STRIP = strip
 VERSION = 1.0.1
 abs_builddir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/src
 abs_srcdir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086/src
 abs_top_builddir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086
 abs_top_srcdir = /home/kosy/Desktop/kosyWork/Desktop/gtkemu8086
+ac_ct_AR = ar
 ac_ct_CC = gcc
+ac_ct_DUMPBIN = 
 am__include = include
 am__leading_dot = .
 am__quote = 
 am__tar = $${TAR-tar} chof - "$$tardir"
 am__untar = $${TAR-tar} xf -
 bindir = ${exec_prefix}/bin
+build = x86_64-pc-linux-gnu
 build_alias = 
+build_cpu = x86_64
+build_os = linux-gnu
+build_vendor = pc
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
@@ -251,7 +323,11 @@ docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
 gsettingsschemadir = ${datarootdir}/glib-2.0/schemas
+host = x86_64-pc-linux-gnu
 host_alias = 
+host_cpu = x86_64
+host_os = linux-gnu
+host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
@@ -280,13 +356,17 @@ top_srcdir = ..
 # gsettings_SCHEMAS is a list of all the schemas you want to install
 gsettings_SCHEMAS = com.krc.emu8086app.gschema.xml
 EXTRA_DIST = com.krc.emu8086app.gschema.xml
+lib_LTLIBRARIES = libemu8086.la
+libemu8086_la_SOURCES = emu8086.c \
+ops.c \
+assembler.c
+
+libemu8086_la_LDFLAGS = -version-info 1:0:0
+libemu8086_la_CFLAGS = -I $(srcdir)/../include
 AM_CFLAGS = $(EMU8086_CFLAGS)
 emu8086_CFLAGS = -I $(srcdir)/../include $(EMU8086_CFLAGS)
-emu8086_LDADD = $(EMU8086_LIBS)
+emu8086_LDADD = $(EMU8086_LIBS) libemu8086.la
 emu8086_SOURCES = \
-emu8086.c \
-assembler.c \
-ops.c \
 resources.c \
 pango_css.c \
 code_buffer.c \
@@ -302,7 +382,7 @@ main.c
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -342,6 +422,7 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
 	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
 	  ; then echo "$$p"; echo "$$p"; else :; fi; \
 	done | \
 	sed -e 'p;s,.*/,,;n;h' \
@@ -356,8 +437,8 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	while read type dir files; do \
 	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
 	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
 	    } \
 	; done
 
@@ -373,7 +454,51 @@ uninstall-binPROGRAMS:
 	cd "$(DESTDIR)$(bindir)" && rm -f $$files
 
 clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+	@list='$(bin_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	list2=; for p in $$list; do \
+	  if test -f $$p; then \
+	    list2="$$list2 $$p"; \
+	  else :; fi; \
+	done; \
+	test -z "$$list2" || { \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	}
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
+
+libemu8086.la: $(libemu8086_la_OBJECTS) $(libemu8086_la_DEPENDENCIES) $(EXTRA_libemu8086_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libemu8086_la_LINK) -rpath $(libdir) $(libemu8086_la_OBJECTS) $(libemu8086_la_LIBADD) $(LIBS)
 
 emu8086$(EXEEXT): $(emu8086_OBJECTS) $(emu8086_DEPENDENCIES) $(EXTRA_emu8086_DEPENDENCIES) 
 	@rm -f emu8086$(EXEEXT)
@@ -385,20 +510,20 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/emu8086-assembler.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-code.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-code_buffer.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-code_gutter.Po # am--include-marker
-include ./$(DEPDIR)/emu8086-emu8086.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-emu8086aboutwin.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-emu8086app.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-emu8086appprefs.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-emu8086win.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-emu_8086_app_runner.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-main.Po # am--include-marker
-include ./$(DEPDIR)/emu8086-ops.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-pango_css.Po # am--include-marker
 include ./$(DEPDIR)/emu8086-resources.Po # am--include-marker
+include ./$(DEPDIR)/libemu8086_la-assembler.Plo # am--include-marker
+include ./$(DEPDIR)/libemu8086_la-emu8086.Plo # am--include-marker
+include ./$(DEPDIR)/libemu8086_la-ops.Plo # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -420,47 +545,33 @@ am--depfiles: $(am__depfiles_remade)
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-emu8086-emu8086.o: emu8086.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-emu8086.o -MD -MP -MF $(DEPDIR)/emu8086-emu8086.Tpo -c -o emu8086-emu8086.o `test -f 'emu8086.c' || echo '$(srcdir)/'`emu8086.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-emu8086.Tpo $(DEPDIR)/emu8086-emu8086.Po
-#	$(AM_V_CC)source='emu8086.c' object='emu8086-emu8086.o' libtool=no \
+.c.lo:
+	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+#	$(AM_V_CC)source='$<' object='$@' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-emu8086.o `test -f 'emu8086.c' || echo '$(srcdir)/'`emu8086.c
+#	$(AM_V_CC_no)$(LTCOMPILE) -c -o $@ $<
 
-emu8086-emu8086.obj: emu8086.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-emu8086.obj -MD -MP -MF $(DEPDIR)/emu8086-emu8086.Tpo -c -o emu8086-emu8086.obj `if test -f 'emu8086.c'; then $(CYGPATH_W) 'emu8086.c'; else $(CYGPATH_W) '$(srcdir)/emu8086.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-emu8086.Tpo $(DEPDIR)/emu8086-emu8086.Po
-#	$(AM_V_CC)source='emu8086.c' object='emu8086-emu8086.obj' libtool=no \
+libemu8086_la-emu8086.lo: emu8086.c
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -MT libemu8086_la-emu8086.lo -MD -MP -MF $(DEPDIR)/libemu8086_la-emu8086.Tpo -c -o libemu8086_la-emu8086.lo `test -f 'emu8086.c' || echo '$(srcdir)/'`emu8086.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libemu8086_la-emu8086.Tpo $(DEPDIR)/libemu8086_la-emu8086.Plo
+#	$(AM_V_CC)source='emu8086.c' object='libemu8086_la-emu8086.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-emu8086.obj `if test -f 'emu8086.c'; then $(CYGPATH_W) 'emu8086.c'; else $(CYGPATH_W) '$(srcdir)/emu8086.c'; fi`
+#	$(AM_V_CC_no)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -c -o libemu8086_la-emu8086.lo `test -f 'emu8086.c' || echo '$(srcdir)/'`emu8086.c
 
-emu8086-assembler.o: assembler.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-assembler.o -MD -MP -MF $(DEPDIR)/emu8086-assembler.Tpo -c -o emu8086-assembler.o `test -f 'assembler.c' || echo '$(srcdir)/'`assembler.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-assembler.Tpo $(DEPDIR)/emu8086-assembler.Po
-#	$(AM_V_CC)source='assembler.c' object='emu8086-assembler.o' libtool=no \
+libemu8086_la-ops.lo: ops.c
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -MT libemu8086_la-ops.lo -MD -MP -MF $(DEPDIR)/libemu8086_la-ops.Tpo -c -o libemu8086_la-ops.lo `test -f 'ops.c' || echo '$(srcdir)/'`ops.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libemu8086_la-ops.Tpo $(DEPDIR)/libemu8086_la-ops.Plo
+#	$(AM_V_CC)source='ops.c' object='libemu8086_la-ops.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-assembler.o `test -f 'assembler.c' || echo '$(srcdir)/'`assembler.c
+#	$(AM_V_CC_no)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -c -o libemu8086_la-ops.lo `test -f 'ops.c' || echo '$(srcdir)/'`ops.c
 
-emu8086-assembler.obj: assembler.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-assembler.obj -MD -MP -MF $(DEPDIR)/emu8086-assembler.Tpo -c -o emu8086-assembler.obj `if test -f 'assembler.c'; then $(CYGPATH_W) 'assembler.c'; else $(CYGPATH_W) '$(srcdir)/assembler.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-assembler.Tpo $(DEPDIR)/emu8086-assembler.Po
-#	$(AM_V_CC)source='assembler.c' object='emu8086-assembler.obj' libtool=no \
+libemu8086_la-assembler.lo: assembler.c
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -MT libemu8086_la-assembler.lo -MD -MP -MF $(DEPDIR)/libemu8086_la-assembler.Tpo -c -o libemu8086_la-assembler.lo `test -f 'assembler.c' || echo '$(srcdir)/'`assembler.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libemu8086_la-assembler.Tpo $(DEPDIR)/libemu8086_la-assembler.Plo
+#	$(AM_V_CC)source='assembler.c' object='libemu8086_la-assembler.lo' libtool=yes \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-assembler.obj `if test -f 'assembler.c'; then $(CYGPATH_W) 'assembler.c'; else $(CYGPATH_W) '$(srcdir)/assembler.c'; fi`
-
-emu8086-ops.o: ops.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-ops.o -MD -MP -MF $(DEPDIR)/emu8086-ops.Tpo -c -o emu8086-ops.o `test -f 'ops.c' || echo '$(srcdir)/'`ops.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-ops.Tpo $(DEPDIR)/emu8086-ops.Po
-#	$(AM_V_CC)source='ops.c' object='emu8086-ops.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-ops.o `test -f 'ops.c' || echo '$(srcdir)/'`ops.c
-
-emu8086-ops.obj: ops.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-ops.obj -MD -MP -MF $(DEPDIR)/emu8086-ops.Tpo -c -o emu8086-ops.obj `if test -f 'ops.c'; then $(CYGPATH_W) 'ops.c'; else $(CYGPATH_W) '$(srcdir)/ops.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/emu8086-ops.Tpo $(DEPDIR)/emu8086-ops.Po
-#	$(AM_V_CC)source='ops.c' object='emu8086-ops.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-ops.obj `if test -f 'ops.c'; then $(CYGPATH_W) 'ops.c'; else $(CYGPATH_W) '$(srcdir)/ops.c'; fi`
+#	$(AM_V_CC_no)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libemu8086_la_CFLAGS) $(CFLAGS) -c -o libemu8086_la-assembler.lo `test -f 'assembler.c' || echo '$(srcdir)/'`assembler.c
 
 emu8086-resources.o: resources.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -MT emu8086-resources.o -MD -MP -MF $(DEPDIR)/emu8086-resources.Tpo -c -o emu8086-resources.o `test -f 'resources.c' || echo '$(srcdir)/'`resources.c
@@ -616,6 +727,12 @@ emu8086-main.obj: main.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(emu8086_CFLAGS) $(CFLAGS) -c -o emu8086-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
 tags: tags-am
@@ -703,9 +820,11 @@ distdir-am: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(LTLIBRARIES)
+install-binPROGRAMS: install-libLTLIBRARIES
+
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -740,23 +859,24 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/emu8086-assembler.Po
-	-rm -f ./$(DEPDIR)/emu8086-code.Po
+		-rm -f ./$(DEPDIR)/emu8086-code.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_buffer.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_gutter.Po
-	-rm -f ./$(DEPDIR)/emu8086-emu8086.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086aboutwin.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086app.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086appprefs.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086win.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu_8086_app_runner.Po
 	-rm -f ./$(DEPDIR)/emu8086-main.Po
-	-rm -f ./$(DEPDIR)/emu8086-ops.Po
 	-rm -f ./$(DEPDIR)/emu8086-pango_css.Po
 	-rm -f ./$(DEPDIR)/emu8086-resources.Po
+	-rm -f ./$(DEPDIR)/libemu8086_la-assembler.Plo
+	-rm -f ./$(DEPDIR)/libemu8086_la-emu8086.Plo
+	-rm -f ./$(DEPDIR)/libemu8086_la-ops.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -779,7 +899,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -802,26 +922,27 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/emu8086-assembler.Po
-	-rm -f ./$(DEPDIR)/emu8086-code.Po
+		-rm -f ./$(DEPDIR)/emu8086-code.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_buffer.Po
 	-rm -f ./$(DEPDIR)/emu8086-code_gutter.Po
-	-rm -f ./$(DEPDIR)/emu8086-emu8086.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086aboutwin.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086app.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086appprefs.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu8086win.Po
 	-rm -f ./$(DEPDIR)/emu8086-emu_8086_app_runner.Po
 	-rm -f ./$(DEPDIR)/emu8086-main.Po
-	-rm -f ./$(DEPDIR)/emu8086-ops.Po
 	-rm -f ./$(DEPDIR)/emu8086-pango_css.Po
 	-rm -f ./$(DEPDIR)/emu8086-resources.Po
+	-rm -f ./$(DEPDIR)/libemu8086_la-assembler.Plo
+	-rm -f ./$(DEPDIR)/libemu8086_la-emu8086.Plo
+	-rm -f ./$(DEPDIR)/libemu8086_la-ops.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -831,23 +952,25 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
-	clean-binPROGRAMS clean-generic cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic distclean-tags \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
