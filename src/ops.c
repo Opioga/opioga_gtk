@@ -6200,8 +6200,8 @@ void op_setptrs(struct emu8086 *aCPU)
     // ROL TO SAR
     aCPU->op[ROL_8_SAR_8] = &rol_sar_8;
     aCPU->op[ROL_8_SAR_16] = &rol_sar_16;
-    aCPU->op[ROL_8_SAR_8 + 1] = &rol_sar_8;
-    aCPU->op[0xd3] = &rol_sar_16;
+    aCPU->op[ROL_8_SAR_8 + 2] = &rol_sar_8;
+    aCPU->op[ROL_8_SAR_16 + 2] = &rol_sar_16;
     // aCPU->op[ROL_8_SAR_8]
 
     for (int i = 0; i < 8; i++)
