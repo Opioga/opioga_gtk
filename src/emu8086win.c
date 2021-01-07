@@ -706,17 +706,17 @@ static void emu8086_win_change_theme(Emu8086AppWindow *win)
     else if (strcmp("cobalt", win->theme) == 0)
     {
         color.alpha = 1;
-        color.red = 0.58;
-        color.green = 0.31;
-        color.blue = 0.055;
+        color.red = 0;
+        color.green = 0.11;
+        color.blue = 0.2;
     }
 
     else if (strcmp("light", win->theme) == 0)
     {
         color.alpha = 1;
-        color.red = 1.0;
-        color.green = 1.0;
-        color.blue = 1.0;
+        color.red = .95;
+        color.green = .95;
+        color.blue = .95;
     }
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
 }

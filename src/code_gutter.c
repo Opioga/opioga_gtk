@@ -257,13 +257,13 @@ void recalculate_size(Emu8086AppCodeGutter *gutter)
 
     if (num_digits != priv->num_line_digits)
     {
-        gchar markup[24];
+        gchar markup[27];
         gint size;
         priv->num_line_digits = num_digits;
 
         num_lines = MAX(num_lines, 99);
 
-        g_snprintf(markup, sizeof markup, "<b>%d</b>", num_lines);
+        g_snprintf(markup, sizeof markup, "<span>%d</span>", num_lines);
 
         measure_text(gutter, markup, &size);
         priv->size = size;
@@ -279,7 +279,7 @@ gutter_renderer_query_data(Emu8086AppCodeGutter *gutter)
     PRIV_CODE_GUTTER;
     gint line;
     line = priv->num_lines;
-    gchar text[24];
+    gchar text[27];
     const gchar *textptr = text;
     // gint line;
     gint len;
@@ -290,7 +290,7 @@ gutter_renderer_query_data(Emu8086AppCodeGutter *gutter)
     }
     line = line + 1;
 
-    len = g_snprintf(text, sizeof text, "<b>%d</b>", line);
+    len = g_snprintf(text, sizeof text, "<span>%d</span>", line);
     priv->text = len >= 0 ? g_strndup(text, len) : g_strdup(text);
 }
 
@@ -449,6 +449,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
     GtkTextIter start;
     gint i;
 
+    // color.red
     buffer = priv->buffer;
 
     gtk_text_buffer_get_iter_at_mark(buffer,
@@ -497,6 +498,9 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         gint ypad = 0;
 
         background_area.width = priv->size + 10;
+        gtk_text_view_set_border_window_size(priv->code,
+                                             GTK_TEXT_WINDOW_LEFT,
+                                             background_area.width + 10);
         // g_print("%s %d", "lion", priv->size);
         cell_area.y = background_area.y + ypad;
         cell_area.height = background_area.height - 2 * ypad;
@@ -508,7 +512,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         cairo_save(cr);
 
         gdk_cairo_rectangle(cr, &background_area);
-
+        
         cairo_clip(cr);
 
         if (priv->cached_layout == NULL)
@@ -528,6 +532,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         x = cell_area.x; // + (cell_area.width - width)*0
         y = cell_area.y; // + (cell_area->height - height) * 0;
         GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(view));
+
         gtk_render_layout(context, cr, x, y, priv->cached_layout);
         cairo_restore(cr);
 

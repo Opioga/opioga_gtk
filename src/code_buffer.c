@@ -27,278 +27,14 @@
  */
 
 #include <code_buffer.h>
-
-static gchar *keywords[] = {
-    "aaa",
-    "aad",
-    "aam",
-    "aas",
-    "adc",
-    "add",
-    "and",
-    "call",
-    "cbw",
-    "clc",
-    "cld",
-    "cli",
-    "cmc",
-    "cmp",
-    "cmpsb",
-    "cmpsw",
-    "cwd",
-    "daa",
-    "das",
-    "dec",
-    "div",
-    "esc",
-    "hlt",
-    "idiv",
-    "imul",
-    "in",
-    "inc",
-    "int",
-    "into",
-    "iret",
-    "ja",
-    "jae",
-    "jb",
-    "jbe",
-    "jc",
-    "jcxz",
-    "je",
-    "jg",
-    "jge",
-    "jl",
-    "jle",
-    "jna",
-    "jnae",
-    "jnb",
-    "jnbe",
-    "jnc",
-    "jne",
-    "jng",
-    "jnge",
-    "jnl",
-    "jnle",
-    "jno",
-    "jnp",
-    "jns",
-    "jnz",
-    "jo",
-    "jp",
-    "jpe",
-    "jpo",
-    "js",
-    "jz",
-    "jmp",
-    "lahf",
-    "lds",
-    "lea",
-    "les",
-    "lock",
-    "lodsb",
-    "lodsw",
-    "loop",
-    "loope",
-    "loopne",
-    "loopnz",
-    "loopz",
-    "mov",
-    "movsb",
-    "movsw",
-    "mul",
-    "neg",
-    "nop",
-    "not",
-    "or",
-    "out",
-    "pop",
-    "popf",
-    "push",
-    "pushf",
-    "rcl",
-    "rcr",
-    "rep",
-    "repe",
-    "repne",
-    "repnz",
-    "repz",
-    "ret",
-    "retn",
-    "retf",
-    "rol",
-    "ror",
-    "sahf",
-    "sal",
-    "sar",
-    "sbb",
-    "scasb",
-    "scasw",
-    "shl",
-    "shr",
-    "stc",
-    "std",
-    "sti",
-    "stosb",
-    "stosw",
-    "sub",
-    "test",
-    "wait",
-    "xchg",
-    "xlat",
-    "xor"};
-static char *reg1[] = {
-    "AL",
-    "CL",
-    "DL",
-    "BL",
-    "AH",
-    "CH",
-    "DH",
-    "BH",
-    "AX",
-    "CX",
-    "DX",
-    "BX",
-    "SP",
-    "BP",
-    "SI",
-    "DI",
-    "CS",
-    "DS",
-    "SS",
-    "ES"};
-
-static gboolean getkeyword(gchar *keyword)
+#include <emu_8086_app_utils.h>
+typedef enum
 {
-    char i = 0, *p;
-    gboolean ret = FALSE;
-    p = keyword;
-    while (*p)
-    {
-        *p = tolower(*p);
-        p++;
-    }
-    p = keyword;
-    while (i < 118)
-    {
-        if (strcmp(p, keywords[i]) == 0)
-        {
-            ret = TRUE;
-            break;
-        }
-        i++;
-    }
-    return ret;
-}
-static gboolean getreg(gchar *keyword)
-{
-    char i = 0, *p;
-    gboolean ret = FALSE;
-    p = keyword;
-    while (*p)
-    {
-        *p = toupper(*p);
-        p++;
-    }
-    p = keyword;
-    while (i < 20)
-    {
-        if (strcmp(p, reg1[i]) == 0)
-        {
-            ret = TRUE;
-            break;
-        }
-        i++;
-    }
-    return ret;
-}
-static gboolean getsp_(gchar *keyword)
-{
-    char i = 0, *p;
-    gboolean ret = FALSE;
-    p = keyword;
-    while (*p)
-    {
-        *p = toupper(*p);
-        p++;
-    }
-    p = keyword;
+    PROP_0,
 
-    if (strcmp(p, "DB") == 0)
-    {
-        ret = TRUE;
-    }
-    else if (strcmp(p, "DW") == 0)
-    {
-        ret = TRUE;
-    }
+    PROP_BUFFER_THEME
 
-    else if (strcmp(p, "EQU") == 0)
-    {
-        ret = TRUE;
-    }
-    else if (strcmp(p, "BYTE") == 0)
-    {
-        ret = TRUE;
-    }
-    else if (strcmp(p, "WORD") == 0)
-    {
-        ret = TRUE;
-    }
-    else if (strcmp(p, "OFFSET") == 0)
-    {
-        ret = TRUE;
-    }
-
-    else if (strcmp(p, "DUP") == 0)
-    {
-        ret = TRUE;
-    }
-    return ret;
-}
-static gboolean getstr_(gchar *keyword)
-{
-    gint i = strlen(keyword);
-    gboolean ret = FALSE;
-
-    if (*keyword == '"' && keyword[i - 1] == '"')
-        ret = TRUE;
-    else if (*keyword == '\'' && keyword[i - 1] == '\'')
-        ret = TRUE;
-    return ret;
-}
-
-static gboolean getlab_(gchar *keyword)
-{
-    gint i = strlen(keyword);
-    gboolean ret = FALSE;
-
-    if (*keyword != '\0' && keyword[i - 1] == ':')
-        ret = TRUE;
-
-    return ret;
-}
-
-static gboolean getnum_(gchar *keyword)
-{
-    gint i = 50;
-    gchar *p = keyword;
-    gboolean ret = FALSE;
-    if (p[0] == '0' && tolower(p[1]) == 'b')
-    { /* Binary */
-        ret = TRUE;
-    }
-    else if (p[0] == '0' && tolower(p[1]) == 'x' && isxdigit(p[2]))
-        ret = TRUE;
-    else if (isdigit(p[0]))
-        ret = TRUE;
-    else if (p[0] == '$' && isdigit(p[1]))
-    { /* Hexadecimal */
-        ret = TRUE;
-    }
-    return ret;
-}
+} Emu8086AppCodeBufferProperty;
 
 static void skip_space(GtkTextIter *iter)
 {
@@ -495,6 +231,7 @@ typedef struct _Emu8086AppCodeBufferPrivate Emu8086AppCodeBufferPrivate;
 struct _Emu8086AppCodeBuffer
 {
     GtkTextBuffer parent;
+    gchar *theme
 };
 
 struct _Emu8086AppCodeBufferPrivate
@@ -518,6 +255,18 @@ static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
 
     PRIV_CODE_BUFFER;
     priv->settings = g_settings_new("com.krc.emu8086app");
+
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
+
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "keyword", NULL);
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "reg", "weight", PANGO_WEIGHT_BOLD, NULL);
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "string", NULL);
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "label_def", NULL);
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "num", NULL);
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "special", "weight", PANGO_WEIGHT_BOLD, NULL);
+
+    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "comment", "style", PANGO_STYLE_ITALIC, NULL);
+    g_settings_bind(priv->settings, "theme", buffer, "theme", G_SETTINGS_BIND_GET);
     priv->lc = 0;
     priv->line = 0;
     priv->timeout = 0;
@@ -629,14 +378,112 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
     gint i = gtk_text_iter_get_line(&iter2);
     queue_highlight(buffer);
 }
+
+static void changeTheme(Emu8086AppCodeBuffer *buffer)
+{
+    // TODO
+
+    GtkTextTag *tag;
+    gchar *tag_name;
+    GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(GTK_TEXT_BUFFER(buffer));
+    if (strcmp("dark+", buffer->theme) == 0)
+    {
+
+        for (int i = 0; i < 7; i++)
+        {
+            tag_name = tag_names[i];
+            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
+            g_print(tag_name);
+            if (G_IS_OBJECT(tag))
+                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i], NULL);
+        }
+    }
+    else if (strcmp("cobalt", buffer->theme) == 0)
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            tag_name = tag_names[i];
+            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
+            g_print(tag_name);
+            if (G_IS_OBJECT(tag))
+                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 8], NULL);
+            // if (G_IS_OBJECT(*tags))
+
+            //     g_object_set_property(G_OBJECT(*tags), "foreground", theme_colors[i + 7]);
+        }
+    }
+
+    else if (strcmp("light", buffer->theme) == 0)
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            tag_name = tag_names[i];
+            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
+            g_print(tag_name);
+            if (G_IS_OBJECT(tag))
+                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 16], NULL);
+            // if (G_IS_OBJECT(*tags))
+
+            //     g_object_set_property(G_OBJECT(*tags), "foreground", theme_colors[i + 7]);
+        }
+    }
+}
+
+static void
+emu_8086_app_code_buffer_set_property(GObject *object,
+                                      guint property_id,
+                                      const GValue *value,
+                                      GParamSpec *pspec)
+{
+    Emu8086AppCodeBuffer *self = EMU_8086_APP_CODE_BUFFER(object);
+
+    gchar *v;
+    switch ((Emu8086AppCodeBufferProperty)property_id)
+    {
+
+    case PROP_BUFFER_THEME:
+        v = g_value_get_string(value);
+        self->theme = g_strdup(v);
+        changeTheme(self);
+        // g_string_free(v, FALSE);
+        break;
+    }
+}
+static void
+emu_8086_app_code_buffer_get_property(GObject *object,
+                                      guint property_id,
+                                      GValue *value,
+                                      GParamSpec *pspec)
+{
+    Emu8086AppCodeBuffer *self = EMU_8086_APP_CODE_BUFFER(object);
+    switch ((Emu8086AppCodeBufferProperty)property_id)
+    {
+    case PROP_BUFFER_THEME:
+        g_value_set_string(value, self->theme);
+        break;
+
+    default:
+        /* We don't have any other property... */
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+        break;
+    }
+}
+
 static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
 {
 
     GtkTextBufferClass *text_buffer_class;
-
+    GObjectClass *object_class;
+    object_class = G_OBJECT_CLASS(klass);
     text_buffer_class = GTK_TEXT_BUFFER_CLASS(klass);
     text_buffer_class->insert_text = emu_8086_app_code_buffer_insert_text_real;
     text_buffer_class->delete_range = emu_8086_app_code_buffer_delete_range;
+    object_class->set_property = emu_8086_app_code_buffer_set_property;
+    object_class->get_property = emu_8086_app_code_buffer_get_property;
+
+    g_object_class_install_property(object_class, PROP_BUFFER_THEME,
+                                    g_param_spec_string("theme", "Theme", "Editor Theme", "dark+",
+                                                        G_PARAM_READWRITE));
 }
 
 Emu8086AppCodeBuffer *emu_8086_app_code_buffer_new(GtkTextTagTable *table)

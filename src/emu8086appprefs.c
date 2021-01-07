@@ -84,8 +84,8 @@ dialog_response_handler(GtkDialog *dlg,
 }
 
 static them themes[] = {
-    {"dark+", "Dark+"},
-    {"cobalt", "Cobalt"},
+    {"dark+", "Dark+ From VsCode"},
+    {"cobalt", "Cobalt From plumas cobalt color scheme"},
     {"light", "Light"}};
 
 static void
