@@ -11,9 +11,9 @@
 This is a github repo containing source code of an 8086 emulator written in C that is currently in the works.
 View the documentation [here](https://kosiken.github.io/gtkemu8086-docs)
 
-## Screenshot
+## Demo
 
-![Screenshot](project.png)
+![DEMO](gif/emu8086.gif)
 
 ## Motivation
 
