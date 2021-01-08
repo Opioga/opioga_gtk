@@ -714,9 +714,9 @@ static void emu8086_win_change_theme(Emu8086AppWindow *win)
     else if (strcmp("light", win->theme) == 0)
     {
         color.alpha = 1;
-        color.red = .95;
-        color.green = .95;
-        color.blue = .95;
+        color.red = .98;
+        color.green = .98;
+        color.blue = .98;
     }
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
 }

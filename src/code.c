@@ -16,7 +16,7 @@ struct _Emu8086AppCode
 {
     GtkTextView parent;
     gchar *font;
-
+    gchar *color;
     Emu8086AppCodePrivate *priv;
 };
 
@@ -24,6 +24,7 @@ typedef enum
 {
     PROP_0,
     PROP_FONT,
+    PROP_CODE_THEME,
     PROP_AUTO_INDENT
 } Emu8086AppCodeProperty;
 
@@ -74,6 +75,7 @@ static GActionEntry code_entries[] = {
     {"remove_bps", menu_item_activate_rem_bps_cb, NULL, NULL, NULL}
 
 };
+
 static void
 menu_item_activate_indent_cb(GSimpleAction *action,
                              GVariant *parameter,
@@ -139,6 +141,24 @@ static gboolean emu_8086_app_code_popup_menu(GtkTextView *text_view,
     gtk_widget_show(menu_item);
 };
 
+static gchar *emu_8086_app_code_change_color(gchar *theme)
+{
+    if (strcmp("dark+", theme) == 0)
+    {
+        return "#c4c4c4;";
+    }
+
+    else if (strcmp("cobalt", theme) == 0)
+    {
+        return "#ffffff;";
+    }
+
+    else if (strcmp("light", theme) == 0)
+    {
+        return "#000000;";
+    }
+}
+
 static void
 emu_8086_app_code_set_property(GObject *object,
                                guint property_id,
@@ -155,14 +175,32 @@ emu_8086_app_code_set_property(GObject *object,
     switch ((Emu8086AppCodeProperty)property_id)
     {
     case PROP_FONT:
+
+        gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
         v = g_value_get_string(value);
         desc = pango_font_description_from_string(v);
-        m = emu8086_pango_font_description_to_css(desc);
+        m = emu8086_pango_font_description_to_css(desc, code->color);
         gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
 
         code->font = g_strdup(v);
 
         pango_font_description_free(desc);
+        // g_print("filename: %s\n", self->font);
+        // g_free(v);
+        break;
+    case PROP_CODE_THEME:
+
+        v = emu_8086_app_code_change_color(g_value_get_string(value));
+
+        desc = pango_font_description_from_string(g_strdup(code->font));
+
+        m = emu8086_pango_font_description_to_css(desc, v);
+        gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+
+        code->color = v;
+
+        pango_font_description_free(desc);
+        //  g_free(v);
         // g_print("filename: %s\n", self->font);
         // g_free(v);
         break;
@@ -187,6 +225,10 @@ emu_8086_app_code_get_property(GObject *object,
     {
     case PROP_FONT:
         g_value_set_string(value, self->font);
+        break;
+
+    case PROP_CODE_THEME:
+        g_value_set_string(value, self->color);
         break;
     case PROP_AUTO_INDENT:
         g_value_set_boolean(value, self->priv->auto_indent);
@@ -454,7 +496,9 @@ static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
                                                         G_PARAM_READWRITE));
-
+    g_object_class_install_property(object_class, PROP_CODE_THEME,
+                                    g_param_spec_string("color", "Color", "Editor Color", "#C4C4C4",
+                                                        G_PARAM_READWRITE));
     g_object_class_install_property(object_class, PROP_AUTO_INDENT,
                                     g_param_spec_boolean("auto_indent", "AutoIndent", "Editor auto indent", FALSE,
                                                          G_PARAM_READWRITE));
@@ -492,6 +536,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
                                          20);
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
+    g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "ai", code, "auto_indent", G_SETTINGS_BIND_GET);
     g_signal_connect(GTK_TEXT_VIEW(code), "paste-clipboard", G_CALLBACK(_refreshLines), NULL);
 
@@ -503,8 +548,6 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     Emu8086AppCodeGutter *gutter;
     gutter = emu_8086_app_code_gutter_new(code, GTK_TEXT_WINDOW_LEFT);
 
-    // gtk_text_buffer_set_text(buffer, "1 ", 1);
-    // priv->code = code;
     priv->isOpen = FALSE;
     setCode(buffer, code);
     priv->buffer = buffer;
@@ -645,7 +688,7 @@ void editFontSize(Emu8086AppCode *code, gint size)
     g_settings_set_string(priv->settings, "font", tmp);
     PangoFontDescription *desc;
     desc = pango_font_description_from_string(tmp);
-    gtk_css_provider_load_from_data(priv->provider, (emu8086_pango_font_description_to_css(desc)), -1, NULL);
+    gtk_css_provider_load_from_data(priv->provider, (emu8086_pango_font_description_to_css(desc, code->color)), -1, NULL);
     // getCss(size, priv->provider);
 
     pango_font_description_free(desc);
@@ -674,22 +717,11 @@ Emu8086AppCode *create_new(Emu8086AppWindow *win)
     color.alpha = 1;
     gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
 
-    // getCss(size, priv->provider);
-
-    // gtk_widget_override_symbolic_color
-
-    // gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(code));
-
-    // GtkTextBuffer *buff = gtk_text_view_get_buffer();
-
     priv->line = 0;
     GtkAccelGroup *ag = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(win), ag);
     priv->win = win;
     priv->ag = ag;
-    // priv->provider = provider;
-
-    //
 
     return EMU_8086_APP_CODE(code);
 

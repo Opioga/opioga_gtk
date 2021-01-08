@@ -72,7 +72,7 @@ add_css_variations(GString *s,
  *    CSS describing the font description.
  */
 gchar *
-emu8086_pango_font_description_to_css(const PangoFontDescription *desc)
+emu8086_pango_font_description_to_css(const PangoFontDescription *desc, gchar *color)
 {
     GString *s;
     PangoFontMask set;
@@ -202,10 +202,12 @@ emu8086_pango_font_description_to_css(const PangoFontDescription *desc)
         g_string_append(s, "font-variation-settings: ");
         variations = pango_font_description_get_variations(desc);
         add_css_variations(s, variations);
-        g_string_append(s, "; ");
+        g_string_append(s, ";");
     }
 #endif
-  //  g_string_append(s, "color: #c4c4c4;caret-color: #795e26;");
-    g_string_append(s, "}\n");
+   g_string_append(s, "color:");
+      g_string_append(s,color);
+
+    g_string_append(s, "caret-color: #795e26;}\n");
     return g_string_free(s, FALSE);
 }

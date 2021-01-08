@@ -393,7 +393,7 @@ static void changeTheme(Emu8086AppCodeBuffer *buffer)
         {
             tag_name = tag_names[i];
             tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-            g_print(tag_name);
+
             if (G_IS_OBJECT(tag))
                 g_object_set(G_OBJECT(tag), "foreground", theme_colors[i], NULL);
         }
@@ -404,7 +404,7 @@ static void changeTheme(Emu8086AppCodeBuffer *buffer)
         {
             tag_name = tag_names[i];
             tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-            g_print(tag_name);
+
             if (G_IS_OBJECT(tag))
                 g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 8], NULL);
             // if (G_IS_OBJECT(*tags))
@@ -419,7 +419,7 @@ static void changeTheme(Emu8086AppCodeBuffer *buffer)
         {
             tag_name = tag_names[i];
             tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-            g_print(tag_name);
+
             if (G_IS_OBJECT(tag))
                 g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 16], NULL);
             // if (G_IS_OBJECT(*tags))
