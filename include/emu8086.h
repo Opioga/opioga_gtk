@@ -65,6 +65,7 @@ struct emu8086
     struct instruction *instruction_cache_loop;
     int call_stack;
     struct variable *variable_list;
+    int port;
     int last_ip;
 };
 enum MESSAGES_

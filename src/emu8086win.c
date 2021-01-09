@@ -13,15 +13,16 @@
  * emu8086win.c
  * Window class
  */
-
-
-
-
-#include <emu8086app.h>
 #include <emu8086win.h>
+#include <emu8086app.h>
+
 #include <code.h>
 #include <code_buffer.h>
 #include <emu_8086_app_runner.h>
+#include <emu_plugin_box.h>
+#include <emu_8086_plugins_engine.h>
+#include <libpeas/peas-activatable.h>
+#include <libpeas/peas-extension-set.h>
 
 typedef enum
 {
@@ -30,20 +31,12 @@ typedef enum
     PROP_MEM,
     PROP_THEME
 } Emu8086AppWindowProperty;
+
 typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
-
-struct _Emu8086AppWindow
-{
-    GtkApplicationWindow parent;
-    Emu8086AppWindowState state;
-    gboolean updates;
-    Emu8086AppWindowPrivate *priv;
-    gchar *theme;
-    gboolean memory;
-};
-
 struct _Emu8086AppWindowPrivate
 {
+    PeasExtensionSet *exten_set;
+
     guint tos;
     GtkWidget *AX_;
     GtkWidget *CX_;
@@ -76,6 +69,16 @@ struct _Emu8086AppWindowPrivate
     Emu8086App *app;
     GSettings *settings;
     gint open;
+};
+
+struct _Emu8086AppWindow
+{
+    GtkApplicationWindow parent;
+    Emu8086AppWindowState state;
+    gboolean updates;
+    Emu8086AppWindowPrivate *priv;
+    gchar *theme;
+    gboolean memory;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppWindow, emu_8086_app_window, GTK_TYPE_APPLICATION_WINDOW);
 
@@ -168,6 +171,7 @@ static GActionEntry win_entries[] = {
 
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
 {
+
     //  emu_8086_app_get_type()
     return g_object_new(EMU_8086_APP_WINDOW_TYPE, "application", app,
                         NULL);
@@ -199,7 +203,7 @@ get_drop_window(GtkWidget *widget)
     return EMU_8086_APP_WINDOW(target_window);
 }
 
-void open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data)
+void emu_8086_app_window_open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data)
 {
     PRIV;
     gchar **uri_list;
@@ -264,7 +268,7 @@ void open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data)
         // uri = gtk_file_chooser_get_uri(chooser);
         add_recent(uri);
         // g_free(uri);
-        setOpen(win);
+        emu_8086_app_window_set_open(win);
         set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buffer, contents, length);
         strcpy(win->state.file_name, base);
@@ -294,7 +298,7 @@ static void drag_data_received_cb(GtkWidget *widget,
 
     if (win == NULL)
         return;
-    open_drag_data(win, selection_data);
+    emu_8086_app_window_open_drag_data(win, selection_data);
     gtk_drag_finish(context, TRUE, FALSE, timestamp);
 }
 
@@ -351,10 +355,15 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
 
     g_signal_connect(priv->runner, "error_occured", G_CALLBACK(emu_8086_app_window_flash), win);
     g_signal_connect(priv->runner, "exec_ins", G_CALLBACK(emu_8086_app_window_update_wids), win);
-    // gtk_menu_button_get_menu_model;
+
+    Emu8086AppPluginBox *box;
+    box = emu_8086_app_plugin_box_new(win, priv->runner);
+    gtk_container_add(GTK_CONTAINER(priv->stack), box);
+    gtk_widget_show_all(box);
 
     g_object_unref(builder);
 };
+
 void quick_message(GtkWindow *parent, gchar *message, gchar *title)
 {
     GtkWidget *dialog, *label, *content_area;
@@ -479,9 +488,9 @@ static void _open(Emu8086AppWindow *win)
             uri = gtk_file_chooser_get_uri(chooser);
             add_recent(uri);
             g_free(uri);
-            setOpen(win);
+            emu_8086_app_window_set_open(win);
 
-            setOpen(win);
+            emu_8086_app_window_set_open(win);
             set_fname(priv->runner, win->state.file_path);
             gtk_text_buffer_set_text(buffer, contents, length);
             // update(buffer, EMU_8086_APP_CODE(priv->code));
@@ -552,7 +561,7 @@ emu_8086_window_key_press_event(GtkWidget *widget,
         else if ((event->keyval == GDK_KEY_s))
         {
             handled = TRUE;
-            save_doc(EMU_8086_APP_WINDOW(widget));
+            emu_8086_app_window_save_doc(EMU_8086_APP_WINDOW(widget));
         }
         // else if( )
     }
@@ -572,17 +581,17 @@ emu_8086_window_key_press_event(GtkWidget *widget,
 
     return handled;
 }
-void open_activate_cb(Emu8086AppWindow *win)
+void emu_8086_app_window_open_activate_cb(Emu8086AppWindow *win)
 {
     _open(win);
 }
 
-void save_activate_cb(Emu8086AppWindow *win)
+void emu_8086_app_window_save_activate_cb(Emu8086AppWindow *win)
 {
-    save_doc(win);
+    emu_8086_app_window_save_doc(win);
     // gtk_application_ex
 }
-void save_as_activate_cb(Emu8086AppWindow *win)
+void emu_8086_app_window_save_as_activate_cb(Emu8086AppWindow *win)
 {
 
     if (save_new(win, "lol", win->state.file_path))
@@ -596,14 +605,14 @@ void save_as_activate_cb(Emu8086AppWindow *win)
         gchar *con = gtk_text_buffer_get_text(buffer, &start_iter, &end_iter, FALSE);
 
         win->state.file_path_set = TRUE;
-        write_to_file(win->state.file_path, con, win->state.file_name);
+        emu_8086_app_window_write_to_file(win->state.file_path, con, win->state.file_name);
         gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
         win->state.isSaved = TRUE;
         return TRUE;
     };
 }
 
-void arr_sum_activate_cb(Emu8086AppWindow *win)
+void emu_8086_app_window_arr_sum_activate_cb(Emu8086AppWindow *win)
 {
     PRIV;
     gchar *con;
@@ -629,7 +638,7 @@ void arr_sum_activate_cb(Emu8086AppWindow *win)
         GtkTextBuffer *buf;
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
-        setOpen(win);
+        emu_8086_app_window_set_open(win);
         set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buf, con, len);
         // update(buf, EMU_8086_APP_CODE(priv->code));
@@ -641,7 +650,7 @@ void arr_sum_activate_cb(Emu8086AppWindow *win)
     }
 }
 
-void rev_str_activate_cb(Emu8086AppWindow *win)
+void emu_8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win)
 {
     PRIV;
     gchar *con;
@@ -668,7 +677,7 @@ void rev_str_activate_cb(Emu8086AppWindow *win)
         GtkTextBuffer *buf;
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         refreshLines(EMU_8086_APP_CODE_BUFFER(buf));
-        setOpen(win);
+        emu_8086_app_window_set_open(win);
         set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buf, con, len);
         // update(buf, EMU_8086_APP_CODE(priv->code));
@@ -832,7 +841,7 @@ void char_ins(GtkTextView *text_view,
     exit(1);
 }
 
-void upd(Emu8086AppWindow *win)
+void emu_8086_app_window_upd(Emu8086AppWindow *win)
 {
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(win->priv->code));
     gboolean modified = gtk_text_buffer_get_modified(buffer);
@@ -847,7 +856,7 @@ void upd(Emu8086AppWindow *win)
     gtk_text_buffer_set_modified(buffer, FALSE);
 }
 
-gchar *write_to_file(gchar *filename, gchar *buffer, char *buff)
+gchar *emu_8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *buff)
 {
 
     FILE *f;
@@ -924,7 +933,7 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf)
     return ret;
 }
 
-gboolean save_doc(Emu8086AppWindow *win)
+gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win)
 {
     if (!win->state.isSaved)
     {
@@ -938,7 +947,7 @@ gboolean save_doc(Emu8086AppWindow *win)
         gchar *con = gtk_text_buffer_get_text(buffer, &start_iter, &end_iter, FALSE);
         if (win->state.file_path_set)
         {
-            write_to_file(win->state.file_path, con, win->state.file_name);
+            emu_8086_app_window_write_to_file(win->state.file_path, con, win->state.file_name);
             set_fname(priv->runner, win->state.file_path);
 
             gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
@@ -951,7 +960,7 @@ gboolean save_doc(Emu8086AppWindow *win)
             {
 
                 win->state.file_path_set = TRUE;
-                write_to_file(win->state.file_path, con, win->state.file_name);
+                emu_8086_app_window_write_to_file(win->state.file_path, con, win->state.file_name);
                 set_fname(priv->runner, win->state.file_path);
 
                 gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
@@ -972,7 +981,7 @@ void play_clicked(GtkToolButton *toolbutton,
     PRIV;
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
     gint c = gtk_text_buffer_get_char_count(buffer);
-    if (!save_doc(win))
+    if (!emu_8086_app_window_save_doc(win))
     {
         return;
     }
@@ -1000,7 +1009,7 @@ void step_clicked(GtkToolButton *toolbutton,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
 
-    if (!save_doc(win))
+    if (!emu_8086_app_window_save_doc(win))
     {
         return;
     }
@@ -1023,7 +1032,7 @@ void step_over_clicked(GtkToolButton *toolbutton,
                        gpointer user_data)
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
-    if (!save_doc(win))
+    if (!emu_8086_app_window_save_doc(win))
     {
         return;
     }
@@ -1050,7 +1059,7 @@ void save_clicked(GtkToolButton *toolbutton,
                   gpointer user_data)
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(user_data);
-    save_doc(win);
+    emu_8086_app_window_save_doc(win);
     //
 }
 
@@ -1098,7 +1107,7 @@ static void open_item(GtkRecentChooser *recents, gpointer user_data)
         strcpy(win->state.file_path, filename);
         add_recent(uri);
         g_free(uri);
-        setOpen(win);
+        emu_8086_app_window_set_open(win);
         set_fname(priv->runner, win->state.file_path);
         gtk_text_buffer_set_text(buffer, contents, length);
         // update(buffer, EMU_8086_APP_CODE(priv->code));
@@ -1225,7 +1234,7 @@ void populate_tools(Emu8086AppWindow *win)
 static modified_changed(GtkTextBuffer *textbuffer,
                         gpointer user_data)
 {
-    upd(EMU_8086_APP_WINDOW(user_data));
+    emu_8086_app_window_upd(EMU_8086_APP_WINDOW(user_data));
 }
 
 static void populate_win(Emu8086AppWindow *win)
@@ -1462,7 +1471,7 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
         GtkTextBuffer *buf;
         buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         set_fname(priv->runner, win->state.file_path);
-        setOpen(win);
+        emu_8086_app_window_set_open(win);
         gtk_text_buffer_set_text(buf, con, len);
         // update(buf, EMU_8086_APP_CODE(priv->code));
 
@@ -1480,7 +1489,7 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     }
     // g_free(base);
 }
-void setOpen(Emu8086AppWindow *win)
+void emu_8086_app_window_set_open(Emu8086AppWindow *win)
 {
 
     win->priv->open = 1;
@@ -1492,7 +1501,12 @@ void unsetOpen(Emu8086AppWindow *win)
     win->priv->open = 0;
 }
 
-void stop_win(Emu8086AppWindow *win)
+void emu_8086_app_window_stop_win(Emu8086AppWindow *win)
 {
     stop(win->priv->runner, FALSE);
+}
+
+GtkWidget *emu8086_get_stack(Emu8086AppWindow *win)
+{
+    return win->priv->stack;
 }

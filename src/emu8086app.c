@@ -87,7 +87,7 @@ void emu_8086_open_file(Emu8086App *app, GFile *file)
     priv->win = win;
 }
 
-static void
+void
 emu_8086_open(GApplication *appe,
               GFile **files,
               gint n_files,
@@ -159,7 +159,7 @@ save_activated(GSimpleAction *action,
 
     priv->win = gtk_application_get_active_window(app);
 
-    save_activate_cb(priv->win);
+    emu_8086_app_window_save_activate_cb(priv->win);
 }
 
 static void
@@ -172,7 +172,7 @@ save_as_activated(GSimpleAction *action,
 
     priv->win = gtk_application_get_active_window(app);
 
-    save_as_activate_cb(priv->win);
+    emu_8086_app_window_save_as_activate_cb(priv->win);
 }
 
 static void
@@ -194,7 +194,7 @@ ex1_activated(GSimpleAction *action,
     _PRIV;
     priv->win = gtk_application_get_active_window(app);
 
-    arr_sum_activate_cb(priv->win);
+    emu_8086_app_window_arr_sum_activate_cb(priv->win);
 }
 
 static void
@@ -206,7 +206,7 @@ ex2_activated(GSimpleAction *action,
     _PRIV;
     priv->win = gtk_application_get_active_window(app);
 
-    rev_str_activate_cb(priv->win);
+    emu_8086_app_window_rev_str_activate_cb(priv->win);
 }
 
 static void
@@ -314,7 +314,34 @@ void open_help()
 
 static void quit(Emu8086AppWindow *win)
 {
-    stop_win(win);
+    emu_8086_app_window_stop_win(win);
     gtk_widget_destroy(win);
     // exit(EXIT_SUCCESS);
+}
+
+static void
+app_weak_notify (gpointer data,
+		 GObject *where_the_app_was)
+{
+	gtk_main_quit ();
+}
+
+
+Emu8086App *
+emu_8086_app_get_default (void)
+{
+	static Emu8086App *app = NULL;
+
+	if (app != NULL)
+		return app;
+
+	app =emu_8086_app_new();
+
+	g_object_add_weak_pointer (G_OBJECT (app),
+				   (gpointer) &app);
+	g_object_weak_ref (G_OBJECT (app),
+			   app_weak_notify,
+			   NULL);
+
+	return app;
 }

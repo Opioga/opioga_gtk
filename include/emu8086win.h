@@ -14,10 +14,9 @@
  * Window class
  */
 
-
-
 #ifndef WIN_C
 #define WIN_C
+
 
 #include <gtk/gtk.h>
 #include "emu8086app.h"
@@ -27,6 +26,8 @@
 #define PRIV Emu8086AppWindowPrivate *priv = win->priv
 #define EMU_8086_APP_WINDOW_TYPE (emu_8086_app_window_get_type())
 G_DECLARE_FINAL_TYPE(Emu8086AppWindow, emu_8086_app_window, EMU_8086, APP_WINDOW, GtkApplicationWindow)
+
+G_BEGIN_DECLS
 
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app);
 
@@ -42,21 +43,26 @@ struct _Emu8086AppWindowState
     gint fontSize;
 };
 
+
+GType emu_8086_app_window_get_type(void) G_GNUC_CONST;
 void emu_8086_app_window_open(Emu8086AppWindow *win,
                               GFile *file);
 void emu_8086_app_window_up(Emu8086AppWindow *win);
 void emu_8086_app_window_set_app(Emu8086AppWindow *win, Emu8086App *app);
+Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app);
 
-void setOpen(Emu8086AppWindow *win);
-void arr_sum_activate_cb(Emu8086AppWindow *win);
-void rev_str_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_set_open(Emu8086AppWindow *win);
+void emu_8086_app_window_arr_sum_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_save_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_save_as_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_open_activate_cb(Emu8086AppWindow *win);
+void emu_8086_app_window_stop_win(Emu8086AppWindow *win);
+void emu_8086_app_window_open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data);
+void emu_8086_app_window_upd(Emu8086AppWindow *win);
+gchar *emu_8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *buff);
+gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win);
+GtkWidget *emu8086_get_stack(Emu8086AppWindow *win);
 
-void save_activate_cb(Emu8086AppWindow *win);
-void save_as_activate_cb(Emu8086AppWindow *win);
-void open_activate_cb(Emu8086AppWindow *win);
-void stop_win(Emu8086AppWindow *win);
-void open_drag_data(Emu8086AppWindow *win, GtkSelectionData *selection_data);
-void upd(Emu8086AppWindow *win);
-gchar *write_to_file(gchar *filename, gchar *buffer, char *buff);
-gboolean save_doc(Emu8086AppWindow *win);
+G_END_DECLS
 #endif /* __EXAMPLEAPPWIN_H */

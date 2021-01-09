@@ -640,6 +640,18 @@ GSETTINGS_RULES
 GLIB_COMPILE_SCHEMAS
 gsettingsschemadir
 GSETTINGS_DISABLE_SCHEMAS_COMPILE
+HAVE_INTROSPECTION_FALSE
+HAVE_INTROSPECTION_TRUE
+INTROSPECTION_MAKEFILE
+INTROSPECTION_LIBS
+INTROSPECTION_CFLAGS
+INTROSPECTION_TYPELIBDIR
+INTROSPECTION_GIRDIR
+INTROSPECTION_GENERATE
+INTROSPECTION_COMPILER
+INTROSPECTION_SCANNER
+_GI_EXP_LIBDIR
+_GI_EXP_DATADIR
 EMU8086_LIBS
 EMU8086_CFLAGS
 PKG_CONFIG_LIBDIR
@@ -772,6 +784,7 @@ with_aix_soname
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
+enable_introspection
 enable_schemas_compile
 '
       ac_precious_vars='build_alias
@@ -1430,6 +1443,8 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --enable-introspection=[no/auto/yes]
+                          Enable introspection for this build
   --disable-schemas-compile
                           Disable regeneration of gschemas.compiled on install
 
@@ -3979,6 +3994,8 @@ unknown)
   as_fn_error $? "could not determine $AR interface" "$LINENO" 5
   ;;
 esac
+
+ac_config_headers="$ac_config_headers config.h"
 
 case `pwd` in
   *\ * | *\	*)
@@ -12923,10 +12940,14 @@ if test -n "$EMU8086_CFLAGS"; then
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 \""; } >&5
   ($PKG_CONFIG --exists --print-errors "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 ") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
@@ -12934,6 +12955,8 @@ if test -n "$EMU8086_CFLAGS"; then
   pkg_cv_EMU8086_CFLAGS=`$PKG_CONFIG --cflags "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 " 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
@@ -12949,10 +12972,14 @@ if test -n "$EMU8086_LIBS"; then
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 \""; } >&5
   ($PKG_CONFIG --exists --print-errors "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 ") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
@@ -12960,6 +12987,8 @@ if test -n "$EMU8086_LIBS"; then
   pkg_cv_EMU8086_LIBS=`$PKG_CONFIG --libs "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 " 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
@@ -12984,11 +13013,15 @@ fi
 	        EMU8086_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 " 2>&1`
         else
 	        EMU8086_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 " 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
@@ -12997,6 +13030,8 @@ fi
 	as_fn_error $? "Package requirements (
     glib-2.0
     gtk+-3.0
+    libpeas-1.0 >= 1.2.0
+	libpeas-gtk-1.0 >= 1.2.0
 ) were not met:
 
 $EMU8086_PKG_ERRORS
@@ -13028,6 +13063,166 @@ else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
+fi
+
+
+
+                # Check whether --enable-introspection was given.
+if test "${enable_introspection+set}" = set; then :
+  enableval=$enable_introspection;
+else
+  enable_introspection=auto
+fi
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gobject-introspection" >&5
+$as_echo_n "checking for gobject-introspection... " >&6; }
+
+        case $enable_introspection in #(
+  no) :
+            found_introspection="no (disabled, use --enable-introspection to enable)"
+     ;; #(
+      yes) :
+            if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gobject-introspection-1.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "gobject-introspection-1.0") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  :
+else
+  as_fn_error $? "gobject-introspection-1.0 is not installed" "$LINENO" 5
+fi
+        if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gobject-introspection-1.0 >= 0.9.3\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "gobject-introspection-1.0 >= 0.9.3") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  found_introspection=yes
+else
+  as_fn_error $? "You need to have gobject-introspection >= 0.9.3 installed to build emu8086" "$LINENO" 5
+fi
+     ;; #(
+      auto) :
+            if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gobject-introspection-1.0 >= 0.9.3\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "gobject-introspection-1.0 >= 0.9.3") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  found_introspection=yes
+else
+  found_introspection=no
+fi
+		enable_introspection=$found_introspection
+     ;; #(
+  *) :
+                as_fn_error $? "invalid argument passed to --enable-introspection, should be one of [no/auto/yes]" "$LINENO" 5
+     ;;
+esac
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_introspection" >&5
+$as_echo "$found_introspection" >&6; }
+
+
+  EXP_VAR=_GI_EXP_DATADIR
+  FROM_VAR="$datadir"
+
+    prefix_save=$prefix
+  exec_prefix_save=$exec_prefix
+
+    if test "x$prefix" = "xNONE"; then
+    prefix="$ac_default_prefix"
+  fi
+    if test "x$exec_prefix" = "xNONE"; then
+    exec_prefix=$prefix
+  fi
+
+  full_var="$FROM_VAR"
+    while true; do
+    new_full_var="`eval echo $full_var`"
+    if test "x$new_full_var" = "x$full_var"; then break; fi
+    full_var=$new_full_var
+  done
+
+    full_var=$new_full_var
+  _GI_EXP_DATADIR="$full_var"
+
+
+    prefix=$prefix_save
+  exec_prefix=$exec_prefix_save
+
+
+  EXP_VAR=_GI_EXP_LIBDIR
+  FROM_VAR="$libdir"
+
+    prefix_save=$prefix
+  exec_prefix_save=$exec_prefix
+
+    if test "x$prefix" = "xNONE"; then
+    prefix="$ac_default_prefix"
+  fi
+    if test "x$exec_prefix" = "xNONE"; then
+    exec_prefix=$prefix
+  fi
+
+  full_var="$FROM_VAR"
+    while true; do
+    new_full_var="`eval echo $full_var`"
+    if test "x$new_full_var" = "x$full_var"; then break; fi
+    full_var=$new_full_var
+  done
+
+    full_var=$new_full_var
+  _GI_EXP_LIBDIR="$full_var"
+
+
+    prefix=$prefix_save
+  exec_prefix=$exec_prefix_save
+
+
+    INTROSPECTION_SCANNER=
+    INTROSPECTION_COMPILER=
+    INTROSPECTION_GENERATE=
+    INTROSPECTION_GIRDIR=
+    INTROSPECTION_TYPELIBDIR=
+    if test "x$found_introspection" = "xyes"; then
+       INTROSPECTION_SCANNER=$PKG_CONFIG_SYSROOT_DIR`$PKG_CONFIG --variable=g_ir_scanner gobject-introspection-1.0`
+       INTROSPECTION_COMPILER=$PKG_CONFIG_SYSROOT_DIR`$PKG_CONFIG --variable=g_ir_compiler gobject-introspection-1.0`
+       INTROSPECTION_GENERATE=$PKG_CONFIG_SYSROOT_DIR`$PKG_CONFIG --variable=g_ir_generate gobject-introspection-1.0`
+       INTROSPECTION_GIRDIR=`$PKG_CONFIG --define-variable=datadir="${_GI_EXP_DATADIR}" --variable=girdir gobject-introspection-1.0`
+       INTROSPECTION_TYPELIBDIR="$($PKG_CONFIG --define-variable=libdir="${_GI_EXP_LIBDIR}" --variable=typelibdir gobject-introspection-1.0)"
+       INTROSPECTION_CFLAGS=`$PKG_CONFIG --cflags gobject-introspection-1.0`
+       INTROSPECTION_LIBS=`$PKG_CONFIG --libs gobject-introspection-1.0`
+       INTROSPECTION_MAKEFILE=$PKG_CONFIG_SYSROOT_DIR`$PKG_CONFIG --variable=datadir gobject-introspection-1.0`/gobject-introspection-1.0/Makefile.introspection
+    fi
+
+
+
+
+
+
+
+
+
+     if test "x$found_introspection" = "xyes"; then
+  HAVE_INTROSPECTION_TRUE=
+  HAVE_INTROSPECTION_FALSE='#'
+else
+  HAVE_INTROSPECTION_TRUE='#'
+  HAVE_INTROSPECTION_FALSE=
+fi
+
+
+
+
+if test "$found_introspection" = "yes"; then
+	have_introspection=yes
+
+$as_echo "#define HAVE_INTROSPECTION 1" >>confdefs.h
+
+else
+	have_introspection=no
 fi
 
 
@@ -13287,8 +13482,7 @@ endif
 
 
 
-
-ac_config_files="$ac_config_files Makefile src/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile mime/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile fonts/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile mime/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -13380,43 +13574,7 @@ test "x$prefix" = xNONE && prefix=$ac_default_prefix
 # Let make expand exec_prefix.
 test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
 
-# Transform confdefs.h into DEFS.
-# Protect against shell expansion while executing Makefile rules.
-# Protect against Makefile macro expansion.
-#
-# If the first sed substitution is executed (which looks for macros that
-# take arguments), then branch to the quote section.  Otherwise,
-# look for a macro that doesn't take arguments.
-ac_script='
-:mline
-/\\$/{
- N
- s,\\\n,,
- b mline
-}
-t clear
-:clear
-s/^[	 ]*#[	 ]*define[	 ][	 ]*\([^	 (][^	 (]*([^)]*)\)[	 ]*\(.*\)/-D\1=\2/g
-t quote
-s/^[	 ]*#[	 ]*define[	 ][	 ]*\([^	 ][^	 ]*\)[	 ]*\(.*\)/-D\1=\2/g
-t quote
-b any
-:quote
-s/[	 `~#$^&*(){}\\|;'\''"<>?]/\\&/g
-s/\[/\\&/g
-s/\]/\\&/g
-s/\$/$$/g
-H
-:any
-${
-	g
-	s/^\n//
-	s/\n/ /g
-	p
-}
-'
-DEFS=`sed -n "$ac_script" confdefs.h`
-
+DEFS=-DHAVE_CONFIG_H
 
 ac_libobjs=
 ac_ltlibobjs=
@@ -13461,6 +13619,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_INTROSPECTION_TRUE}" && test -z "${HAVE_INTROSPECTION_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_INTROSPECTION\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13878,11 +14040,15 @@ case $ac_config_files in *"
 "*) set x $ac_config_files; shift; ac_config_files=$*;;
 esac
 
+case $ac_config_headers in *"
+"*) set x $ac_config_headers; shift; ac_config_headers=$*;;
+esac
 
 
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 # Files that config.status was made for.
 config_files="$ac_config_files"
+config_headers="$ac_config_headers"
 config_commands="$ac_config_commands"
 
 _ACEOF
@@ -13904,9 +14070,14 @@ Usage: $0 [OPTION]... [TAG]...
       --recheck    update $as_me by reconfiguring in the same conditions
       --file=FILE[:TEMPLATE]
                    instantiate the configuration file FILE
+      --header=FILE[:TEMPLATE]
+                   instantiate the configuration header FILE
 
 Configuration files:
 $config_files
+
+Configuration headers:
+$config_headers
 
 Configuration commands:
 $config_commands
@@ -13974,7 +14145,18 @@ do
     esac
     as_fn_append CONFIG_FILES " '$ac_optarg'"
     ac_need_defaults=false;;
-  --he | --h |  --help | --hel | -h )
+  --header | --heade | --head | --hea )
+    $ac_shift
+    case $ac_optarg in
+    *\'*) ac_optarg=`$as_echo "$ac_optarg" | sed "s/'/'\\\\\\\\''/g"` ;;
+    esac
+    as_fn_append CONFIG_HEADERS " '$ac_optarg'"
+    ac_need_defaults=false;;
+  --he | --h)
+    # Conflict between --help and --header
+    as_fn_error $? "ambiguous option: \`$1'
+Try \`$0 --help' for more information.";;
+  --help | --hel | -h )
     $as_echo "$ac_cs_usage"; exit ;;
   -q | -quiet | --quiet | --quie | --qui | --qu | --q \
   | -silent | --silent | --silen | --sile | --sil | --si | --s)
@@ -14319,9 +14501,11 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
+    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "fonts/Makefile") CONFIG_FILES="$CONFIG_FILES fonts/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "pixmaps/Makefile") CONFIG_FILES="$CONFIG_FILES pixmaps/Makefile" ;;
     "pixbufs/Makefile") CONFIG_FILES="$CONFIG_FILES pixbufs/Makefile" ;;
@@ -14339,6 +14523,7 @@ done
 # bizarre bug on SunOS 4.1.3.
 if $ac_need_defaults; then
   test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
+  test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
   test "${CONFIG_COMMANDS+set}" = set || CONFIG_COMMANDS=$config_commands
 fi
 
@@ -14527,8 +14712,116 @@ fi
 cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 fi # test -n "$CONFIG_FILES"
 
+# Set up the scripts for CONFIG_HEADERS section.
+# No need to generate them if there are no CONFIG_HEADERS.
+# This happens for instance with `./config.status Makefile'.
+if test -n "$CONFIG_HEADERS"; then
+cat >"$ac_tmp/defines.awk" <<\_ACAWK ||
+BEGIN {
+_ACEOF
 
-eval set X "  :F $CONFIG_FILES      :C $CONFIG_COMMANDS"
+# Transform confdefs.h into an awk script `defines.awk', embedded as
+# here-document in config.status, that substitutes the proper values into
+# config.h.in to produce config.h.
+
+# Create a delimiter string that does not exist in confdefs.h, to ease
+# handling of long lines.
+ac_delim='%!_!# '
+for ac_last_try in false false :; do
+  ac_tt=`sed -n "/$ac_delim/p" confdefs.h`
+  if test -z "$ac_tt"; then
+    break
+  elif $ac_last_try; then
+    as_fn_error $? "could not make $CONFIG_HEADERS" "$LINENO" 5
+  else
+    ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
+  fi
+done
+
+# For the awk script, D is an array of macro values keyed by name,
+# likewise P contains macro parameters if any.  Preserve backslash
+# newline sequences.
+
+ac_word_re=[_$as_cr_Letters][_$as_cr_alnum]*
+sed -n '
+s/.\{148\}/&'"$ac_delim"'/g
+t rset
+:rset
+s/^[	 ]*#[	 ]*define[	 ][	 ]*/ /
+t def
+d
+:def
+s/\\$//
+t bsnl
+s/["\\]/\\&/g
+s/^ \('"$ac_word_re"'\)\(([^()]*)\)[	 ]*\(.*\)/P["\1"]="\2"\
+D["\1"]=" \3"/p
+s/^ \('"$ac_word_re"'\)[	 ]*\(.*\)/D["\1"]=" \2"/p
+d
+:bsnl
+s/["\\]/\\&/g
+s/^ \('"$ac_word_re"'\)\(([^()]*)\)[	 ]*\(.*\)/P["\1"]="\2"\
+D["\1"]=" \3\\\\\\n"\\/p
+t cont
+s/^ \('"$ac_word_re"'\)[	 ]*\(.*\)/D["\1"]=" \2\\\\\\n"\\/p
+t cont
+d
+:cont
+n
+s/.\{148\}/&'"$ac_delim"'/g
+t clear
+:clear
+s/\\$//
+t bsnlc
+s/["\\]/\\&/g; s/^/"/; s/$/"/p
+d
+:bsnlc
+s/["\\]/\\&/g; s/^/"/; s/$/\\\\\\n"\\/p
+b cont
+' <confdefs.h | sed '
+s/'"$ac_delim"'/"\\\
+"/g' >>$CONFIG_STATUS || ac_write_fail=1
+
+cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
+  for (key in D) D_is_set[key] = 1
+  FS = ""
+}
+/^[\t ]*#[\t ]*(define|undef)[\t ]+$ac_word_re([\t (]|\$)/ {
+  line = \$ 0
+  split(line, arg, " ")
+  if (arg[1] == "#") {
+    defundef = arg[2]
+    mac1 = arg[3]
+  } else {
+    defundef = substr(arg[1], 2)
+    mac1 = arg[2]
+  }
+  split(mac1, mac2, "(") #)
+  macro = mac2[1]
+  prefix = substr(line, 1, index(line, defundef) - 1)
+  if (D_is_set[macro]) {
+    # Preserve the white space surrounding the "#".
+    print prefix "define", macro P[macro] D[macro]
+    next
+  } else {
+    # Replace #undef with comments.  This is necessary, for example,
+    # in the case of _POSIX_SOURCE, which is predefined and required
+    # on some systems where configure will not decide to define it.
+    if (defundef == "undef") {
+      print "/*", prefix defundef, macro, "*/"
+      next
+    }
+  }
+}
+{ print }
+_ACAWK
+_ACEOF
+cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+  as_fn_error $? "could not setup config headers machinery" "$LINENO" 5
+fi # test -n "$CONFIG_HEADERS"
+
+
+eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    :C $CONFIG_COMMANDS"
 shift
 for ac_tag
 do
@@ -14747,7 +15040,64 @@ which seems to be undefined.  Please make sure it is defined" >&2;}
   esac \
   || as_fn_error $? "could not create $ac_file" "$LINENO" 5
  ;;
-
+  :H)
+  #
+  # CONFIG_HEADER
+  #
+  if test x"$ac_file" != x-; then
+    {
+      $as_echo "/* $configure_input  */" \
+      && eval '$AWK -f "$ac_tmp/defines.awk"' "$ac_file_inputs"
+    } >"$ac_tmp/config.h" \
+      || as_fn_error $? "could not create $ac_file" "$LINENO" 5
+    if diff "$ac_file" "$ac_tmp/config.h" >/dev/null 2>&1; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: $ac_file is unchanged" >&5
+$as_echo "$as_me: $ac_file is unchanged" >&6;}
+    else
+      rm -f "$ac_file"
+      mv "$ac_tmp/config.h" "$ac_file" \
+	|| as_fn_error $? "could not create $ac_file" "$LINENO" 5
+    fi
+  else
+    $as_echo "/* $configure_input  */" \
+      && eval '$AWK -f "$ac_tmp/defines.awk"' "$ac_file_inputs" \
+      || as_fn_error $? "could not create -" "$LINENO" 5
+  fi
+# Compute "$ac_file"'s index in $config_headers.
+_am_arg="$ac_file"
+_am_stamp_count=1
+for _am_header in $config_headers :; do
+  case $_am_header in
+    $_am_arg | $_am_arg:* )
+      break ;;
+    * )
+      _am_stamp_count=`expr $_am_stamp_count + 1` ;;
+  esac
+done
+echo "timestamp for $_am_arg" >`$as_dirname -- "$_am_arg" ||
+$as_expr X"$_am_arg" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$_am_arg" : 'X\(//\)[^/]' \| \
+	 X"$_am_arg" : 'X\(//\)$' \| \
+	 X"$_am_arg" : 'X\(/\)' \| . 2>/dev/null ||
+$as_echo X"$_am_arg" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
+	    s//\1/
+	    q
+	  }
+	  /^X\(\/\/\)[^/].*/{
+	    s//\1/
+	    q
+	  }
+	  /^X\(\/\/\)$/{
+	    s//\1/
+	    q
+	  }
+	  /^X\(\/\).*/{
+	    s//\1/
+	    q
+	  }
+	  s/.*/./; q'`/stamp-h$_am_stamp_count
+ ;;
 
   :C)  { $as_echo "$as_me:${as_lineno-$LINENO}: executing $ac_file commands" >&5
 $as_echo "$as_me: executing $ac_file commands" >&6;}

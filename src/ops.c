@@ -14,7 +14,6 @@
  * Emulation Functions
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5904,13 +5903,27 @@ void rol_sar_16(struct emu8086 *aCPU, int *handled)
     }
 }
 
+
+// out
+void out_i8_al(struct emu8086 *aCPU, int *handled)
+{
+    IP++;
+    unsigned char opn = *(CODE_SEGMENT_IP);
+    unsigned char *op1 = DATA_SEGMENT + opn;
+    *op1 = AX & 0xff;
+    aCPU->port = opn;
+
+    IP+=1;
+    *handled = 1;
+}
+
 // ANCHOR
 
 // unimplemented instructions
 void unimp(struct emu8086 *aCPU, int *handled)
 {
     IP = _INSTRUCTIONS->end_address + 1;
-    char buf[35];
+    char buf[256];
     sprintf(buf, errors_str[UNIMPLEMENTED], _INSTRUCTIONS->line_number);
     massage(buf, ERR);
     *handled = 1;
@@ -6192,6 +6205,10 @@ void op_setptrs(struct emu8086 *aCPU)
     aCPU->op[ROL_8_SAR_8 + 2] = &rol_sar_8;
     aCPU->op[ROL_8_SAR_16 + 2] = &rol_sar_16;
     // aCPU->op[ROL_8_SAR_8]
+
+    // OUT
+    aCPU->op[OUT_I8_AL] = &out_i8_al;
+    
 
     for (int i = 0; i < 8; i++)
     {

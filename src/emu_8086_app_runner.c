@@ -14,11 +14,6 @@
  * Runner class
  */
 
-
-
-
-
-
 #include <assembler.h>
 #include <emu8086.h>
 #include <emu_8086_app_runner.h>
@@ -72,8 +67,6 @@ static void emu_8086_app_code_runner_set_property(GObject *object,
         // *v = (gboolean *)value;
 
         self->priv->fname = g_value_get_string(value);
-        // emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
         break;
     case PROP_RUNNER_CAN_RUN:
         self->priv->can_run = g_value_get_boolean(value);
@@ -101,6 +94,7 @@ emu_8086_app_code_runner_get_property(GObject *object,
     case PROP_RUNNER_CAN_RUN:
         g_value_set_boolean(value, self->priv->can_run);
         break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -115,8 +109,6 @@ Emu8086AppCodeRunner *emu_8086_app_code_runner_new(gchar *fname, gboolean can_ru
                         "can_run", can_run,
                         NULL);
 };
-
-
 
 static void emu_8086_app_code_runner_exec_ins(Emu8086AppCodeRunner *runner)
 {
@@ -191,7 +183,7 @@ static void emu_8086_app_code_runner_class_init(Emu8086AppCodeRunnerClass *klass
                                       G_SIGNAL_RUN_FIRST,
                                       G_STRUCT_OFFSET(Emu8086AppCodeRunnerClass, interrupt),
                                       NULL, NULL, NULL,
-                                      G_TYPE_NONE, 0);
+                                      G_TYPE_NONE, 1, G_TYPE_CHAR);
 }
 
 static void emu_8086_app_code_runner_init(Emu8086AppCodeRunner *runner)
@@ -303,7 +295,7 @@ void execute(struct emu8086 *aCPU)
         aCPU->op[op](aCPU, &handled);
         if (!handled)
         {
-            char buf[15];
+            char buf[150];
             sprintf(buf, "Unhandled instrution on line %d, opcode: %x", _INSTRUCTIONS->line_number, op); //message()
             message(buf, ERR, _INSTRUCTIONS->line_number);
         }
@@ -399,6 +391,13 @@ int emu_run(Emu8086AppCodeRunner *runner)
         stop(runner, FALSE);
         return 0;
         // exit(1);
+    }
+    if (aCPU->port > -1)
+    {
+        gchar c = *(DATA_SEGMENT + aCPU->port);
+
+        g_signal_emit(runner, signals[INTERRUPT], 0, c);
+        aCPU->port = -1;
     }
     g_signal_emit(runner, signals[EXEC_INS], 0);
 
@@ -523,7 +522,15 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
             return;
             // exit(1);
         }
+
+        if (aCPU->port > -1)
+        {
+            gchar c = *(DATA_SEGMENT + aCPU->port);
+            g_signal_emit(runner, signals[INTERRUPT], 0, c);
+            aCPU->port = -1;
+        }
         g_signal_emit(runner, signals[EXEC_INS], 0);
+
         ;
         //  emu_8086_app_window_update_wids(priv->win, priv->aCPU);
     }

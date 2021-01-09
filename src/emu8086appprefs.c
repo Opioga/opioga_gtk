@@ -19,7 +19,10 @@
 
 #include <emu8086app.h>
 #include <emu8086win.h>
+#include <emu_8086_plugins_engine.h>
+
 #include <emu8086appprefs.h>
+#include <libpeas-gtk/peas-gtk-plugin-manager.h>
 
 static GtkWidget *preferences_dialog = NULL;
 
@@ -52,6 +55,7 @@ struct _Emu8086AppPrefsPrivate
   GtkListStore *themes_treeview_model;
   GtkWidget *themes_treeview;
   GtkWidget *indent;
+  GtkWidget *pluginsbox;
 };
 struct _Emu8086AppPrefs
 {
@@ -154,6 +158,16 @@ emu8086_app_prefs_init(Emu8086AppPrefs *prefs)
                    "response",
                    G_CALLBACK(dialog_response_handler),
                    NULL);
+    Emu8086PluginsEngine *engine = emu8086_plugins_engine_get_default();
+    	GtkWidget *page_content;
+	page_content = peas_gtk_plugin_manager_new (PEAS_ENGINE(engine));
+	g_return_if_fail (page_content != NULL);
+
+	gtk_box_pack_start (GTK_BOX (priv->pluginsbox),
+			    page_content,
+			    TRUE,
+			    TRUE,
+			    0);
 }
 
 static void
@@ -180,6 +194,8 @@ emu8086_app_prefs_class_init(Emu8086AppPrefsClass *class)
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, ul);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, lf);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, indent);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, pluginsbox);
+
 }
 
 Emu8086AppPrefs *

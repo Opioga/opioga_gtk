@@ -55,6 +55,7 @@ struct emu8086 *emu8086_new(void)
     new->call_stack = 0;
     new->instruction_cache_loop = NULL;
     new->is_first = 1;
+    new->port = -1;
     //new->sfrread((struct struct emu8086 *)new, REG_DS);
     return new;
 }

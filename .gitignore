@@ -45,3 +45,8 @@ include/Makefile.in
 egs/Makefile
 egs/Makefile.in
 ar-lib
+plugins
+config.h.in
+src/Emu8086-1.0.gir
+src/Emu8086-1.0.typelib
+stamp-h1

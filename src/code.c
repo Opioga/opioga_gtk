@@ -14,8 +14,6 @@
  * Code class
  */
 
-
-
 #include <code.h>
 #include <code_buffer.h>
 #include <pango_css.h>
@@ -264,7 +262,7 @@ emu_8086_app_code_drag_data_received(GtkWidget *widget,
     code = EMU_8086_APP_CODE(widget);
     PRIV_CODE;
     // ;
-    open_drag_data(priv->win, selection_data);
+    emu_8086_app_window_open_drag_data(priv->win, selection_data);
     gtk_drag_finish(context, TRUE, FALSE, timestamp);
 }
 static gboolean

@@ -67,6 +67,7 @@ typedef enum
     PROP_RUNNER_FNAME,
     PROP_RUNNER_CODE,
     PROP_RUNNER_CAN_RUN,
+    PROP_ACPU
 
 } Emu8086AppCodeRunnerProperty;
 
