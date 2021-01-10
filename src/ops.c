@@ -5123,6 +5123,9 @@ void rcr_8(struct emu8086 *aCPU, int *handled, int cl)
     int b = 0;
     int *op1;
     op2 = op1 = NULL;
+
+
+    
     is_16 = 0;
     high_reg = 0;
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
