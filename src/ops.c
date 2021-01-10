@@ -81,13 +81,13 @@ void compare_set_flags(struct emu8086 *aCPU, int v1, int v2)
 void find_instruction16(struct emu8086 *aCPU)
 {
 
-   int off = *(CODE_SEGMENT_IP);
+    int off = *(CODE_SEGMENT_IP);
     //__uint128_t add = 0;
 
     IP++;
     off |= *(CODE_SEGMENT_IP) << 8;
     IP++;
-    printf("leen: n%x\n", off);
+  
 
     // off = off < 0 ? 0 - off : off;
 
@@ -98,7 +98,7 @@ void find_instruction16(struct emu8086 *aCPU)
 
     // if (_current_instruction->starting_address == *(CODE_SEGMENT + IP))
     // {
-    printf("leen: n%d\n", off);
+   
 
     //     IP = *(CODE_SEGMENT_IP);
     //     return;
@@ -367,6 +367,8 @@ int get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int **ops, unsig
                   r_m = opn & 0b111;
 
     *dest = DATA_SEGMENT;
+
+
     if (mod == 0 && r_m == 6)
     {
         // special
@@ -681,7 +683,7 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
             value ^= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
         else
         {
-            printf("hr: %d\n", high_reg);
+
             compare_set_flags(aCPU, (high_reg ? (*op4 >> 8) : (*op4 & 0xff)), value);
             *handled = 1;
             IP++;
@@ -1016,8 +1018,7 @@ void or_reg8_addr8(struct emu8086 *aCPU, int *handled)
 
 void or_addr8_reg8(struct emu8086 *aCPU, int *handled)
 {
-    printf("hhh:\n");
-    exit(1);
+
     int b = 0;
     is_16 = 0;
     // int _value = INSTRUCTIONS->value;
@@ -4455,7 +4456,7 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
     if (b)
     {
         int value, value2;
-        printf("%d \n", high_reg);
+      
         if (high_reg == 0 && (op3 != op2))
         {
 
@@ -4507,7 +4508,6 @@ void xchg_r8_d8(struct emu8086 *aCPU, int *handled)
         //  IP++;
         //  value += *(op1);
         int value2 = *op3;
-        printf("%d %x %x\n", high_reg, value2 & 0xff, value2 >> 8);
         *op1 = high_reg ? value2 >> 8 : value2 & 0xff;
         // *(op1) = value & 0xff;
         *op3 = high_reg ? (*op3 & 0xff) | (value << 8) : (*op3 & 0xff00) | value;
@@ -4840,7 +4840,8 @@ void lea(struct emu8086 *aCPU, int *handled)
         int v = *(CODE_SEGMENT_IP);
         IP++;
         v |= *(CODE_SEGMENT_IP) << 8;
-        *dest = v;
+        if (v >= (0x10 * DS))
+            *dest = v - (0x10 * DS);
     }
     else
     {
@@ -4849,32 +4850,54 @@ void lea(struct emu8086 *aCPU, int *handled)
         {
         case 0:
             *dest = BX + SI;
-
+            if (*dest >= (0x10 * DS))
+                *dest = *dest - (0x10 * DS);
             break;
         case 1:
             *dest = BX + DI;
+            if (*dest >= (0x10 * DS))
+                *dest = *dest - (0x10 * DS);
+
             break;
         case 2:
             *dest = BP + SI;
+            if (*dest >= (0x10 * _SS))
+                *dest = *dest - (0x10 * _SS);
+
             break;
         case 3:
             *dest = BP + DI;
+            if (*dest >= (0x10 * _SS))
+                *dest = *dest - (0x10 * _SS);
+
             break;
         case 4:
             // printf("33jjjj\n");
             // special
             *dest = SI;
+            if (*dest >= (0x10 * DS))
+                *dest = *dest - (0x10 * DS);
+
             // printf("33jjjj\n, %d\n", **dest);
 
             break;
         case 5:
             *dest = DI;
+            if (*dest >= (0x10 * DS))
+                *dest = *dest - (0x10 * DS);
+
             break;
         case 6:
             *dest = BP;
+            if (*dest >= (0x10 * _SS))
+                *dest = *dest - (0x10 * _SS);
+
             break;
         case 7:
             *dest = BX;
+            if (*dest >= (0x10 * DS))
+                *dest = *dest - (0x10 * DS);
+
             break;
         }
 
@@ -5105,7 +5128,6 @@ void rcr_8(struct emu8086 *aCPU, int *handled, int cl)
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
     {
-        printf("%x", high_reg);
         unsigned char value;
         int cf = GET_FLAG(0);
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
@@ -5161,7 +5183,7 @@ void shl_8(struct emu8086 *aCPU, int *handled, int cl)
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
     {
-        printf("%x", high_reg);
+     
         unsigned char value;
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
 
@@ -6235,5 +6257,3 @@ void op_setptrs(struct emu8086 *aCPU)
 
     //  aCPU->op[MOV_DW16_I16] = &mov_
 }
-
-

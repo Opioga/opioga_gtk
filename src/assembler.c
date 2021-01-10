@@ -314,7 +314,7 @@ struct instruction *define_instruction(int line)
 void emit_byte(int c)
 {
     // printf("%03x: %02x\n", address, c);
-    if (assembler_step == 1)
+    if (assembler_step == 2)
         *(code_mem + address) = c;
     address+=1;
 }
@@ -2063,7 +2063,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
         }
         // has_label = 0;
     }
-    if (assembler_step == 1)
+    if (assembler_step == 2)
     {
         unsigned char *h;
         h = CODE_SEGMENT;

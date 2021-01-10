@@ -462,7 +462,27 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         emu_free(runner);
         return 0;
     }
+    assembler_step = 2;
+    errors = 0;
+    do_assembly(priv->aCPU, fname);
+    if (errors > 0)
+    {
 
+        if (list_err != NULL)
+        {
+
+            if (priv->em != NULL)
+                g_free(priv->em);
+            priv->em = NULL;
+            priv->em = g_strdup(list_err->message);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0);
+        }
+        // emu_8086_app_window_flash(priv->win, first_err->message);
+        set_app_state(runner, STOPPED);
+        emu_free(runner);
+        return 0;
+    }
+// g_print()
     CS = aCPU->code_start_addr / 0x10;
     DS = 0x03ff;
     BX = 5;
