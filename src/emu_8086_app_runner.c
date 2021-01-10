@@ -183,7 +183,7 @@ static void emu_8086_app_code_runner_class_init(Emu8086AppCodeRunnerClass *klass
                                       G_SIGNAL_RUN_FIRST,
                                       G_STRUCT_OFFSET(Emu8086AppCodeRunnerClass, interrupt),
                                       NULL, NULL, NULL,
-                                      G_TYPE_NONE, 1, G_TYPE_CHAR);
+                                      G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 static void emu_8086_app_code_runner_init(Emu8086AppCodeRunner *runner)
@@ -395,8 +395,8 @@ int emu_run(Emu8086AppCodeRunner *runner)
     if (aCPU->port > -1)
     {
         gchar c = *(DATA_SEGMENT + aCPU->port);
-
-        g_signal_emit(runner, signals[INTERRUPT], 0, c);
+        gint val = (gint)c;
+        g_signal_emit(runner, signals[INTERRUPT], 0, val);
         aCPU->port = -1;
     }
     g_signal_emit(runner, signals[EXEC_INS], 0);
@@ -482,7 +482,7 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         emu_free(runner);
         return 0;
     }
-// g_print()
+    // g_print()
     CS = aCPU->code_start_addr / 0x10;
     DS = 0x03ff;
     BX = 5;
@@ -546,7 +546,8 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
         if (aCPU->port > -1)
         {
             gchar c = *(DATA_SEGMENT + aCPU->port);
-            g_signal_emit(runner, signals[INTERRUPT], 0, c);
+            gint val = (gint)c;
+            g_signal_emit(runner, signals[INTERRUPT], 0, val);
             aCPU->port = -1;
         }
         g_signal_emit(runner, signals[EXEC_INS], 0);
