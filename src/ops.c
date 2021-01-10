@@ -18,14 +18,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "assembler.h"
 
-#include <opcodes.h>
-#include <m_ops.h>
+#include "opcodes.h"
+#include "m_ops.h"
 
 extern struct instruction *_instruction_list;
-extern struct instruction *_last_instruction;
 extern struct instruction *_current_instruction, *_first_instruction;
-extern struct variable *variable_list, *first_variable, *v_ordered_list;
+extern struct label *label_list, *explore;
+extern struct errors_list *first_err, *list_err;
+extern int errors, assembler_step;
 enum err_index
 {
     MAX_CALL,
@@ -78,11 +80,8 @@ void compare_set_flags(struct emu8086 *aCPU, int v1, int v2)
 }
 void find_instruction16(struct emu8086 *aCPU)
 {
-    if (_INSTRUCTIONS == NULL)
-    {
-    }
 
-    short off = *(CODE_SEGMENT_IP);
+   int off = *(CODE_SEGMENT_IP);
     //__uint128_t add = 0;
 
     IP++;
@@ -91,7 +90,7 @@ void find_instruction16(struct emu8086 *aCPU)
     printf("leen: n%x\n", off);
 
     // off = off < 0 ? 0 - off : off;
-    __uint128_t add = 0;
+
     // char is_back = off >> 7;
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
@@ -109,61 +108,70 @@ void find_instruction16(struct emu8086 *aCPU)
     else
         next = NULL;
     int b = IP + off;
-    while (1)
+    if (off == -2)
     {
-        if (prev != NULL)
-        {
-            if (prev->starting_address == b)
-            {
+        IP = b;
 
-                _current_instruction = prev;
-                add = b;
+        return;
+    }
+    if (next != NULL)
+    {
+        int addr = next->starting_address;
+        _current_instruction = next;
+        while (addr < b)
+        {
+            if (_current_instruction == NULL)
+            {
+                char buf[15];
+                sprintf(buf, errors_str[UNDEFINED],
+                        _current_instruction->line_number);
+                massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
                 break;
             }
-            else
-                prev = prev->prev;
-        }
-        if (next != NULL)
-        {
-            if (next->starting_address == b)
-            {
-
-                _current_instruction = next;
-                add = b;
+            next = _current_instruction->next;
+            if (next == NULL)
                 break;
-            }
-            else
-                next = next->next;
-        }
-        if ((prev == NULL) && (next == NULL))
-        {
-
-            char buf[15];
-            sprintf(buf, errors_str[UNDEFINED],
-                    _current_instruction->line_number);
-            massage(buf, ERR);
+            addr += (next->starting_address - _current_instruction->starting_address);
+            _current_instruction = next;
+            /* code */
         }
     }
-    // IP++;
-    printf("l: \n\n%x\n\n", _current_instruction->starting_address);
+    else
+    {
+        int addr = prev->starting_address;
+        _current_instruction = prev;
+        while (addr > b)
+        {
+            if (_current_instruction == NULL)
+            {
+                char buf[15];
+                sprintf(buf, errors_str[UNDEFINED],
+                        _current_instruction->line_number);
+                massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
+                break;
+            }
+            prev = _current_instruction->prev;
+            if (prev == NULL)
+                break;
+            addr -= (_current_instruction->starting_address - prev->starting_address);
+            _current_instruction = prev;
+        }
+    }
+    IP = b;
 
-    IP = off < 0 ? b : b > 0xff ? b + 2 : b + 1;
     _INSTRUCTIONS = _current_instruction;
-    // if ()
 }
 
 void find_instruction(struct emu8086 *aCPU)
 {
-    if (_INSTRUCTIONS == NULL)
-    {
-    }
 
+    // instruction offset
     char off = *(CODE_SEGMENT + IP);
-    printf("lee: \n\n%d\n\n", off);
     IP++;
-    // off = off < 0 ? 0 - off : off;
-    __uint128_t add = 0;
-    // char is_back = off >> 7;
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
     struct instruction *next = _current_instruction->next;
@@ -171,63 +179,62 @@ void find_instruction(struct emu8086 *aCPU)
         prev = NULL;
     else
         next = NULL;
-    int b = _current_instruction->end_address + off;
-    if (_current_instruction->starting_address == b)
+    int b = IP + off;
+    if (off == -2)
     {
-
         IP = b;
+
         return;
     }
-    IP = _current_instruction->end_address;
-    // printf("lee: \n\n%x %d , %x\n\n", b, off, _current_instruction->end_address);
-    if (_current_instruction->end_address == b)
-    { //  if(_current_instruction->end_address)
-
-        // IP = (b + 1);
-        _INSTRUCTIONS = _current_instruction->next;
-        // return;
-    }
-    while (1)
+    if (next != NULL)
     {
-        if (prev != NULL)
+        int addr = next->starting_address;
+        _current_instruction = next;
+        while (addr < b)
         {
-            if (prev->starting_address == b)
+            if (_current_instruction == NULL)
             {
-
-                _current_instruction = prev;
-                add = b; //+ 1;
+                char buf[15];
+                sprintf(buf, errors_str[UNDEFINED],
+                        _current_instruction->line_number);
+                massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
                 break;
             }
-            else
-                prev = prev->prev;
-        }
-        if (next != NULL)
-        {
-            if (next->starting_address == b)
-            {
-
-                _current_instruction = next;
-                add = b;
+            next = _current_instruction->next;
+            if (next == NULL)
                 break;
-            }
-            else
-                next = next->next;
-        }
-        if ((prev == NULL) && (next == NULL))
-        {
-
-            char buf[256];
-            sprintf(buf, errors_str[UNDEFINED], _INSTRUCTIONS->line_number);
-            massage(buf, ERR);
-            break;
+            addr += (next->starting_address - _current_instruction->starting_address);
+            _current_instruction = next;
+            /* code */
         }
     }
-    // IP++;
-
+    else
+    {
+        int addr = prev->starting_address;
+        _current_instruction = prev;
+        while (addr > b)
+        {
+            if (_current_instruction == NULL)
+            {
+                char buf[15];
+                sprintf(buf, errors_str[UNDEFINED],
+                        _current_instruction->line_number);
+                massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
+                break;
+            }
+            prev = _current_instruction->prev;
+            if (prev == NULL)
+                break;
+            addr -= (_current_instruction->starting_address - prev->starting_address);
+            _current_instruction = prev;
+        }
+    }
     IP = b;
-    printf("l: b = %x %d , %x\n\n", IP, off, _current_instruction->end_address);
-    //    / if (off > 0)
-    //         IP++;
+
     _INSTRUCTIONS = _current_instruction;
     // if ()
 }
@@ -244,76 +251,80 @@ void find_instruction_call(struct emu8086 *aCPU)
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
     struct instruction *next = _current_instruction->next;
-    int _next = next != NULL ? next->starting_address : aCPU->end_address;
+    int _next = IP + 1;
 
     if (value >= 0)
         prev = NULL;
     else
         next = NULL;
+    IP++;
+
     int b = IP + value;
+
     if (SP == 0)
     {
         char buf[256];
         sprintf(buf, "Stack reached maximum: on line %d",
                 _current_instruction->line_number);
         massage(buf, ERR);
-    }
-    if (b == 0xfffd)
-    {
-        IP = _current_instruction->starting_address;
-
-        push_to_stack(aCPU, _next);
-
+        IP = aCPU->end_address;
         return;
     }
-    if (_current_instruction->starting_address == b + 1)
+    if (value == -3)
     {
-        add = b;
+        IP = b;
+        push_to_stack(aCPU, _next);
+        return;
+    }
+    if (next != NULL)
+    {
+        int addr = next->starting_address;
+        _current_instruction = next;
+        while (addr < b)
+        {
+            if (_current_instruction == NULL)
+            {
+                char buf[15];
+                sprintf(buf, errors_str[UNDEFINED],
+                        _current_instruction->line_number);
+                massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
+                break;
+            }
+            next = _current_instruction->next;
+            if (next == NULL)
+                break;
+            addr += (next->starting_address - _current_instruction->starting_address);
+            _current_instruction = next;
+            /* code */
+        }
     }
     else
     {
-        while (1)
+        int addr = prev->starting_address;
+        _current_instruction = prev;
+        while (addr > b)
         {
-            if (prev != NULL)
+            if (_current_instruction == NULL)
             {
-
-                if (prev->starting_address == b + 1)
-                {
-                    add = b;
-
-                    _current_instruction = prev;
-                    break;
-                }
-                else
-                    prev = prev->prev;
-            }
-            if (next != NULL)
-            {
-                if (next->starting_address == b + 1)
-                {
-                    add = b;
-                    _current_instruction = next;
-                    break;
-                }
-                else
-                    next = next->next;
-            }
-            if ((prev == NULL) && (next == NULL))
-            {
-                char buf[256];
+                char buf[15];
                 sprintf(buf, errors_str[UNDEFINED],
-                        _INSTRUCTIONS->line_number);
+                        _current_instruction->line_number);
                 massage(buf, ERR);
+                _current_instruction = _INSTRUCTIONS;
+                IP = aCPU->end_address;
                 break;
             }
+            prev = _current_instruction->prev;
+            if (prev == NULL)
+                break;
+            addr -= (_current_instruction->starting_address - prev->starting_address);
+            _current_instruction = prev;
         }
     }
-    // IP++;
-    IP = add > 0xff ? add + 2 : add + 1;
-    printf("nn: %x\n", add);
+    IP = b;
     push_to_stack(aCPU, _next);
-    //  }
-
     _INSTRUCTIONS = _current_instruction;
     // if ()
 }
@@ -5903,7 +5914,6 @@ void rol_sar_16(struct emu8086 *aCPU, int *handled)
     }
 }
 
-
 // out
 void out_i8_al(struct emu8086 *aCPU, int *handled)
 {
@@ -5913,7 +5923,7 @@ void out_i8_al(struct emu8086 *aCPU, int *handled)
     *op1 = AX & 0xff;
     aCPU->port = opn;
 
-    IP+=1;
+    IP += 1;
     *handled = 1;
 }
 
@@ -6208,7 +6218,6 @@ void op_setptrs(struct emu8086 *aCPU)
 
     // OUT
     aCPU->op[OUT_I8_AL] = &out_i8_al;
-    
 
     for (int i = 0; i < 8; i++)
     {
@@ -6226,3 +6235,5 @@ void op_setptrs(struct emu8086 *aCPU)
 
     //  aCPU->op[MOV_DW16_I16] = &mov_
 }
+
+

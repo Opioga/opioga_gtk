@@ -49,3 +49,4 @@ config.h.in
 src/Emu8086-1.0.gir
 src/Emu8086-1.0.typelib
 stamp-h1
+plugins/lcd/lcd/__pycache__

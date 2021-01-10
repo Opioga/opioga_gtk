@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <emu8086.h>
-#include <ins.h>
-#include <assembler.h>
+#include "emu8086.h"
+#include "ins.h"
+#include "assembler.h"
 
 char *reg1[16] = {
     "AL",
@@ -55,7 +55,7 @@ struct instruction *_current_instruction, *_first_instruction;
 struct variable *variable_list, *first_variable, *v_ordered_list;
 int undefined, instruction_addr,
     instruction_register, instruction_value2;
-unsigned char code_mem[0xffff];
+unsigned char *code_mem = NULL;
 char global_label[MAX_SIZE];
 char name[MAX_SIZE];
 char expr_name[MAX_SIZE];
@@ -281,7 +281,7 @@ char *avoid_spaces(char *p)
     return p;
 }
 
-void seperate()
+void separate()
 {
     char *p2;
 
@@ -316,7 +316,7 @@ void emit_byte(int c)
     // printf("%03x: %02x\n", address, c);
     if (assembler_step == 1)
         *(code_mem + address) = c;
-    address++;
+    address+=1;
 }
 
 int _check__end(char *p)
@@ -1590,6 +1590,7 @@ void process_instr()
                 p = avoid_spaces(p);
                 char buf[4];
                 strncpy(buf, p, 3);
+                buf[3] = '\0';
                 if (strcmp(buf, "DUP") == 0)
                 {
                     p += 3;
@@ -1706,6 +1707,7 @@ void process_instr()
                 }
                 else
                     emit_byte(instruction_value);
+       
             }
             p = avoid_spaces(p);
             if (*p == ',')
@@ -1740,6 +1742,8 @@ void process_instr()
                 p++;
                 continue;
             }
+
+
             check_end(p);
             break;
         }
@@ -1781,12 +1785,18 @@ void process_instr()
         }
         else
         {
+      
+      
             p = p2;
 
-            seperate();
+            separate();
         }
     }
     //  }
+}
+void reset_address()
+{
+    address = start_address;
 }
 
 void do_assembly(struct emu8086 *aCPU, char *fname)
@@ -1800,12 +1810,14 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
     int i = 0;
     int starting_address = 0, first_time = 0;
     _INSTRUCTIONS = NULL;
-    starting_address = 0x100;
+    starting_address = 0;
     address = 0;
     data_mem_offset = 0;
-    CS = 0x10;
+    CS = 0;
     is_first = 1;
     line_number = 0;
+    first_time = 1;
+    code_mem = aCPU->mDataMem;
     aCPU->code_start_addr = starting_address;
     while (fgets(line, sizeof(line), input))
     {
@@ -1844,12 +1856,18 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
         while (1)
         {
             p = line;
-            seperate();
+
+            separate();
+            if (part[0] == '\0' && (*p == '\0' || *p == ';')) /* Empty line */
+                break;
+
+            if (address == 271)
+                printf("line: %d m \n", line_number);
+
 
             if (part[0] != '\0' && part[strlen(part) - 1] == ':')
             { /* Label */
                 part[strlen(part) - 1] = '\0';
-                //   assembler_step = 0;
                 if (part[0] == '.')
                 {
                     strcpy(name, global_label);
@@ -1860,69 +1878,152 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
                     strcpy(name, part);
                     strcpy(global_label, name);
                 }
-                seperate();
-
+                separate();
+                // if (avoid_level == -1 || level < avoid_level) {
                 if (strcmp(part, "EQU") == 0)
                 {
                     p2 = match_expression(p, &instruction_value);
                     if (p2 == NULL)
                     {
-                        _message("bad expression", ERR);
-                        //   exit(1);
+                        message("bad expression\n", ERR, line_number);
                     }
                     else
                     {
-
-                        struct label *_nu = find_label(name);
-
-                        if (_nu)
+                        if (assembler_step == 0)
                         {
-                            char m[18 + MAX_SIZE];
+                            if (find_label(name))
+                            {
+                                char m[18 + MAX_SIZE];
 
-                            sprintf(m, "Redefined label '%s'", name);
-                            _message(m, WARN);
-                            _nu->is_defined = 1;
-                            // exit(1);
+                                sprintf(m, "Redefined label '%s'", name);
+                                message(m, ERR, line_number);
+                            }
+                            else
+                            {
+                                last_label = define_label(name, instruction_value);
+                            }
                         }
                         else
                         {
-                            last_label = define_label(name, instruction_value);
-                            last_label->is_defined = 1;
-                        }
+                            last_label = find_label(name);
+                            if (last_label == NULL)
+                            {
+                                char m[33 + MAX_SIZE];
 
+                                sprintf(m, "Inconsistency, label '%s' not found", name);
+                                message(m, ERR, line_number);
+                            }
+                            else
+                            {
+                                if (last_label->value != instruction_value)
+                                {
+
+                                    int change = 1;
+                                }
+                                last_label->value = instruction_value;
+                            }
+                        }
                         check_end(p2);
                     }
                     break;
                 }
-                struct label *nu = find_label(name);
-
-                if (nu != NULL && assembler_step == 0)
+                if (first_time == 1)
                 {
-                    char m[30 + MAX_SIZE];
 
-                    sprintf(m, "Warning Redefined label '%s'", name);
+                    first_time = 0;
+                    reset_address();
+                }
+                if (assembler_step == 0)
+                {
+                 
+                    if (find_label(name))
+                    {
+                        char m[18 + MAX_SIZE];
 
-                    _message(m, WARN);
-                    nu->value = address;
-                    if (!_check__end(p))
-                        nu->line_number = line_number;
+                        sprintf(m, "Redefined label '%s'", name);
+                        message(m, ERR, line_number);
+                    }
                     else
                     {
-                        _current_label = nu;
-                        break;
+                        last_label = define_label(name, address);
                     }
-                    nu->is_defined = 1;
-                    nu->is_addr = 1;
-                    // exit(1);
                 }
-
-                else if (assembler_step == 0)
+                else
                 {
-                    last_label = define_label(name, address);
-                    last_label->is_addr = 1;
-                    last_label->is_defined = 1;
-                    last_label->value = address;
+                    last_label = find_label(name);
+                    if (last_label == NULL)
+                    {
+                        char m[33 + MAX_SIZE];
+
+                        sprintf(m, "Inconsistency, label '%s' not found", name);
+                        message(m, ERR, line_number);
+                    }
+                    else
+                    {
+                        if (last_label->value != address)
+                        {
+#ifdef DEBUG
+/*                                fprintf(stderr, "Woops: label '%s' changed value from %04x to %04x\n", last_label->name, last_label->value, address);*/
+#endif
+                            int change = 1;
+                        }
+                        last_label->value = address;
+                    }
                 }
+            }
+            if (strcmp(part, "ORG") == 0)
+            {
+                p = avoid_spaces(p);
+                undefined = 0;
+                p2 = match_expression(p, &instruction_value);
+                if (p2 == NULL)
+                {
+
+                    char buf[50];
+                    sprintf(buf, "Bad expression on line %d", line_number);
+                    message(buf, ERR, line_number);
+                }
+                else if (undefined)
+                {
+                    char buf[150];
+                    sprintf("Cannot use undefined labels %s on line %d", last_label->name, line_number);
+                    message(buf, ERR, line_number);
+                    // message(1, "");
+                }
+                else
+                {
+                    if (first_time == 1)
+                    {
+                        first_time = 0;
+                        address = instruction_value;
+                        start_address = instruction_value;
+                        starting_address = aCPU->code_start_addr = address;
+
+                        CS = address / 0x10;
+                    }
+                    else
+                    {
+                        if (instruction_value < address)
+                        {
+                            char buf[50];
+                            sprintf("Backward Address on line %d", line_number);
+                            message(buf, ERR, line_number);
+                        }
+                        else
+                        {
+                            while (address < instruction_value)
+                                emit_byte(0);
+                        }
+                    }
+                    check_end(p2);
+                }
+                break;
+            }
+            if (first_time == 1)
+            {
+
+                first_time = 0;
+                reset_address();
             }
             if (part[0])
             {
@@ -1933,15 +2034,15 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
 
                 else
                 {
-                    if (!assembler_step)
+                    if (assembler_step==2)
                         _current_instruction = define_instruction(line_number);
-                    if (!assembler_step)
-                        _current_instruction->starting_address = address;
+                    if (assembler_step==2)
+                        _current_instruction->starting_address = address - starting_address;
 
                     process_instr();
-                    if (!assembler_step)
-                        _current_instruction->end_address = address;
-                    if (!assembler_step)
+                    if (assembler_step==2)
+                        _current_instruction->end_address = address - starting_address;
+                    if (assembler_step==2)
                     {
                         if (is_first)
                         {
@@ -1962,25 +2063,27 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
         }
         // has_label = 0;
     }
-    if (assembler_step)
+    if (assembler_step == 1)
     {
         unsigned char *h;
         h = CODE_SEGMENT;
 
-        int end = address + 1, start = 0;
+        int end = address + 1, start = start_address;
         // if (data_mem_offset > 0)
         // {
         //     check_for_vars(aCPU);
         // }
+        int vn = 0;
         // data_mem_offset = data_mem_offset > 0 ? data_mem_offset : 0;
         // end = end - data_mem_offset;
         while (start < end)
         {
 
-            *(h + start) = *(code_mem + data_mem_offset + start);
+            // *(h + start) = *(code_mem + data_mem_offset + start);
 
 #ifdef DEBUG
-            printf("%03x: %02x\n", (CS * 0x10) + start, *((CODE_SEGMENT) + start));
+            printf("%03x: %02x\n", (CS * 0x10) + vn, *(code_mem + start));
+            vn++;
 #endif
             start++;
         }
