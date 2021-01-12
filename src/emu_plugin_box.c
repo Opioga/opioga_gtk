@@ -24,6 +24,7 @@ struct _Emu8086AppPluginBoxPrivate
     Emu8086AppWindow *win;
     PeasExtensionSet *extensions;
     Emu8086AppCodeRunner *runner;
+    GtkBox *v_box;
 };
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPluginBox, emu_8086_app_plugin_box, GTK_TYPE_BOX);
 
@@ -75,6 +76,12 @@ static void emu_8086_app_plugin_box_set_property(GObject *object,
         // emu8086_win_change_theme(self);
         // g_print("filename: %s\n", self->filename);
         break;
+    case PROP_VBOX:
+
+        // self->priv->v_box = EMU_8086_APP_CODE_RUNNER(g_value_get_object(value));
+        // emu8086_win_change_theme(self);
+        // g_print("filename: %s\n", self->filename);
+        break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -100,8 +107,9 @@ emu_8086_app_plugin_box_get_property(GObject *object,
         g_value_set_object(value, self->priv->runner);
         break;
 
-
-
+    case PROP_VBOX:
+        g_value_set_object(value, self->priv->v_box);
+        break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -124,10 +132,17 @@ static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
     object_class->set_property = emu_8086_app_plugin_box_set_property;
     object_class->get_property = emu_8086_app_plugin_box_get_property;
     klass->get_stack = emu8086_app_window_get_stack;
-// PROP_MY_RUNNER;
+    // PROP_MY_RUNNER;
 
+    g_object_class_install_property(object_class,
+                                    PROP_VBOX,
+                                    g_param_spec_object("v_box",
+                                                        "Vertical Container",
+                                                        "",
 
- g_object_class_install_property(object_class,
+                                                        GTK_TYPE_BOX,
+                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    g_object_class_install_property(object_class,
                                     PROP_MY_RUNNER,
                                     g_param_spec_object("runner",
                                                         "Runner",
@@ -135,7 +150,6 @@ static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
 
                                                         EMU_8086_APP_CODE_RUNNER_TYPE,
                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-
 
     g_object_class_install_property(object_class,
                                     PROP_WIN,
@@ -151,9 +165,11 @@ static void emu_8086_app_plugin_box_init(Emu8086AppPluginBox *box)
 {
     box->priv = emu_8086_app_plugin_box_get_instance_private(box);
     PRIV_BOX;
+    priv->v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_box_pack_start(box, priv->v_box, TRUE, TRUE, 15);
+
     priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
                                               PEAS_TYPE_ACTIVATABLE, "object", box, NULL);
-   
 
     peas_extension_set_call(priv->extensions, "activate", box);
     g_signal_connect(priv->extensions,

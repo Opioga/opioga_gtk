@@ -53,7 +53,8 @@ typedef enum
 {
     DUMMY,
     PROP_WIN,
-    PROP_MY_RUNNER
+    PROP_MY_RUNNER,
+    PROP_VBOX
 
 } Emu8086AppPluginBoxProperty;
 
