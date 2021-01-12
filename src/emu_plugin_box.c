@@ -184,8 +184,11 @@ on_extension_added(PeasExtensionSet *extensions,
 {
     PRIV_BOX;
 
-     g_print("0x%x", priv->runner);
+    //  g_print("0x%x", priv->runner);
     peas_activatable_activate(PEAS_ACTIVATABLE(exten));
+    // peas_extension_call (exten, "kon",box);
+    // peas_
+    // peas_extension_set_call_valist
 }
 
 GtkWidget *emu8086_app_window_get_stack(Emu8086AppPluginBox *box)

@@ -316,7 +316,7 @@ void emit_byte(int c)
     // printf("%03x: %02x\n", address, c);
     if (assembler_step == 2)
         *(code_mem + address) = c;
-    address+=1;
+    address += 1;
 }
 
 int _check__end(char *p)
@@ -1707,7 +1707,6 @@ void process_instr()
                 }
                 else
                     emit_byte(instruction_value);
-       
             }
             p = avoid_spaces(p);
             if (*p == ',')
@@ -1742,7 +1741,6 @@ void process_instr()
                 p++;
                 continue;
             }
-
 
             check_end(p);
             break;
@@ -1785,8 +1783,7 @@ void process_instr()
         }
         else
         {
-      
-      
+
             p = p2;
 
             separate();
@@ -1864,7 +1861,6 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
             if (address == 271)
                 printf("line: %d m \n", line_number);
 
-
             if (part[0] != '\0' && part[strlen(part) - 1] == ':')
             { /* Label */
                 part[strlen(part) - 1] = '\0';
@@ -1935,7 +1931,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
                 }
                 if (assembler_step == 0)
                 {
-                 
+
                     if (find_label(name))
                     {
                         char m[18 + MAX_SIZE];
@@ -2034,15 +2030,15 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
 
                 else
                 {
-                    if (assembler_step==2)
+                    if (assembler_step == 2)
                         _current_instruction = define_instruction(line_number);
-                    if (assembler_step==2)
+                    if (assembler_step == 2)
                         _current_instruction->starting_address = address - starting_address;
 
                     process_instr();
-                    if (assembler_step==2)
+                    if (assembler_step == 2)
                         _current_instruction->end_address = address - starting_address;
-                    if (assembler_step==2)
+                    if (assembler_step == 2)
                     {
                         if (is_first)
                         {
@@ -2075,18 +2071,18 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
         // }
         int vn = 0;
         // data_mem_offset = data_mem_offset > 0 ? data_mem_offset : 0;
-        // end = end - data_mem_offset;
+#ifdef DEBUG // end = end - data_mem_offset;
         while (start < end)
         {
 
             // *(h + start) = *(code_mem + data_mem_offset + start);
 
-#ifdef DEBUG
             printf("%03x: %02x\n", (CS * 0x10) + vn, *(code_mem + start));
             vn++;
-#endif
+
             start++;
         }
+#endif
         aCPU->instructions_list = _first_instruction;
         aCPU->end_address = end;
     }

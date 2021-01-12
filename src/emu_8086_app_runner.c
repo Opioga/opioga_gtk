@@ -618,7 +618,7 @@ void run_clicked_app(Emu8086AppCodeRunner *runner)
             return;
     }
 
-    priv->to = g_timeout_add(1000, (GSourceFunc)emu_run, runner);
+    priv->to = g_timeout_add(200, (GSourceFunc)emu_run, runner);
     set_app_state(runner, PLAYING);
 
     // g_timeout_add
