@@ -186,8 +186,11 @@ void find_instruction(struct emu8086 *aCPU)
 
         return;
     }
+                    // printf("oo %d %d\n", off, b);
+
     if (next != NULL)
     {
+        
         int addr = next->starting_address;
         _current_instruction = next;
         while (addr < b)
@@ -199,7 +202,8 @@ void find_instruction(struct emu8086 *aCPU)
                         _current_instruction->line_number);
                 massage(buf, ERR);
                 _current_instruction = _INSTRUCTIONS;
-                IP = aCPU->end_address;
+                IP = aCPU->end_address;                printf("o2o\n");
+
                 break;
             }
             next = _current_instruction->next;
@@ -224,6 +228,7 @@ void find_instruction(struct emu8086 *aCPU)
                 massage(buf, ERR);
                 _current_instruction = _INSTRUCTIONS;
                 IP = aCPU->end_address;
+                printf("oo\n");
                 break;
             }
             prev = _current_instruction->prev;
@@ -5237,7 +5242,7 @@ void shr_8(struct emu8086 *aCPU, int *handled, int cl)
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
     {
-        printf("%x", high_reg);
+        // printf("%x", high_reg);
         unsigned char value;
         value = (high_reg) ? *op1 >> 8 : *op1 & 0xff;
         int shift = cl ? (CX & 0x7) : 1;

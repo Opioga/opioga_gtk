@@ -29,6 +29,8 @@
 #ifndef _ASSEMBLER_H_
 #define _ASSEMBLER_H_
 #define MAX_SIZE 256
+
+// #define DEBUG
 struct emu8086;
 struct instruction;
 

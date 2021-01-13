@@ -396,6 +396,7 @@ int emu_run(Emu8086AppCodeRunner *runner)
     {
         gchar c = *(DATA_SEGMENT + aCPU->port);
         gint val = (gint)c;
+        // g_print("here %d, %d\n", aCPU->port, val);
         g_signal_emit(runner, signals[INTERRUPT], 0, val);
         aCPU->port = -1;
     }
@@ -547,6 +548,7 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
         {
             gchar c = *(DATA_SEGMENT + aCPU->port);
             gint val = (gint)c;
+            // g_print("hh %x, %d\n", aCPU->port, val);
             g_signal_emit(runner, signals[INTERRUPT], 0, val);
             aCPU->port = -1;
         }
@@ -593,7 +595,7 @@ void step_over_clicked_app(Emu8086AppCodeRunner *runner, Emu8086AppCode *code)
     errors = 0;
     priv->code = code;
 
-    priv->to = g_timeout_add(100, (GSourceFunc)emu_run, runner);
+    priv->to = g_timeout_add(10, (GSourceFunc)emu_run, runner);
 
     //;
 }
