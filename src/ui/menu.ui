@@ -87,7 +87,10 @@
                             <attribute name="label" translatable="yes">_RevStr    </attribute>
                             <attribute name="action">app.ex2</attribute>
                         </item>
-
+                        <item>
+                            <attribute name="label" translatable="yes">_More Examples    </attribute>
+                            <attribute name="action">app.ex3</attribute>
+                        </item>
                     </section>
 
 

@@ -75,7 +75,7 @@ struct errors_list *define_errors_list(char *name, int line)
     error = (struct errors_list *)malloc(sizeof(struct errors_list) + strlen(name));
     if (error == NULL)
     {
-        printf("Out of memory for label\n");
+        // printf("Out of memory for label\n");
         exit(1);
         return NULL;
     }
@@ -198,7 +198,7 @@ struct variable *define_variable(char *name,
         exit(1);
         return NULL;
     }
-    printf("%s\n", name);
+    // printf("%s\n", name);
     /* Fill variable */
     variable->left = NULL;
     variable->right = NULL;
@@ -1295,7 +1295,7 @@ char *decode;
                         return NULL;
                     if (qualifier == 0)
                     {
-                        printf("%d\n", instruction_value);
+                        //printf("%d\n", instruction_value);
 
                         c = instruction_value - (address + 2);
                         if (undefined == 0 && (c < -128 || c > 127) && memcmp(decode, "xeb", 3) == 0)
@@ -1486,7 +1486,7 @@ char *decode;
                             if (assembler_step == 1 && (c < -128 || c > 127))
 
                             {
-                                printf("c = %d l = %d a = %d v = %d\n", c, line_number, address, instruction_value);
+                                // printf("c = %d l = %d a = %d v = %d\n", c, line_number, address, instruction_value);
                                 message("short jump too long ", ERR, line_number);
                             }
                             break;
@@ -1631,7 +1631,7 @@ void process_instr()
                     {
                         p++;
                         char *lp = p;
-                        printf("%s\n", p);
+                        // printf("%s\n", p);
 
                         while (instruction_value > 0)
                         {
@@ -1653,7 +1653,7 @@ void process_instr()
                         p = avoid_spaces(p);
                         p++;
 
-                        printf("%s\n", p);
+                        // printf("%s\n", p);
 
                         // exit(1);
                     }
@@ -1674,7 +1674,7 @@ void process_instr()
                     else if (*p)
                     {
                         int v = instruction_value;
-                        printf("pen: %s\n", p);
+                        // printf("pen: %s\n", p);
 
                         p2 = match_expression_level6(p, &instruction_value);
                         while (v > 0)
@@ -1858,9 +1858,8 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
             if (part[0] == '\0' && (*p == '\0' || *p == ';')) /* Empty line */
                 break;
 
-            if (address == 271)
-                printf("line: %d m \n", line_number);
-
+            
+            
             if (part[0] != '\0' && part[strlen(part) - 1] == ':')
             { /* Label */
                 part[strlen(part) - 1] = '\0';

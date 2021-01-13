@@ -588,6 +588,7 @@ void emu_8086_app_window_open_activate_cb(Emu8086AppWindow *win)
 
 void emu_8086_app_window_save_activate_cb(Emu8086AppWindow *win)
 {
+
     emu_8086_app_window_save_doc(win);
     // gtk_application_ex
 }
@@ -935,6 +936,15 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf)
 
 gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win)
 {
+    gchar *fname = win->state.file_path;
+    gchar buf[5];
+    strncpy(buf, fname, 4);
+    buf[4] = '\0';
+    if (strcmp(buf, "/usr") == 0)
+    {
+        return;
+    }
+
     if (!win->state.isSaved)
     {
         PRIV;
@@ -1509,4 +1519,90 @@ void emu_8086_app_window_stop_win(Emu8086AppWindow *win)
 GtkWidget *emu8086_get_stack(Emu8086AppWindow *win)
 {
     return win->priv->stack;
+}
+
+gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win)
+{
+    GtkWidget *dialog;
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+    gint res;
+    GtkWindow *window = GTK_WINDOW(win);
+    gboolean found;
+    dialog = gtk_file_chooser_dialog_new("Open File",
+                                         window,
+                                         action,
+                                         ("_Cancel"),
+                                         GTK_RESPONSE_CANCEL,
+                                         "_Open",
+                                         GTK_RESPONSE_ACCEPT,
+                                         NULL);
+    found = gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), "/usr/local/share/emu8086/egs");
+
+    if (!found)
+        found = gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), "/usr/share/emu8086/egs");
+
+    if (found)
+    {
+        gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+        if (res == GTK_RESPONSE_ACCEPT)
+        {
+            PRIV;
+            char *filename, *base;
+            gchar *contents;
+            gsize length;
+            // char *filename;
+            GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+            filename = gtk_file_chooser_get_filename(chooser);
+            GFile *file = gtk_file_chooser_get_file(chooser);
+
+            base = g_file_get_basename(file);
+            if (!check(base))
+            {
+                char err[256];
+                sprintf(err, "unsupported file\n %s", base);
+                quick_message(GTK_WINDOW(win), err, "Error");
+                g_free(base);
+                free(filename);
+                gtk_widget_destroy(dialog);
+                return;
+            }
+
+            gchar *uri;
+
+            strcpy(win->state.file_name, base);
+            //win->state.file_name[strlen(base) - 1] = '\0';
+            gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
+
+            strcpy(win->state.file_path, filename);
+
+            //g_file_get_contents(filename, )
+            if (g_file_load_contents(file, NULL, &contents, &length, NULL, NULL))
+            {
+                GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+
+                refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
+                uri = gtk_file_chooser_get_uri(chooser);
+                add_recent(uri);
+                g_free(uri);
+                emu_8086_app_window_set_open(win);
+
+                emu_8086_app_window_set_open(win);
+                set_fname(priv->runner, win->state.file_path);
+                gtk_text_buffer_set_text(buffer, contents, length);
+                // update(buffer, EMU_8086_APP_CODE(priv->code));
+                strcpy(win->state.file_name, base);
+                //win->state.file_name[strlen(base) - 1] = '\0';
+                gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
+
+                // strcpy(win->state.file_path, filename);
+                g_free(contents);
+                win->state.isSaved = TRUE;
+                win->state.file_path_set = TRUE;
+            }
+
+            free(filename);
+            free(base);
+        }
+    }
+    gtk_widget_destroy(dialog);
 }

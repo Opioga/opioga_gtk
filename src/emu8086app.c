@@ -161,6 +161,18 @@ save_activated(GSimpleAction *action,
 
     emu_8086_app_window_save_activate_cb(priv->win);
 }
+static void
+emu_8086_action3(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086App *app = EMU_8086_APP(appe);
+    _PRIV;
+
+    priv->win = gtk_application_get_active_window(app);
+
+    emu_8086_app_window_open_egs(priv->win);
+}
 
 static void
 save_as_activated(GSimpleAction *action,
@@ -235,7 +247,7 @@ static GActionEntry app_entries[] = {
     {"ex1", ex1_activated, NULL, NULL, NULL},
 
     {"ex2", ex2_activated, NULL, NULL, NULL},
-
+{"ex3", emu_8086_action3, NULL, NULL, NULL},
     {"pref", pref_activated, NULL, NULL, NULL},
 
 };

@@ -5,7 +5,7 @@
 ; make 5 - 8
 ; al = 0fdh (not in binary coded decimal form)
 mov	al, 05h
-mov	bl, 08h
+mov	bl, 08h 
 sub	al, bl
 
 

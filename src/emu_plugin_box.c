@@ -19,6 +19,13 @@
 #include <libpeas/peas-activatable.h>
 #include <libpeas/peas-extension-set.h>
 
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+
+
 struct _Emu8086AppPluginBoxPrivate
 {
     Emu8086AppWindow *win;

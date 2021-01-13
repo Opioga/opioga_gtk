@@ -50,3 +50,6 @@ src/Emu8086-1.0.gir
 src/Emu8086-1.0.typelib
 stamp-h1
 plugins/lcd/lcd/__pycache__
+**/*.in
+py-compile
+m4/*

@@ -63,6 +63,6 @@ void emu_8086_app_window_upd(Emu8086AppWindow *win);
 gchar *emu_8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *buff);
 gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win);
 GtkWidget *emu8086_get_stack(Emu8086AppWindow *win);
-
+gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win);
 G_END_DECLS
 #endif /* __EXAMPLEAPPWIN_H */

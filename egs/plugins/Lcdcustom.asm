@@ -62,7 +62,7 @@ newline:
 	and al, 0xf
 	or al, 30h
 	out 199, al
-	and al, 2fh
+	and al, 2fh 
 	out 199, al
 	ret
 	

@@ -19,6 +19,9 @@ PKG_CHECK_MODULES([EMU8086], [
     libpeas-1.0 >= 1.2.0
 	libpeas-gtk-1.0 >= 1.2.0
 ])
+
+AM_PATH_PYTHON([3.0])
+AC_CONFIG_MACRO_DIRS([m4])
 GOBJECT_INTROSPECTION_CHECK([0.9.3])
 
 if test "$found_introspection" = "yes"; then
@@ -28,6 +31,8 @@ else
 	have_introspection=no
 fi
 
+EMU8086_PLUGINS_LIBS_DIR="$datadir/emu8086/plugins"
+AC_SUBST(EMU8086_PLUGINS_LIBS_DIR)
 GLIB_GSETTINGS
 
 AC_OUTPUT([
@@ -38,6 +43,9 @@ include/Makefile
 pixmaps/Makefile
 pixbufs/Makefile
 egs/Makefile
+egs/plugins/Makefile
 mime/Makefile
-
+plugins/Makefile
+plugins/lcdhitachi/Makefile
+plugins/lcdhitachi/lcdhitachi/Makefile
 ])

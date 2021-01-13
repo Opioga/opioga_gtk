@@ -5443,7 +5443,7 @@ void rol_16(struct emu8086 *aCPU, int *handled, int cl)
     op2 = op1 = NULL;
     is_16 = 1;
     high_reg = 0;
-    printf("here %x \n", 3);
+    // printf("here %x \n", 3);
 
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
@@ -5485,7 +5485,7 @@ void rol_16(struct emu8086 *aCPU, int *handled, int cl)
             CLEAR_FLAG(0);
         value <<= shift;
         value |= cf;
-        printf("%x \n", value);
+        // printf("%x \n", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -5564,7 +5564,7 @@ void rcl_16(struct emu8086 *aCPU, int *handled, int cl)
     op2 = op1 = NULL;
     is_16 = 1;
     high_reg = 0;
-    printf("here %x \n", 3);
+    // printf("here %x \n", 3);
 
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
@@ -5604,7 +5604,7 @@ void rcl_16(struct emu8086 *aCPU, int *handled, int cl)
             CLEAR_FLAG(0);
         value <<= shift;
         value |= cf;
-        printf("%x \n", value);
+        // printf("%x \n", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -5698,7 +5698,7 @@ void shl_16(struct emu8086 *aCPU, int *handled, int cl)
         else
             CLEAR_FLAG(0);
         value <<= shift;
-        printf("%x, \n", value);
+        // printf("%x, \n", value);
         *op1 = value & 0xffff;
     }
 
