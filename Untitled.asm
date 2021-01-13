@@ -16,8 +16,8 @@ commands:
 
 	
 string:
-	db "Party Scatter", 0ah
-	db "As they gather ..."
+	db "hello world", 0ah
+	db "HELLO WORLD", 0ah
 	
 newline:
 	mov ah, al
