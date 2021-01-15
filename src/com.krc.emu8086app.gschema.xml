@@ -31,7 +31,11 @@
             <summary>License File</summary>
             <description>The license file to be used for content.</description>
         </key>
-
+        <key name="frequency" type="i">
+            <default>1</default>
+            <summary>Update frequency</summary>
+            <description>The code runner update frequency</description>
+        </key>
         <key name="theme" type="s">
             <default>'dark+'</default>
             <summary>Theme</summary>

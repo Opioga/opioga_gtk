@@ -303,6 +303,7 @@ struct instruction *define_instruction(int line)
     _new->line_number = line_number;
     _new->next = NULL;
     _new->prev = NULL;
+    _new->cache = NULL;
     if (is_first)
     {
         _first_instruction = _new;

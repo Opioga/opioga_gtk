@@ -71,6 +71,9 @@ static void emu_8086_app_code_runner_set_property(GObject *object,
     case PROP_RUNNER_CAN_RUN:
         self->priv->can_run = g_value_get_boolean(value);
         break;
+            case PROP_U_F:
+        self->priv->update_frequency= g_value_get_int(value);
+        break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -152,7 +155,13 @@ static void emu_8086_app_code_runner_class_init(Emu8086AppCodeRunnerClass *klass
                                                         "",
                                                         NULL,
                                                         G_PARAM_READWRITE));
-
+    g_object_class_install_property(object_class,
+                                    PROP_U_F,
+                                    g_param_spec_int("update_frequency",
+                                                         "Update Frequency",
+                                                         "The runners' update_frequency",1,500,
+                                                         1,
+                                                         G_PARAM_WRITABLE));
     g_object_class_install_property(object_class,
                                     PROP_RUNNER_CAN_RUN,
                                     g_param_spec_boolean("can_run",
@@ -193,6 +202,10 @@ static void emu_8086_app_code_runner_init(Emu8086AppCodeRunner *runner)
     runner->priv->fname = NULL;
     runner->priv->ie = 0;
     runner->priv->state = STOPPED;
+    GSettings *settings;
+    settings = g_settings_new("com.krc.emu8086app");
+    g_settings_bind(settings, "frequency",runner, "update_frequency", G_SETTINGS_BIND_GET);
+    g_object_unref(settings);
 }
 
 static void emu_free(Emu8086AppCodeRunner *runner)
@@ -331,6 +344,15 @@ void stop_clicked_app(Emu8086AppCodeRunner *runner)
     stop(runner, TRUE);
 }
 
+
+void emit(Emu8086AppCodeRunner *runner){PRIV_CODE_RUNNER;
+
+if((priv->m_ins)%priv->update_frequency == 0)
+        g_signal_emit(runner, signals[EXEC_INS], 0);
+        priv->m_ins++;
+
+}
+
 int emu_run(Emu8086AppCodeRunner *runner)
 {
     PRIV_CODE_RUNNER;
@@ -352,6 +374,7 @@ int emu_run(Emu8086AppCodeRunner *runner)
     if (aCPU->is_first == 1)
     {
         g_signal_emit(runner, signals[EXEC_INS], 0);
+        priv->m_ins = 1;
         ;
         aCPU->is_first = 0;
         return 1;
@@ -400,7 +423,7 @@ int emu_run(Emu8086AppCodeRunner *runner)
         g_signal_emit(runner, signals[INTERRUPT], 0, val);
         aCPU->port = -1;
     }
-    g_signal_emit(runner, signals[EXEC_INS], 0);
+    emit(runner);
 
     // if (priv->win != NULL)
     //     emu_8086_app_window_update_wids(priv->win, aCPU);

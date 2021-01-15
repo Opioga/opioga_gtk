@@ -58,6 +58,12 @@ emu8086_plugins_engine_init(Emu8086PluginsEngine *engine)
 
 	g_free(private_path);
 
+#ifdef EMU_DEBUG
+	peas_engine_add_search_path(PEAS_ENGINE(engine),
+								"/home/lion/Desktop/kosyWork/Desktop/gtkemu8086/plugins",
+								"/home/lion/Desktop/kosyWork/Desktop/gtkemu8086/plugins");
+
+#else
 	peas_engine_add_search_path(PEAS_ENGINE(engine),
 								"/usr/local/share/emu8086/plugins",
 								"/usr/local/share/emu8086/plugins");
@@ -65,6 +71,7 @@ emu8086_plugins_engine_init(Emu8086PluginsEngine *engine)
 	peas_engine_add_search_path(PEAS_ENGINE(engine),
 								"/usr/share/emu8086/plugins",
 								"/usr/share/emu8086/plugins");
+#endif
 }
 
 static void

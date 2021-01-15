@@ -56,6 +56,7 @@ struct _Emu8086AppPrefsPrivate
   GtkWidget *themes_treeview;
   GtkWidget *indent;
   GtkWidget *pluginsbox;
+  GtkAdjustment *update_frequency;
 };
 struct _Emu8086AppPrefs
 {
@@ -135,7 +136,7 @@ emu8086_app_prefs_init(Emu8086AppPrefs *prefs)
   g_settings_bind(priv->settings, "lf",
                   priv->lf, "label",
                   G_SETTINGS_BIND_DEFAULT);
-
+g_settings_bind(priv->settings,"frequency",priv->update_frequency, "value", G_SETTINGS_BIND_DEFAULT);
   GtkTreePath *tree;
   GtkListStore *list_store;
   GtkTreeIter iter;
@@ -195,6 +196,7 @@ emu8086_app_prefs_class_init(Emu8086AppPrefsClass *class)
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, lf);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, indent);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, pluginsbox);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, update_frequency);
 
 }
 

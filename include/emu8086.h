@@ -33,6 +33,7 @@ struct instruction
     int starting_address;
     int end_address;
     int is_16;
+    struct instruction *cache;
 };
 struct variable
 {
@@ -58,7 +59,7 @@ struct emu8086
     unsigned char mDataMem[0xfffff];
     char is_first;
     int code_start_addr;
-    int mSFR[22];
+    unsigned short mSFR[22];
     int skip_next;
     struct instruction *instructions_list;
     struct instruction *instruction_cache[MAX_CALL_STACK];

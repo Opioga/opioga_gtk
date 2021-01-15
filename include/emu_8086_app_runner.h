@@ -14,8 +14,6 @@
  * Runner class
  */
 
-
-
 #ifndef _EMU_CODE_RUNNER_C
 #define _EMU_CODE_RUNNER_C
 #include <gtk/gtk.h>
@@ -42,6 +40,9 @@ struct _Emu8086AppCodeRunnerPrivate
     gchar *em;
     gint f;
     Emu8086AppCode *code;
+  
+    gint m_ins;
+    gint update_frequency;
 };
 typedef struct _Emu8086AppCodeRunner Emu8086AppCodeRunner;
 struct _Emu8086AppCodeRunner
@@ -67,7 +68,8 @@ typedef enum
     PROP_RUNNER_FNAME,
     PROP_RUNNER_CODE,
     PROP_RUNNER_CAN_RUN,
-    PROP_ACPU
+    PROP_ACPU,
+    PROP_U_F
 
 } Emu8086AppCodeRunnerProperty;
 

@@ -44,7 +44,7 @@ commands:
 
 	
 string:
-	db "hello world", 0ah
+	db "hello world welcome to joy", 0ah
 	db "HELLO WORLD", 0ah
 	
 newline:
