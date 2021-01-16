@@ -172,15 +172,20 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             }
             else
                 gtk_text_buffer_remove_tag_by_name(buffer, "string", &iter, &iter2);
-            if (strlen(buf) > 0 && !isString)
+            gint length =strlen(buf) ;
+            if (length > 0 && !isString)
             {
                 // g_print(buf);
+                if(length>2)                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
+
                 if (getnum_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "num", &iter, &iter2);
                 else if (getsp_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "special", &iter, &iter2);
                 else if (getlab_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &iter, &iter2);
+                else if (getkeyword(buf))
+                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &iter, &iter2);
                 else if (getreg(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "reg", &iter, &iter2);
 
@@ -189,10 +194,8 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
                 {
                     gtk_text_buffer_apply_tag_by_name(buffer, "string", &iter, &iter2);
                 }
-                else if (getkeyword(buf))
-                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &iter, &iter2);
 
-                else if (strlen(line) > 0)
+                else if (length > 0)
                 {
 
                     gtk_text_buffer_remove_tag_by_name(buffer, "num", &iter, &iter2);

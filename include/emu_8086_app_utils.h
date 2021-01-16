@@ -14,10 +14,6 @@
  * Runner class
  */
 
-
-
-
-
 #ifndef EMU_8086_APP_UTILS_H
 #define EMU_8086_APP_UTILS_H
 #include <ctype.h>
@@ -175,22 +171,22 @@ gchar *tag_names[7] = {
     "comment"};
 
 gchar *theme_colors[24] = {
-   
+
     /* keyword */ "#96CBFE",
     "#B5CAE8",
     "#CE9178",
     "#ebeb8d",
     "#B5CEA8",
     "#C586C0",
-     "#6A9955",
+    "#6A9955",
     NULL,
     "#80ffbb",
     "#ffee80",
     "#3ad900",
     "#ff9d00",
     "#ffffff",
-   "#ffdd00",
-     "#0088ff",
+    "#ffdd00",
+    "#0088ff",
     NULL,
     "#000000",
     "#0057AE",
@@ -198,7 +194,7 @@ gchar *theme_colors[24] = {
     "#808080",
     "#FF0000",
     "#B07E00",
-     "#808080",
+    "#808080",
     NULL
 
 };
@@ -228,13 +224,18 @@ gboolean getkeyword(gchar *keyword)
 gboolean getreg(gchar *keyword)
 {
     char i = 0, *p;
+
     gboolean ret = FALSE;
     p = keyword;
+    int len = 0;
     while (*p)
     {
         *p = toupper(*p);
         p++;
+        len++;
     }
+    if (len > 2)
+        return ret;
     p = keyword;
     while (i < 20)
     {

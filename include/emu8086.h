@@ -137,6 +137,9 @@ void sfrwrite(struct emu8086 *aCPU, int aRegister);
 #define EXTRA_SEGMENT aCPU->mDataMem + (ES * 0x10)
 #define GET_FLAG(f) (FLAGS >> f) & 1
 #define SET_FLAG(f) FLAGS |= (1 << f)
+#define SET_BIT(f, s) f |= (1 << s)
+#define CLEAR_BIT(f, s, l) f &= (((~f & l) | (1 << s)) ^ f);
+
 #define CLEAR_FLAG(f) FLAGS &= (((~FLAGS & 0xffff) | (1 << f)) ^ FLAGS);
 #define IS_SET(f, s) (f >> s) & 1
 void op_setptrs(struct emu8086 *aCPU);

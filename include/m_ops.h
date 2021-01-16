@@ -58,8 +58,13 @@ void xor_addr16_s8(struct emu8086 *aCPU, int *handled);
 
 void dec_addr8(struct emu8086 *aCPU, int *handled);
 void cmp_addr16_s8(struct emu8086 *aCPU, int *handled);
+
+
 void neg_addr8(struct emu8086 *aCPU, int *handled);
 void not_addr8(struct emu8086 *aCPU, int *handled);
+void imul_addr8(struct emu8086 *aCPU, int *handled);
 void mul_addr8(struct emu8086 *aCPU, int *handled);
 void push_to_stack(struct emu8086 *aCPU, int value);
+void div_addr8(struct emu8086 *aCPU, int *handled);
+void idiv_addr8(struct emu8086 *aCPU, int *handled);
 #endif

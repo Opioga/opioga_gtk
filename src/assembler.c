@@ -908,6 +908,7 @@ char *match_expression_level6(char *p, int *value)
         for (c = 0; c < 16; c++)
             if (strcmp(expr_name, reg1[c]) == 0)
                 return NULL;
+
         label = find_label(expr_name);
         if (label == NULL)
         {
@@ -942,7 +943,17 @@ char *match_register(char *p, int width, int *value)
 
     p = avoid_spaces(p);
     if (!isalpha(p[0]) || !isalpha(p[1]))
+    {   
+
         return NULL;
+    }
+
+    if (p[2] && (!isspace(p[2]) && p[2] != ','))
+    {
+     
+
+        return NULL;
+    }
     reg[0] = p[0];
     reg[1] = p[1];
     reg[2] = '\0';
@@ -954,7 +965,7 @@ char *match_register(char *p, int width, int *value)
         if (c < 8)
         {
             *value = c;
-            return p + 2;
+            return avoid_spaces(p + 2);
         }
     }
     else
@@ -965,9 +976,9 @@ char *match_register(char *p, int width, int *value)
         if (c < 8)
         {
             *value = c;
-            return p + 2;
+            return avoid_spaces(p + 2);
         }
-    }
+    }printf("%s\n", p);
     return NULL;
 }
 
@@ -1859,8 +1870,6 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
             if (part[0] == '\0' && (*p == '\0' || *p == ';')) /* Empty line */
                 break;
 
-            
-            
             if (part[0] != '\0' && part[strlen(part) - 1] == ':')
             { /* Label */
                 part[strlen(part) - 1] = '\0';
