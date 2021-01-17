@@ -1,10 +1,11 @@
 ; counts the number of characters of a zero terminated string.
-push cs
+       org 500
+       push cs
 	push cs
 	pop ds
 	pop es
-mov bx, 0
-jmp start
+       mov bx, 0
+       jmp start
  str1: db "abcdefg hijklmnop qrstvuwxyz", 0
 
 
@@ -25,8 +26,8 @@ compare: 	mov cl, [bx]
 
 ; print result in binary:
 done:
-mov bx, ax
-mov cx, 8
+       mov bx, ax
+       mov cx, 8
 print: mov ah, 2   ; print function.
        mov dl, '0'
        test bl, 10000000b  ; test first bit.
@@ -34,16 +35,16 @@ print: mov ah, 2   ; print function.
        mov dl, '1'
 zero:  int 21h
        shl bl, 1
-loop print
+       loop print
 
 ; print binary suffix:
-mov dl, 'b'
-int 21h
+       mov dl, 'b'
+       int 21h
 
 
 ; wait for any key press....
-mov ah, 0
-int 16h 
+       mov ah, 0
+       int 16h 
 
 
  
