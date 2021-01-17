@@ -109,6 +109,19 @@ copy_activated(GSimpleAction *action,
     //   et_enabled(cp, gtk_text_buffer_get_has_selection(GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)))));
 }
 
+
+static void
+find_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    g_print("active\n");
+
+}
+
+
+
 static void
 paste_activated(GSimpleAction *action,
                 GVariant *parameter,
@@ -157,8 +170,10 @@ cut_activated(GSimpleAction *action,
     }
 }
 
-static GActionEntry win_entries[] = {
 
+
+static GActionEntry win_entries[] = {
+ {"find", find_activated, NULL, NULL, NULL},
     {"copy", copy_activated, NULL, NULL, NULL},
 
     {"cut", cut_activated, NULL, NULL, NULL},
@@ -521,12 +536,7 @@ emu_8086_window_key_press_event(GtkWidget *widget,
 
     if (event->state & GDK_CONTROL_MASK)
     {
-        if ((event->keyval == GDK_KEY_o))
-        {
-            handled = TRUE;
-            _open(EMU_8086_APP_WINDOW(widget));
-        }
-        else if ((event->keyval == GDK_KEY_plus) || (event->keyval == GDK_KEY_KP_Add) || (event->keyval == GDK_KEY_equal))
+      if ((event->keyval == GDK_KEY_plus) || (event->keyval == GDK_KEY_KP_Add) || (event->keyval == GDK_KEY_equal))
         {
             handled = TRUE;
             Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
@@ -1249,12 +1259,14 @@ static modified_changed(GtkTextBuffer *textbuffer,
     emu_8086_app_window_upd(EMU_8086_APP_WINDOW(user_data));
 }
 
+ 
 static void populate_win(Emu8086AppWindow *win)
 {
 
     PRIV;
     gtk_window_set_default_size(GTK_WINDOW(win), 800, 600);
-
+   
+   
     GtkWidget *scrolled;
     GtkWidget *code;
     int be = 0;
@@ -1318,6 +1330,9 @@ void emu_8086_app_window_up(Emu8086AppWindow *win)
 
     //  g_print("herre %s\n", "string");
 }
+
+
+
 
 char *milli(GtkWidget *label, char *r, int reg)
 {

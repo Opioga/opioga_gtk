@@ -14,7 +14,6 @@
  * App class
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,9 +66,9 @@ emu_8086_activate(GApplication *app)
     Emu8086AppWindow *win;
     _PRIV;
     win = emu_8086_app_window_new(EMU_8086_APP(app));
-    priv->win = win;
+    priv->win = win; emu_8086_app_window_set_app(win, app);
     emu_8086_app_window_up(win);
-    emu_8086_app_window_set_app(win, app);
+   
     gtk_window_present(GTK_WINDOW(win));
 }
 
@@ -79,19 +78,19 @@ void emu_8086_open_file(Emu8086App *app, GFile *file)
     Emu8086AppWindow *win; // *win;
 
     win = emu_8086_app_window_new(EMU_8086_APP(app));
+     emu_8086_app_window_set_app(win, app);
     emu_8086_app_window_open(win, file);
 
-    emu_8086_app_window_set_app(win, app);
+   
     gtk_window_present(GTK_WINDOW(win));
 
     priv->win = win;
 }
 
-void
-emu_8086_open(GApplication *appe,
-              GFile **files,
-              gint n_files,
-              const gchar *hint)
+void emu_8086_open(GApplication *appe,
+                   GFile **files,
+                   gint n_files,
+                   const gchar *hint)
 {
     Emu8086App *app;
     app = EMU_8086_APP(appe); // GList *windows;
@@ -163,8 +162,8 @@ save_activated(GSimpleAction *action,
 }
 static void
 emu_8086_action3(GSimpleAction *action,
-               GVariant *parameter,
-               gpointer appe)
+                 GVariant *parameter,
+                 gpointer appe)
 {
     Emu8086App *app = EMU_8086_APP(appe);
     _PRIV;
@@ -235,11 +234,20 @@ pref_activated(GSimpleAction *action,
     gtk_window_set_title(prefs, "Settings");
     gtk_widget_show_all(prefs);
 }
+static void emu8086_open_doc(GSimpleAction *action,
+                             GVariant *parameter,
+                             gpointer app)
+{
+    GtkWindow *win;
 
+    win = gtk_application_get_active_window(GTK_APPLICATION(app));
+
+    emu_8086_app_window_open_activate_cb(EMU_8086_APP_WINDOW(win));
+}
 static GActionEntry app_entries[] = {
     {"open", open_activated, NULL, NULL, NULL},
     {"save", save_activated, NULL, NULL, NULL},
-
+    {"open_new", emu8086_open_doc, NULL, NULL, NULL},
     {"save_as", save_as_activated, NULL, NULL, NULL},
     {"quit", quit_activated, NULL, NULL, NULL},
 
@@ -247,7 +255,7 @@ static GActionEntry app_entries[] = {
     {"ex1", ex1_activated, NULL, NULL, NULL},
 
     {"ex2", ex2_activated, NULL, NULL, NULL},
-{"ex3", emu_8086_action3, NULL, NULL, NULL},
+    {"ex3", emu_8086_action3, NULL, NULL, NULL},
     {"pref", pref_activated, NULL, NULL, NULL},
 
 };
@@ -256,6 +264,7 @@ static void emu_8086_startup(GApplication *app)
 {
     GtkBuilder *builder;
     GMenuModel *app_menu;
+    const gchar *open_doc_accels[2] = {"<Ctrl>O", NULL};
     const gchar *quit_accels[2] = {"<Ctrl>Q", NULL};
     const gchar *open_accels[2] = {"<Ctrl>N", NULL};
     const gchar *save_accels[2] = {"<Ctrl>S", NULL};
@@ -264,6 +273,8 @@ static void emu_8086_startup(GApplication *app)
     g_action_map_add_action_entries(G_ACTION_MAP(app),
                                     app_entries, G_N_ELEMENTS(app_entries),
                                     app);
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.open_new",
+                                          open_doc_accels);
     gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.quit",
                                           quit_accels);
     gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.open",
@@ -332,28 +343,27 @@ static void quit(Emu8086AppWindow *win)
 }
 
 static void
-app_weak_notify (gpointer data,
-		 GObject *where_the_app_was)
+app_weak_notify(gpointer data,
+                GObject *where_the_app_was)
 {
-	gtk_main_quit ();
+    gtk_main_quit();
 }
 
-
 Emu8086App *
-emu_8086_app_get_default (void)
+emu_8086_app_get_default(void)
 {
-	static Emu8086App *app = NULL;
+    static Emu8086App *app = NULL;
 
-	if (app != NULL)
-		return app;
+    if (app != NULL)
+        return app;
 
-	app =emu_8086_app_new();
+    app = emu_8086_app_new();
 
-	g_object_add_weak_pointer (G_OBJECT (app),
-				   (gpointer) &app);
-	g_object_weak_ref (G_OBJECT (app),
-			   app_weak_notify,
-			   NULL);
+    g_object_add_weak_pointer(G_OBJECT(app),
+                              (gpointer)&app);
+    g_object_weak_ref(G_OBJECT(app),
+                      app_weak_notify,
+                      NULL);
 
-	return app;
+    return app;
 }

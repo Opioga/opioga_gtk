@@ -118,7 +118,6 @@ static gboolean emu_8086_app_code_popup_menu(GtkTextView *text_view,
     GtkTextBuffer *buffer;
     GtkMenuShell *menu;
     GtkWidget *menu_item;
-    GtkMenuShell *case_menu;
     buffer = gtk_text_view_get_buffer(text_view);
     if (!EMU_8086_CODE_BUFFER_IS_BUFFER(buffer))
     {

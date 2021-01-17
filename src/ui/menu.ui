@@ -7,18 +7,33 @@
 
             <section>
                 <item>
+                    <attribute name="label" translatable="yes">_Open </attribute>
+                    <attribute name="action">app.open_new</attribute>
+                    <attribute name="icon">document-open</attribute>  
+                     <attribute name="accel">&lt;Primary&gt;o</attribute>
+                </item>
+                <item>
                     <attribute name="label" translatable="yes">_Open New Window</attribute>
+                                       <attribute name="icon">document-new</attribute>  
+
                     <attribute name="action">app.open</attribute>
                 </item>
                 <item>
                     <attribute name="label" translatable="yes">_Save</attribute>
+                      <attribute name="icon">document-save</attribute> 
                     <attribute name="action">app.save</attribute>
                 </item>
-
+                <item>
+                    <attribute name="label" translatable="yes">_Save As</attribute>
+                      <attribute name="icon">document-save-as</attribute> 
+                    <attribute name="action">app.save_as</attribute>
+                </item>
             </section>
             <section>
                 <item>
                     <attribute name="label" translatable="yes">Close All Windows</attribute>
+                      <attribute name="icon">application-exit</attribute> 
+                   
                     <attribute name="action">app.quit</attribute>
                 </item>
             </section>
@@ -32,6 +47,8 @@
                 <item>
                     <attribute name="label" translatable="yes">_Cut</attribute>
                     <attribute name="action">win.cut</attribute>
+                       <attribute name="icon">edit-cut</attribute> 
+                   
                     <attribute name="accel">&lt;Primary&gt;x</attribute>
                 </item>
 
@@ -39,6 +56,7 @@
                 <item>
                     <attribute name="label" translatable="yes">_Copy</attribute>
                     <attribute name="action">win.copy</attribute>
+                    <attribute name="icon">edit-copy</attribute> 
                     <attribute name="accel">&lt;Primary&gt;c</attribute>
                 </item>
 
@@ -47,24 +65,52 @@
                 <item>
                     <attribute name="label" translatable="yes">_Paste</attribute>
                     <attribute name="action">win.paste</attribute>
+                    <attribute name="icon">edit-paste</attribute> 
                     <attribute name="accel">&lt;Primary&gt;v</attribute>
                 </item>
                 <item>
                     <attribute name="label" translatable="yes">Select all</attribute>
                     <attribute name="action">win.select</attribute>
+                    <attribute name="icon">edit-select-all</attribute> 
                     <attribute name="accel">&lt;Primary&gt;a</attribute>
 
                 </item>
+                             <item>
+                    <attribute name="label" translatable="yes">Format Document</attribute>
+                    <!-- <attribute name="icon">edit-format</attribute>  -->
+                    <attribute name="accel">&lt;Primary&gt;i</attribute>
+            
 
+                </item>
+        
             </section>
 
             <section>
 
                 <item>
                     <attribute name="label" translatable="yes">Open _Preferences</attribute>
+                    <attribute name="icon">preferences-system</attribute> 
                     <attribute name="action">app.pref</attribute>
                 </item>
             </section>
+        </submenu>
+
+        <submenu>
+           <attribute name="label" translatable="yes">_Search</attribute>
+                <item>
+                    <attribute name="label" translatable="yes">Find</attribute>
+                    <attribute name="action">win.find</attribute>
+                    <attribute name="icon">edit-find</attribute> 
+                    <attribute name="accel">&lt;Primary&gt;f</attribute>
+
+                </item>
+
+                                <item>
+                    <attribute name="label" translatable="yes">Go to Line...</attribute>
+                   
+            
+
+                </item>
         </submenu>
 
         <submenu id="HelpMenu">
