@@ -135,6 +135,7 @@ gchar *keywords[] = {
     "stosw",
     "sub",
     "test",
+    "org",
     "wait",
     "xchg",
     "xlat",

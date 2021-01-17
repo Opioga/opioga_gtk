@@ -948,7 +948,7 @@ char *match_register(char *p, int width, int *value)
         return NULL;
     }
 
-    if (p[2] && (!isspace(p[2]) && p[2] != ','))
+    if (p[2] && (!isspace(p[2]) && p[2] != ',' &&p[2] !=']'))
     {
      
 
@@ -1819,7 +1819,7 @@ void do_assembly(struct emu8086 *aCPU, char *fname)
     int i = 0;
     int starting_address = 0, first_time = 0;
     _INSTRUCTIONS = NULL;
-    starting_address = 0;
+    starting_address = start_address = 0;
     address = 0;
     data_mem_offset = 0;
     CS = 0;

@@ -6208,7 +6208,7 @@ void test_addr8_i8(struct emu8086 *aCPU, int *handled)
         value = *(CODE_SEGMENT_IP);
 
         value &= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-
+setFlags(aCPU, value);
         *handled = 1;
         IP++;
         return;

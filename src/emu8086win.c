@@ -441,6 +441,7 @@ static void _open(Emu8086AppWindow *win)
     gint res;
     gboolean ret = FALSE;
     PRIV;
+    stop(priv->runner, FALSE);
     dialog = gtk_file_chooser_dialog_new("Open File",
                                          win,
                                          action,
@@ -848,7 +849,7 @@ void emu_8086_app_window_upd(Emu8086AppWindow *win)
     gboolean modified = gtk_text_buffer_get_modified(buffer);
     if (win->state.isSaved && (win->priv->open == 0) && modified)
     {
-        char buf[20];
+        char buf[strlen(win->state.file_name)+ 2];
         sprintf(buf, "%s*", win->state.file_name);
         gtk_window_set_title(GTK_WINDOW(win), buf);
         win->state.isSaved = FALSE;
@@ -1107,6 +1108,7 @@ static void open_item(GtkRecentChooser *recents, gpointer user_data)
     if (g_file_load_contents(file, NULL, &contents, &length, NULL, NULL))
     {
         PRIV;
+        stop(priv->runner, FALSE);
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         refreshLines(EMU_8086_APP_CODE_BUFFER(buffer));
 

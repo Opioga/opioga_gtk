@@ -44,7 +44,7 @@ static GSList *file_list = NULL;
 static void
 show_version_and_quit(void)
 {
-    g_print("%s - Version %s\n", g_get_application_name(), VERSION);
+    g_print("%s A simple 8086 emulator - Version %s\n", g_get_application_name(), VERSION);
 
     exit(0);
 }
@@ -60,8 +60,7 @@ static const GOptionEntry options[] =
         {"new-document", '\0', 0, G_OPTION_ARG_NONE, &new_document_option,
          N_("Create a new document in an existing instance of emu8086"), NULL},
 
-        {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_FILENAME_ARRAY, &remaining_args,
-         NULL, N_("[FILE...]")}, /* collects file arguments */
+ /* collects file arguments */
 
         {NULL}};
 
@@ -87,14 +86,17 @@ emu8086_get_command_line_data(void)
 
 int main(int argc, char *argv[])
 {
-    GOptionContext *context;
+    Emu8086App *a;GOptionContext *context;
+    a = emu_8086_app_get_default();
+    context = g_option_context_new(_("- Edit text files"));
+    g_application_add_main_option_entries(a, options);
+    //g_option_context_add_group(context, gtk_get_option_group(TRUE));
+g_application_run(G_APPLICATION(a), argc, argv);
+   
     Emu8086PluginsEngine *engine;
-    Emu8086App *a;
+
     GError *error = NULL;
     Emu8086AppWindow *window;
-    context = g_option_context_new(_("- Edit text files"));
-    g_option_context_add_main_entries(context, options, NULL);
-    g_option_context_add_group(context, gtk_get_option_group(TRUE));
 
 #ifdef HAVE_INTROSPECTION
     g_option_context_add_group(context, g_irepository_get_option_group());
@@ -102,17 +104,18 @@ int main(int argc, char *argv[])
 
     if (!g_option_context_parse(context, &argc, &argv, &error))
     {
-        g_print(_("%s\nRun '%s --help' to see a full list of available command line options.\n"),
-                error->message, argv[0]);
+        // g_print(_("%s\nRun '%s --help' to see a full list of available command line options.\n"),
+        //         error->message, argv[0]);
         g_error_free(error);
         g_option_context_free(context);
         return 1;
     }
-    g_option_context_free(context);
+    // 
 
     engine = emu8086_plugins_engine_get_default();
-    a = emu_8086_app_get_default();
-
+    // a = emu_8086_app_get_default();
+   
+   g_option_context_free(context);
     // if (file_list != NULL)
     // {
     //     while (file_list != NULL)
@@ -129,6 +132,5 @@ int main(int argc, char *argv[])
     // gtk_main();
     // Emu8086App *a = emu_8086_app_new();
     // gint l = g_timeout_add(interval, (GSourceFunc)emu_8086_app_update_usage, a);
-
-    return g_application_run(G_APPLICATION(a), argc, argv);
+    // return
 }

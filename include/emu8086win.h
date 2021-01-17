@@ -35,9 +35,9 @@ typedef struct _Emu8086AppWindowState Emu8086AppWindowState;
 
 struct _Emu8086AppWindowState
 {
-    char file_name[20];
+    char file_name[256];
     gboolean isSaved;
-    char file_path[100];
+    char file_path[256];
     gboolean file_path_set;
     gboolean Open;
     gint fontSize;
@@ -64,5 +64,6 @@ gchar *emu_8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *b
 gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win);
 GtkWidget *emu8086_get_stack(Emu8086AppWindow *win);
 gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win);
+
 G_END_DECLS
 #endif /* __EXAMPLEAPPWIN_H */
