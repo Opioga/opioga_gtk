@@ -15,6 +15,7 @@
  */
 #include <emu8086win.h>
 #include <emu8086app.h>
+#include <emu8086stylescheme.h>
 
 #include <code.h>
 #include <code_buffer.h>
@@ -69,6 +70,7 @@ struct _Emu8086AppWindowPrivate
     Emu8086App *app;
     GSettings *settings;
     gint open;
+    Emu8086AppStyleScheme *scheme;
 };
 
 struct _Emu8086AppWindow
@@ -90,7 +92,7 @@ static void emu_8086_app_window_flash(Emu8086AppCodeRunner *runner, gpointer use
 static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message);
 static void add_recent(gchar *uri);
 void quick_message(GtkWindow *parent, gchar *message, gchar *title);
-
+static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme,Emu8086AppWindow *win);
 static void
 copy_activated(GSimpleAction *action,
                GVariant *parameter,
@@ -109,7 +111,6 @@ copy_activated(GSimpleAction *action,
     //   et_enabled(cp, gtk_text_buffer_get_has_selection(GTK_TEXT_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)))));
 }
 
-
 static void
 find_activated(GSimpleAction *action,
                GVariant *parameter,
@@ -117,10 +118,7 @@ find_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     g_print("active\n");
-
 }
-
-
 
 static void
 paste_activated(GSimpleAction *action,
@@ -170,10 +168,8 @@ cut_activated(GSimpleAction *action,
     }
 }
 
-
-
 static GActionEntry win_entries[] = {
- {"find", find_activated, NULL, NULL, NULL},
+    {"find", find_activated, NULL, NULL, NULL},
     {"copy", copy_activated, NULL, NULL, NULL},
 
     {"cut", cut_activated, NULL, NULL, NULL},
@@ -328,7 +324,8 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2;
     priv->runner = emu_8086_app_code_runner_new(NULL, FALSE);
-    // g_property_action_new
+    priv->scheme = emu_8086_app_style_scheme_get_default();
+
     action = (GAction *)g_property_action_new("check-updates", win, "updates");
     action2 = (GAction *)g_property_action_new("open_mem", win, "memory");
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/gears.ui");
@@ -375,7 +372,7 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     box = emu_8086_app_plugin_box_new(win, priv->runner);
     gtk_container_add(GTK_CONTAINER(priv->stack), box);
     gtk_widget_show_all(box);
-
+g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
     g_object_unref(builder);
 };
 
@@ -536,7 +533,7 @@ emu_8086_window_key_press_event(GtkWidget *widget,
 
     if (event->state & GDK_CONTROL_MASK)
     {
-      if ((event->keyval == GDK_KEY_plus) || (event->keyval == GDK_KEY_KP_Add) || (event->keyval == GDK_KEY_equal))
+        if ((event->keyval == GDK_KEY_plus) || (event->keyval == GDK_KEY_KP_Add) || (event->keyval == GDK_KEY_equal))
         {
             handled = TRUE;
             Emu8086AppWindow *win = EMU_8086_APP_WINDOW(window);
@@ -701,36 +698,15 @@ void emu_8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win)
     }
 }
 
-static void emu8086_win_change_theme(Emu8086AppWindow *win)
+static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme,Emu8086AppWindow *win)
 {
     PRIV;
-    gint a;
+    gchar *a;
     GdkRGBA color;
 
-    //   ;
-    if (strcmp("dark+", win->theme) == 0)
-    {
-        color.alpha = 1;
-        color.red = 0.22;
-        color.green = 0.22;
-        color.blue = 0.22;
-    }
 
-    else if (strcmp("cobalt", win->theme) == 0)
-    {
-        color.alpha = 1;
-        color.red = 0;
-        color.green = 0.11;
-        color.blue = 0.2;
-    }
-
-    else if (strcmp("light", win->theme) == 0)
-    {
-        color.alpha = 1;
-        color.red = .98;
-        color.green = .98;
-        color.blue = .98;
-    }
+    a = emu_8086_app_style_scheme_get_color_by_index(priv->scheme, 8);
+   gdk_rgba_parse(&color, a) ;
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
 }
 
@@ -757,13 +733,8 @@ emu_8086_window_set_property(GObject *object,
         open_memory(self, g_value_get_boolean(value));
         // g_print("filename: %s\n", self->filename);
         break;
-    case PROP_THEME:
-        // *v = (gboolean *)value;
 
-        self->theme = g_value_get_string(value);
-        emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
-        break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -859,7 +830,7 @@ void emu_8086_app_window_upd(Emu8086AppWindow *win)
     gboolean modified = gtk_text_buffer_get_modified(buffer);
     if (win->state.isSaved && (win->priv->open == 0) && modified)
     {
-        char buf[strlen(win->state.file_name)+ 2];
+        char buf[strlen(win->state.file_name) + 2];
         sprintf(buf, "%s*", win->state.file_name);
         gtk_window_set_title(GTK_WINDOW(win), buf);
         win->state.isSaved = FALSE;
@@ -1259,14 +1230,12 @@ static modified_changed(GtkTextBuffer *textbuffer,
     emu_8086_app_window_upd(EMU_8086_APP_WINDOW(user_data));
 }
 
- 
 static void populate_win(Emu8086AppWindow *win)
 {
 
     PRIV;
     gtk_window_set_default_size(GTK_WINDOW(win), 800, 600);
-   
-   
+
     GtkWidget *scrolled;
     GtkWidget *code;
     int be = 0;
@@ -1304,6 +1273,7 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_show_all(scrolled);
 
     priv->code = code;
+    emu8086_win_change_theme(NULL,win);
     // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
     g_signal_connect(buffer, "modified-changed", G_CALLBACK(modified_changed), win);
     // priv->scrolled = scrolled;
@@ -1313,7 +1283,6 @@ static void populate_win(Emu8086AppWindow *win)
     win->state.file_path_set = FALSE;
     win->state.fontSize = 16;
     gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
-    g_settings_bind(priv->settings, "theme", win, "theme", G_SETTINGS_BIND_GET);
 
     GtkClipboard *clipboard;
     clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
@@ -1330,9 +1299,6 @@ void emu_8086_app_window_up(Emu8086AppWindow *win)
 
     //  g_print("herre %s\n", "string");
 }
-
-
-
 
 char *milli(GtkWidget *label, char *r, int reg)
 {
@@ -1623,3 +1589,5 @@ gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win)
     }
     gtk_widget_destroy(dialog);
 }
+
+

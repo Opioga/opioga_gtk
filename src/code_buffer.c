@@ -16,6 +16,7 @@
 
 #include <code_buffer.h>
 #include <emu_8086_app_utils.h>
+#include <emu8086stylescheme.h>
 typedef enum
 {
     PROP_0,
@@ -172,11 +173,12 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             }
             else
                 gtk_text_buffer_remove_tag_by_name(buffer, "string", &iter, &iter2);
-            gint length =strlen(buf) ;
+            gint length = strlen(buf);
             if (length > 0 && !isString)
             {
                 // g_print(buf);
-                if(length>2)                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
+                if (length > 2)
+                    gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
 
                 if (getnum_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "num", &iter, &iter2);
@@ -234,6 +236,7 @@ struct _Emu8086AppCodeBufferPrivate
     GSettings *settings;
     Emu8086AppCode *code;
     gint timeout;
+    Emu8086AppStyleScheme *scheme;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
@@ -246,7 +249,7 @@ static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
 
     PRIV_CODE_BUFFER;
     priv->settings = g_settings_new("com.krc.emu8086app");
-
+    priv->scheme = emu_8086_app_style_scheme_get_default();
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
 
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "keyword", NULL);
@@ -373,50 +376,18 @@ static emu_8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
 static void changeTheme(Emu8086AppCodeBuffer *buffer)
 {
     // TODO
-
+    PRIV_CODE_BUFFER;
     GtkTextTag *tag;
     gchar *tag_name;
     GtkTextTagTable *tag_table = gtk_text_buffer_get_tag_table(GTK_TEXT_BUFFER(buffer));
-    if (strcmp("dark+", buffer->theme) == 0)
+
+    for (int i = 0; i < 7; i++)
     {
+        tag_name = tag_names[i];
+        tag = gtk_text_tag_table_lookup(tag_table, tag_name);
 
-        for (int i = 0; i < 7; i++)
-        {
-            tag_name = tag_names[i];
-            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-
-            if (G_IS_OBJECT(tag))
-                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i], NULL);
-        }
-    }
-    else if (strcmp("cobalt", buffer->theme) == 0)
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            tag_name = tag_names[i];
-            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-
-            if (G_IS_OBJECT(tag))
-                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 8], NULL);
-            // if (G_IS_OBJECT(*tags))
-
-            //     g_object_set_property(G_OBJECT(*tags), "foreground", theme_colors[i + 7]);
-        }
-    }
-
-    else if (strcmp("light", buffer->theme) == 0)
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            tag_name = tag_names[i];
-            tag = gtk_text_tag_table_lookup(tag_table, tag_name);
-
-            if (G_IS_OBJECT(tag))
-                g_object_set(G_OBJECT(tag), "foreground", theme_colors[i + 16], NULL);
-            // if (G_IS_OBJECT(*tags))
-
-            //     g_object_set_property(G_OBJECT(*tags), "foreground", theme_colors[i + 7]);
-        }
+        if (G_IS_OBJECT(tag))
+            g_object_set(G_OBJECT(tag), "foreground", emu_8086_app_style_scheme_get_color_by_index(priv->scheme, i), NULL);
     }
 }
 

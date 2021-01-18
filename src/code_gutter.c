@@ -14,12 +14,10 @@
  * Code Gutter class
  */
 
-
-
-
 #include <gtk/gtk.h>
 #include <code_gutter.h>
 #include <code_buffer.h>
+#include <emu8086stylescheme.h>
 
 static void emu_8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter);
 static void set_code(Emu8086AppCodeGutter *gutter, Emu8086AppCode *code);
@@ -85,9 +83,11 @@ struct _Emu8086AppCodeGutterPrivate
     gint height;
     Emu8086AppCodeBuffer *buffer;
     gchar *text;
+    gchar *foreground;
     gint cl;
     PangoLayout *cached_layout;
     gboolean is_drawing;
+    Emu8086AppStyleScheme *scheme;
 };
 
 struct _Emu8086AppCodeGutter
@@ -203,12 +203,23 @@ static void emu_8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass
                                                       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
+static void emu8086_code_gutter_refresh_fg(Emu8086AppStyleScheme *scheme,Emu8086AppCodeGutter *gutter)
+{
+    PRIV_CODE_GUTTER;
+     priv->foreground = emu_8086_app_style_scheme_get_color_by_index(scheme,
+                                                                    13);
+}
+
 static void emu_8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter)
 {
     gutter->priv = emu_8086_app_code_gutter_get_instance_private(gutter);
     gutter->priv->text = NULL;
+    gutter->priv->scheme = emu_8086_app_style_scheme_get_default();
+    gutter->priv->foreground = emu_8086_app_style_scheme_get_color_by_index(gutter->priv->scheme,
+                                                                            13);
     gutter->priv->cached_layout = NULL;
     gutter->priv->cl = -1;
+    g_signal_connect(gutter->priv->scheme, "theme_changed", G_CALLBACK(emu8086_code_gutter_refresh_fg), gutter);
 }
 
 static inline gint
@@ -298,7 +309,7 @@ gutter_renderer_query_data(Emu8086AppCodeGutter *gutter)
     PRIV_CODE_GUTTER;
     gint line;
     line = priv->num_lines;
-    gchar text[27];
+    gchar text[55];
     const gchar *textptr = text;
     // gint line;
     gint len;
@@ -308,8 +319,8 @@ gutter_renderer_query_data(Emu8086AppCodeGutter *gutter)
         priv->text = NULL;
     }
     line = line + 1;
-
-    len = g_snprintf(text, sizeof text, "<span>%d</span>", line);
+//priv->foreground;
+    len = g_snprintf(text, sizeof text, "<span foreground=\"%s\" >%d</span>",priv->foreground, line);
     priv->text = len >= 0 ? g_strndup(text, len) : g_strdup(text);
 }
 
@@ -519,7 +530,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         background_area.width = priv->size + 10;
         gtk_text_view_set_border_window_size(priv->code,
                                              GTK_TEXT_WINDOW_LEFT,
-                                             background_area.width + 10);
+                                             background_area.width + 5);
         // g_print("%s %d", "lion", priv->size);
         cell_area.y = background_area.y + ypad;
         cell_area.height = background_area.height - 2 * ypad;
@@ -531,7 +542,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         cairo_save(cr);
 
         gdk_cairo_rectangle(cr, &background_area);
-        
+
         cairo_clip(cr);
 
         if (priv->cached_layout == NULL)
@@ -611,7 +622,10 @@ void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
 
     info = get_lines_info(view,
                           first_y_buffer_coord,
+   
                           last_y_buffer_coord);
+
+
 
     draw_cells(gutter,
                view,
@@ -620,6 +634,7 @@ void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
                cr);
 
     lines_info_free(info);
+
 
     // // GtkTextView *text_view;
 }

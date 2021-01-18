@@ -1,0 +1,15 @@
+[Theme]
+keyword=#000000
+reg=#0057AE
+label=#808080
+string=#FF0000
+num=#FF0000
+special=#B07E00
+comment=#808080
+highlight=rgba(238,232,213,1)
+background=rgba(246,239,220,1)
+cursor=#ffffff
+selection=#ffffff
+selectionbg=#001b33
+text=#000000
+linecolor=#000000

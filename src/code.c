@@ -18,7 +18,7 @@
 #include <code_buffer.h>
 #include <pango_css.h>
 #include <code_gutter.h>
-
+#include <emu8086stylescheme.h>
 typedef struct _Emu8086AppCodePrivate Emu8086AppCodePrivate;
 
 struct _Emu8086AppCode
@@ -40,9 +40,9 @@ typedef enum
 struct _Emu8086AppCodePrivate
 {
 
-    GtkWidget *code;
+    Emu8086AppStyleScheme *scheme;
     Emu8086AppWindow *win;
-    gboolean isOpen;
+    gchar *hl;
     GtkStyleProvider *provider;
     Emu8086AppCodeBuffer *buffer;
     gint line;
@@ -54,7 +54,6 @@ struct _Emu8086AppCodePrivate
     int *break_points[100];
     int break_points_len;
     gboolean auto_indent;
-    GtkTextTagTable *tag_table;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu_8086_app_code, GTK_TYPE_TEXT_VIEW);
@@ -149,22 +148,20 @@ static gboolean emu_8086_app_code_popup_menu(GtkTextView *text_view,
     gtk_widget_show(menu_item);
 };
 
-static gchar *emu_8086_app_code_change_color(gchar *theme)
+static gchar *emu_8086_app_code_change_color(Emu8086AppCode *code)
 {
-    if (strcmp("dark+", theme) == 0)
-    {
-        return "#c4c4c4;";
-    }
 
-    else if (strcmp("cobalt", theme) == 0)
-    {
-        return "#ffffff;";
-    }
+    PRIV_CODE;
+    gchar *v = emu_8086_app_style_scheme_get_color_by_index(priv->scheme,12);
 
-    else if (strcmp("light", theme) == 0)
-    {
-        return "#000000;";
-    }
+    PangoFontDescription *desc = pango_font_description_from_string(g_strdup(code->font));
+
+    gchar *m = emu8086_pango_font_description_to_css(desc, v);
+    gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+
+    code->color = v;
+
+    pango_font_description_free(desc);
 }
 
 static void
@@ -187,31 +184,31 @@ emu_8086_app_code_set_property(GObject *object,
         gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
         v = g_value_get_string(value);
         desc = pango_font_description_from_string(v);
-        m = emu8086_pango_font_description_to_css(desc, code->color);
-        gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+        // m = emu8086_pango_font_description_to_css(desc, emu_8086_app_style_scheme_get_color_by_index(priv->scheme, 5));
+        // gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
 
         code->font = g_strdup(v);
 
-        pango_font_description_free(desc);
+        pango_font_description_free(desc);emu_8086_app_code_change_color(code);
         // g_print("filename: %s\n", self->font);
         // g_free(v);
         break;
-    case PROP_CODE_THEME:
+    // case PROP_CODE_THEME:
 
-        v = emu_8086_app_code_change_color(g_value_get_string(value));
+    //     v = emu_8086_app_code_change_color(g_value_get_string(value));
 
-        desc = pango_font_description_from_string(g_strdup(code->font));
+    //     desc = pango_font_description_from_string(g_strdup(code->font));
 
-        m = emu8086_pango_font_description_to_css(desc, v);
-        gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+    //     m = emu8086_pango_font_description_to_css(desc, v);
+    //     gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
 
-        code->color = v;
+    //     code->color = v;
 
-        pango_font_description_free(desc);
-        //  g_free(v);
-        // g_print("filename: %s\n", self->font);
-        // g_free(v);
-        break;
+    //     pango_font_description_free(desc);
+    //     //  g_free(v);
+    //     // g_print("filename: %s\n", self->font);
+    //     // g_free(v);
+    //     break;
 
     case PROP_AUTO_INDENT:
         code->priv->auto_indent = g_value_get_boolean(value);
@@ -459,10 +456,8 @@ static void emu_8086_app_code_paint_current_line_highlight(GtkTextView *view,
     gint y;
     gint height;
     GdkRGBA color;
-    color.red = 0.78;
-    color.alpha = 0.2;
-    color.green = 0.78;
-    color.blue = 0.78;
+   
+   gdk_rgba_parse(&color, EMU_8086_APP_CODE(view)->priv->hl) ;
 
     buffer = gtk_text_view_get_buffer(view);
     gtk_text_buffer_get_iter_at_mark(buffer,
@@ -521,17 +516,30 @@ static void _refreshLines(GtkTextView *text_view,
     b = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(text_view));
     refreshLines(b);
 }
+static void _refresh_theme(Emu8086AppStyleScheme *scheme,
+                           gpointer user_data)
+
+{
+
+    Emu8086AppCode *code;
+    code = EMU_8086_APP_CODE(user_data);
+    gchar *hl;
+    hl = emu_8086_app_style_scheme_get_color_by_index(scheme, 7);
+    code->priv->hl = hl;emu_8086_app_code_change_color(code);
+    // exit(1);
+}
 
 static void emu_8086_app_code_init(Emu8086AppCode *code)
 {
     code->priv = emu_8086_app_code_get_instance_private(code);
     PRIV_CODE;
-    g_print("in_init\n");
 
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     priv->mark = NULL;
     priv->gutter = NULL;
+    priv->scheme = emu_8086_app_style_scheme_get_default();
+priv->hl=emu_8086_app_style_scheme_get_color_by_index(priv->scheme,7);
     gtk_accel_map_add_entry("<Code-Widget>/Format", GDK_KEY_I, GDK_CONTROL_MASK);
     GSimpleActionGroup *ca = g_simple_action_group_new();
     g_action_map_add_action_entries(G_ACTION_MAP(ca),
@@ -543,8 +551,7 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
                                          GTK_TEXT_WINDOW_LEFT,
                                          20);
     gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
-    g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
-    g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);
+
     g_settings_bind(priv->settings, "ai", code, "auto_indent", G_SETTINGS_BIND_GET);
     g_signal_connect(GTK_TEXT_VIEW(code), "paste-clipboard", G_CALLBACK(_refreshLines), NULL);
 
@@ -556,13 +563,14 @@ static void emu_8086_app_code_init(Emu8086AppCode *code)
     Emu8086AppCodeGutter *gutter;
     gutter = emu_8086_app_code_gutter_new(code, GTK_TEXT_WINDOW_LEFT);
 
-    priv->isOpen = FALSE;
+
     setCode(buffer, code);
     priv->buffer = buffer;
     priv->gutter = gutter;
 
     g_signal_connect(GTK_TEXT_BUFFER(buffer), "insert-text", G_CALLBACK(user_function), code);
     g_signal_connect(GTK_TEXT_BUFFER(buffer), "delete-range", G_CALLBACK(user_function2), code);
+    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
 }
 
 void select_line(GtkWidget *co, gint line)
@@ -730,7 +738,10 @@ Emu8086AppCode *create_new(Emu8086AppWindow *win)
     gtk_window_add_accel_group(GTK_WINDOW(win), ag);
     priv->win = win;
     priv->ag = ag;
+    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);    
+    g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 
+    // g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);
     return EMU_8086_APP_CODE(code);
 
     //gtk_widget_show(lines);
