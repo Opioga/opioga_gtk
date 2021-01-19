@@ -31,6 +31,15 @@
             <summary>License File</summary>
             <description>The license file to be used for content.</description>
         </key>
+
+        <key name="license" type="s">
+            <default>'none'</default>
+            <summary>License File Name</summary>
+            <description>The license file name to be used for content.</description>
+        </key>
+
+
+
         <key name="frequency" type="i">
             <default>1</default>
             <summary>Update frequency</summary>

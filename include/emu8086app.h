@@ -33,11 +33,7 @@ emu_8086_app_get_default (void);
 
 // void quit(Emu8086AppWindow *app);
 
-typedef struct _theme them;
-struct _theme
-{
-    gchar *id;
-    gchar *text;
-};
+
+
 
 #endif

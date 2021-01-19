@@ -12,7 +12,12 @@ G_BEGIN_DECLS
 #define EMU_8086_STYLE_SCHEME_IS_scheme_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_STYLE_SCHEME_TYPE)
 
 typedef struct _Emu8086AppStyleSchemePrivate Emu8086AppStyleSchemePrivate;
-
+typedef struct _theme them;
+struct _theme
+{
+    gchar *id;
+    gchar *text;
+};
 struct _Emu8086AppStyleSchemePrivate
 {
     /* data */
@@ -27,12 +32,13 @@ struct _Emu8086AppStyleSchemePrivate
     gchar *color_comment;
     gchar *color_highlight;
 
-   gchar *color_background;
-gchar *color_linecolor;
-gchar *color_cursor;
- gchar *color_selection;
- gchar *color_selectionbg;
-gchar *color_text;
+    gchar *color_background;
+    gchar *color_linecolor;
+    gchar *color_cursor;
+    gchar *color_selection;
+    gchar *color_selectionbg;
+    gchar *color_text;
+    them *themes;
 };
 
 typedef struct _Emu8086AppStyleScheme Emu8086AppStyleScheme;
@@ -47,22 +53,27 @@ typedef struct _Emu8086AppStyleSchemeClass Emu8086AppStyleSchemeClass;
 struct _Emu8086AppStyleSchemeClass
 {
     GObjectClass parent_class;
-      void (*theme_changed)(Emu8086AppStyleScheme *scheme);
-
-  
+    void (*theme_changed)(Emu8086AppStyleScheme *scheme);
 };
 typedef enum
 {
     PROP_SCHEME_0,
-    PROP_SCHEME_THEME
+    PROP_SCHEME_THEME,
+   
 
 } Emu8086AppStyleSchemeProperty;
 
 GType emu_8086_app_style_scheme_get_type(void) G_GNUC_CONST;
 
-
 Emu8086AppStyleScheme *emu_8086_app_style_scheme_get_default();
-gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme,const gint index);
-gchar *emu_8086_app_style_scheme_get_color(Emu8086AppStyleScheme *scheme,const gchar *key);
+gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index);
+gchar *emu_8086_app_style_scheme_get_color(Emu8086AppStyleScheme *scheme, const gchar *key);
+them ** emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gint *len);
+void emu8086_theme_free(them *themes);
+const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
+                                           const GFile *file);
+gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size);
+gboolean file_exists(const gchar *path);
+
 G_END_DECLS
 #endif

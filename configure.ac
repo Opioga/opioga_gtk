@@ -32,6 +32,10 @@ else
 fi
 
 EMU8086_PLUGINS_LIBS_DIR="$datadir/emu8086/plugins"
+
+
+
+# AH_ADD
 AC_SUBST(EMU8086_PLUGINS_LIBS_DIR)
 GLIB_GSETTINGS
 
@@ -48,4 +52,5 @@ mime/Makefile
 plugins/Makefile
 plugins/lcdhitachi/Makefile
 plugins/lcdhitachi/lcdhitachi/Makefile
+themes/Makefile
 ])

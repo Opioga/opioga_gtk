@@ -13508,6 +13508,10 @@ EMU8086_PLUGINS_LIBS_DIR="$datadir/emu8086/plugins"
 
 
 
+# AH_ADD
+
+
+
 
 
   # Check whether --enable-schemas-compile was given.
@@ -13763,7 +13767,7 @@ endif
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile fonts/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile egs/plugins/Makefile mime/Makefile plugins/Makefile plugins/lcdhitachi/Makefile plugins/lcdhitachi/lcdhitachi/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile fonts/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile egs/plugins/Makefile mime/Makefile plugins/Makefile plugins/lcdhitachi/Makefile plugins/lcdhitachi/lcdhitachi/Makefile themes/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14796,6 +14800,7 @@ do
     "plugins/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/Makefile" ;;
     "plugins/lcdhitachi/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/lcdhitachi/Makefile" ;;
     "plugins/lcdhitachi/lcdhitachi/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/lcdhitachi/lcdhitachi/Makefile" ;;
+    "themes/Makefile") CONFIG_FILES="$CONFIG_FILES themes/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

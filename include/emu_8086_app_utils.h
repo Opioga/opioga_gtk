@@ -171,34 +171,7 @@ gchar *tag_names[7] = {
     "special",
     "comment"};
 
-gchar *theme_colors[24] = {
 
-    /* keyword */ "#96CBFE",
-    "#B5CAE8",
-    "#CE9178",
-    "#ebeb8d",
-    "#B5CEA8",
-    "#C586C0",
-    "#6A9955",
-    NULL,
-    "#80ffbb",
-    "#ffee80",
-    "#3ad900",
-    "#ff9d00",
-    "#ffffff",
-    "#ffdd00",
-    "#0088ff",
-    NULL,
-    "#000000",
-    "#0057AE",
-    "#FF0000",
-    "#808080",
-    "#FF0000",
-    "#B07E00",
-    "#808080",
-    NULL
-
-};
 
 gboolean getkeyword(gchar *keyword)
 {

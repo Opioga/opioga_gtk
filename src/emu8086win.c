@@ -30,7 +30,9 @@ typedef enum
     PROP_0,
     PROP_UPDATES,
     PROP_MEM,
-    PROP_THEME
+    PROP_THEME,
+    PROP_UL,
+    PROP_LF
 } Emu8086AppWindowProperty;
 
 typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
@@ -71,6 +73,8 @@ struct _Emu8086AppWindowPrivate
     GSettings *settings;
     gint open;
     Emu8086AppStyleScheme *scheme;
+    gboolean ul;
+    gchar *lf;
 };
 
 struct _Emu8086AppWindow
@@ -91,8 +95,8 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf);
 static void emu_8086_app_window_flash(Emu8086AppCodeRunner *runner, gpointer user_data);
 static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message);
 static void add_recent(gchar *uri);
-void quick_message(GtkWindow *parent, gchar *message, gchar *title);
-static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme,Emu8086AppWindow *win);
+static void emu_8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title);
+static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWindow *win);
 static void
 copy_activated(GSimpleAction *action,
                GVariant *parameter,
@@ -253,7 +257,7 @@ void emu_8086_app_window_open_drag_data(Emu8086AppWindow *win, GtkSelectionData 
         // buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
 
         sprintf(err, "unsupported file %s", base);
-        quick_message(GTK_WINDOW(win), err, "Error");
+        emu_8086_app_window_quick_message(GTK_WINDOW(win), err, "Error");
         if (base != NULL)
             g_free(base);
         free(uri);
@@ -325,7 +329,8 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     GAction *action, *action2;
     priv->runner = emu_8086_app_code_runner_new(NULL, FALSE);
     priv->scheme = emu_8086_app_style_scheme_get_default();
-
+    g_settings_bind(priv->settings, "ul", win, "ul", G_SETTINGS_BIND_GET);
+    g_settings_bind(priv->settings, "lf", win, "lf", G_SETTINGS_BIND_GET);
     action = (GAction *)g_property_action_new("check-updates", win, "updates");
     action2 = (GAction *)g_property_action_new("open_mem", win, "memory");
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/gears.ui");
@@ -372,11 +377,11 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
     box = emu_8086_app_plugin_box_new(win, priv->runner);
     gtk_container_add(GTK_CONTAINER(priv->stack), box);
     gtk_widget_show_all(box);
-g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
+    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
     g_object_unref(builder);
 };
 
-void quick_message(GtkWindow *parent, gchar *message, gchar *title)
+void emu_8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title)
 {
     GtkWidget *dialog, *label, *content_area;
     GtkDialogFlags flags;
@@ -477,7 +482,7 @@ static void _open(Emu8086AppWindow *win)
         {
             char err[256];
             sprintf(err, "unsupported file\n %s", base);
-            quick_message(GTK_WINDOW(win), err, "Error");
+            emu_8086_app_window_quick_message(GTK_WINDOW(win), err, "Error");
             g_free(base);
             free(filename);
             gtk_widget_destroy(dialog);
@@ -698,15 +703,14 @@ void emu_8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win)
     }
 }
 
-static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme,Emu8086AppWindow *win)
+static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWindow *win)
 {
     PRIV;
     gchar *a;
     GdkRGBA color;
 
-
     a = emu_8086_app_style_scheme_get_color_by_index(priv->scheme, 8);
-   gdk_rgba_parse(&color, a) ;
+    gdk_rgba_parse(&color, a);
     gtk_widget_override_background_color(priv->code, GTK_STATE_NORMAL, &color);
 }
 
@@ -718,7 +722,7 @@ emu_8086_window_set_property(GObject *object,
 {
     Emu8086AppWindow *self = EMU_8086_APP_WINDOW(object);
     // g_print("l %d\n", *value);
-
+  gchar *men;  Emu8086AppWindowPrivate *priv = emu_8086_app_window_get_instance_private(self);
     switch ((Emu8086AppWindowProperty)property_id)
     {
     case PROP_UPDATES:
@@ -727,13 +731,30 @@ emu_8086_window_set_property(GObject *object,
         self->updates = g_value_get_boolean(value);
         // g_print("filename: %s\n", self->filename);
         break;
+
+    case PROP_UL:
+        // *v = (gboolean *)value;
+
+        priv->ul = g_value_get_boolean(value);
+        // g_print("filename: %s\n", self->filename);
+        break;
+
+    case PROP_LF:
+        // *v = (gboolean *)value;
+        men = g_value_get_string(value);
+        
+       if(priv->lf != NULL) g_free(priv->lf);
+        priv->lf = g_strdup(men);
+        
+        // g_print("filename: %s\n", self->filename);
+        break;
+
     case PROP_MEM:
         // *v = (gboolean *)value;
 
         open_memory(self, g_value_get_boolean(value));
         // g_print("filename: %s\n", self->filename);
         break;
-
 
     default:
         /* We don't have any other property... */
@@ -801,6 +822,20 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
                                                         "The window's theme",
                                                         "dark+",
                                                         G_PARAM_READWRITE));
+
+    g_object_class_install_property(object_class, PROP_LF,
+                                    g_param_spec_string("lf",
+                                                        "License File",
+                                                        "The window's license file",
+                                                        NULL,
+                                                        G_PARAM_READWRITE));
+
+    g_object_class_install_property(object_class, PROP_UL,
+                                    g_param_spec_boolean("ul",
+                                                         "UL",
+                                                         "The window should use license",
+                                                         FALSE,
+                                                         G_PARAM_READWRITE));
 
     g_object_class_install_property(object_class, PROP_UPDATES,
                                     g_param_spec_boolean("updates",
@@ -1273,7 +1308,7 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_show_all(scrolled);
 
     priv->code = code;
-    emu8086_win_change_theme(NULL,win);
+    emu8086_win_change_theme(NULL, win);
     // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
     g_signal_connect(buffer, "modified-changed", G_CALLBACK(modified_changed), win);
     // priv->scrolled = scrolled;
@@ -1289,6 +1324,33 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_clipboard_set_can_store(clipboard, NULL, 0);
 }
 
+static void load_license(Emu8086AppWindow *win)
+{
+    PRIV;
+
+    if (priv->ul && strcmp(priv->lf, "none") != 0)
+    {
+        gchar *buf[256];
+        FILE *file;file=NULL;
+        file = fopen(priv->lf, "r");
+        if(file==NULL)return;
+        GString *s;
+        s = g_string_new("  ;\n");
+        while (fgets(buf, sizeof buf, file))
+        {
+            /* code */
+            gchar *lin = g_strconcat("  ; ", buf, NULL);
+            g_string_append(s, lin);
+
+        }
+        g_string_append(s,
+         ";--------------------------------------------------------------------------------------------");
+        fclose(file);
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
+        gtk_text_buffer_set_text (buffer, g_string_free(s, FALSE), -1);
+    }
+}
+
 void emu_8086_app_window_up(Emu8086AppWindow *win)
 {
     PRIV;
@@ -1296,7 +1358,7 @@ void emu_8086_app_window_up(Emu8086AppWindow *win)
     populate_tools(win);
 
     win->state.Open = FALSE;
-
+    load_license(win);
     //  g_print("herre %s\n", "string");
 }
 
@@ -1445,7 +1507,7 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     {
         char err[256];
         sprintf(err, "unsupported file\n %s", base);
-        quick_message(GTK_WINDOW(win), err, "Error");
+        emu_8086_app_window_quick_message(GTK_WINDOW(win), err, "Error");
         g_free(base);
         g_free(fname);
         return;
@@ -1478,7 +1540,7 @@ void emu_8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     {
         char err[256];
         sprintf(err, "Cannot open file\n %s", win->state.file_path);
-        quick_message(GTK_WINDOW(win), err, "Error");
+        emu_8086_app_window_quick_message(GTK_WINDOW(win), err, "Error");
     }
     // g_free(base);
 }
@@ -1543,7 +1605,7 @@ gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win)
             {
                 char err[256];
                 sprintf(err, "unsupported file\n %s", base);
-                quick_message(GTK_WINDOW(win), err, "Error");
+                emu_8086_app_window_quick_message(GTK_WINDOW(win), err, "Error");
                 g_free(base);
                 free(filename);
                 gtk_widget_destroy(dialog);
@@ -1589,5 +1651,3 @@ gboolean emu_8086_app_window_open_egs(Emu8086AppWindow *win)
     }
     gtk_widget_destroy(dialog);
 }
-
-
