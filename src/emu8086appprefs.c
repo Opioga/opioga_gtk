@@ -70,6 +70,7 @@ struct _Emu8086AppPrefs
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPrefs, emu8086_app_prefs, GTK_TYPE_DIALOG)
+static refresh_themes(Emu8086AppPrefs *dlg);
 
 static void
 style_scheme_changed(GtkWidget *treeview,
@@ -175,7 +176,7 @@ add_scheme_chooser_response_cb(GtkDialog *chooser,
     emu8086_theme_free(dlg->priv->themes[i - 1]);
   }
   dlg->priv->themes = NULL;
-  dlg->priv->themes = emu_8086_app_style_scheme_get_themes(dlg->priv->scheme, &dlg->priv->theme_size);
+  refresh_themes(dlg);
 }
 
 static void
@@ -231,6 +232,43 @@ install_scheme_clicked(GtkButton *button,
   gtk_widget_show(chooser);
 }
 
+static refresh_themes(Emu8086AppPrefs *dlg)
+{
+
+  Emu8086AppPrefsPrivate *priv = dlg->priv;
+  Emu8086AppStyleScheme *scheme = priv->scheme;
+  gsize theme_size = 0;
+
+  them **ths = emu_8086_app_style_scheme_get_themes(scheme, &theme_size);
+  
+  gchar *selected_theme = g_settings_get_string(priv->settings, "theme");
+ gtk_list_store_clear(priv->themes_treeview_model);
+   g_print("%d\n", theme_size);
+  for (int i = 0; i < theme_size; i++)
+  {
+    const gchar *id;
+    const gchar *name;
+    them *theme = ths[i];
+    id = theme->id;
+    name = theme->text;
+    
+    GtkTreeIter iter;
+    gtk_list_store_append(priv->themes_treeview_model, &iter);
+    gtk_list_store_set(priv->themes_treeview_model, &iter, ID_COLUMN, id, NAME_COLUMN, name, ACTIVE_COLUMN, FALSE, -1);
+
+    if (strcmp(id, selected_theme) == 0)
+    {
+      GtkTreeSelection *selection;
+
+      selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->schemes_treeview));
+      gtk_tree_selection_select_iter(selection, &iter);
+    }
+  }
+
+  priv->themes = ths;
+  priv->theme_size = theme_size;
+}
+
 static void populate_schemes(Emu8086AppPrefs *dlg)
 {
 
@@ -239,16 +277,13 @@ static void populate_schemes(Emu8086AppPrefs *dlg)
   GSList *l;
   Emu8086AppStyleScheme *scheme = emu_8086_app_style_scheme_get_default();
 
-  gint theme_size = 0;
-
-  them **ths = emu_8086_app_style_scheme_get_themes(scheme, &theme_size);
   GtkTreePath *tree;
   GtkListStore *store;
   GtkTreeIter iter;
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
-  gchar *selected_theme = g_settings_get_string(priv->settings, "theme");
+
   priv->themes_treeview_model = gtk_list_store_new(NUM_COLUMNS,
                                                    G_TYPE_STRING,
                                                    G_TYPE_STRING,
@@ -274,29 +309,8 @@ static void populate_schemes(Emu8086AppPrefs *dlg)
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(dlg->priv->schemes_treeview));
   gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 
-  for (int i = 0; i < theme_size; i++)
-  {
-    const gchar *id;
-    const gchar *name;
-    them *theme = ths[i];
-    id = theme->id;
-    name = theme->text;
-    GtkTreeIter iter;
-    gtk_list_store_append(priv->themes_treeview_model, &iter);
-    gtk_list_store_set(priv->themes_treeview_model, &iter, ID_COLUMN, id, NAME_COLUMN, name, ACTIVE_COLUMN, FALSE, -1);
-
-    if (strcmp(id, selected_theme) == 0)
-    {
-      GtkTreeSelection *selection;
-
-      selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(priv->schemes_treeview));
-      gtk_tree_selection_select_iter(selection, &iter);
-    }
-  }
-
-  priv->themes = ths;
-  priv->theme_size = theme_size;
   priv->scheme = scheme;
+
   g_signal_connect(dlg->priv->schemes_treeview,
                    "cursor-changed",
                    G_CALLBACK(style_scheme_changed),
@@ -305,7 +319,7 @@ static void populate_schemes(Emu8086AppPrefs *dlg)
   g_signal_connect(dlg->priv->install_scheme_button,
                    "clicked",
                    G_CALLBACK(install_scheme_clicked),
-                   dlg);
+                   dlg);  refresh_themes(dlg);
 }
 static void license_file_chosen(GtkFileChooserButton *fcb, Emu8086AppPrefs *dlg)
 {

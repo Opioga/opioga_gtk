@@ -241,7 +241,7 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
     gchar *path;
 
     gchar *fname = g_strconcat(priv->theme, ".theme", NULL);
-
+    gboolean usefallbacks = FALSE;
     gchar *keystr[] = {
         "keyword",
         "reg",
@@ -257,15 +257,17 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
         "selection",
         "selectionbg", "text",
         "linecolor",
-        "#96CBFE",
-        "#B5CAE8",
-        "#CE9178",
-        "#ebeb8d",
-        "#B5CEA8",
-        "#C586C0",
-        "#6A9955",
-        "rgba(56,56,56,1)",
-        "#c4c4c4",
+
+
+        "#96CBFE", // 0
+        "#B5CAE8", // 1
+        "#CE9178", // 2
+        "#ebeb8d", // 3
+        "#B5CEA8", // 4
+        "#C586C0", // 5
+        "#6A9955", // 6
+        "rgba(100,100,100,0.5)",// 7
+        "rgba(56,56,56,1)", // 8
         "#ffffff",
         "#ffffff",
         "#001b33",
@@ -280,46 +282,60 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
         path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", fname, NULL);
         if (!file_exists(path))
         {
-            g_free(fname);
+
             g_print("not exist %s \n", path);
             g_free(path);
-            path = NULL;
-            return;
+            path = g_build_filename(DATADIR, "emu8086/themes", "dark+.theme", NULL);
+            usefallbacks = (!file_exists(path));
         }
     }
     g_print("%s \n", path);
 
     g_free(fname);
-    g_autoptr(GError) error = NULL;
-    g_autoptr(GKeyFile) key_file = g_key_file_new();
-    if (!g_key_file_load_from_file(key_file, path, G_KEY_FILE_NONE, &error))
+    if (usefallbacks)
     {
-        if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning("Error loading key file: %s", error->message);
-        return;
-    }
-    int i = 0;
-    for (i; i < 14; i++)
-    {
-        gchar *val = NULL;
-        val = g_key_file_get_string(key_file, "Theme", keystr[i], &error);
-        if (val == NULL &&
-            !g_error_matches(error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
+        int i = 0;
+        for (i; i < 14; i++)
         {
-            g_warning("Error finding key in key file: %s", error->message);
+            gchar *val = NULL;
+            val = keystr[i + 14];
+
+            emu_8086_app_style_scheme_get_col(scheme, FALSE, i, val);
+        }
+    }
+
+    else
+    {
+        g_autoptr(GError) error = NULL;
+        g_autoptr(GKeyFile) key_file = g_key_file_new();
+        if (!g_key_file_load_from_file(key_file, path, G_KEY_FILE_NONE, &error))
+        {
+            if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+                g_warning("Error loading key file: %s", error->message);
             return;
         }
-
-        else if (val == NULL)
+        int i = 0;
+        for (i; i < 14; i++)
         {
-            // Fall back to a default value.
-            val = g_strdup(keystr[i + 14]);
+            gchar *val = NULL;
+            val = g_key_file_get_string(key_file, "Theme", keystr[i], &error);
+            if (val == NULL &&
+                !g_error_matches(error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
+            {
+                g_warning("Error finding key in key file: %s", error->message);
+                return;
+            }
+
+            else if (val == NULL)
+            {
+                // Fall back to a default value.
+                val = g_strdup(keystr[i + 14]);
+            }
+
+            emu_8086_app_style_scheme_get_col(scheme, FALSE, i, val);
+            g_free(val);
         }
-
-        emu_8086_app_style_scheme_get_col(scheme, FALSE, i, val);
-        g_free(val);
     }
-
     g_free(path);
 
     g_signal_emit(scheme, signals[EMU_THEME_CHANGED], 0);
@@ -373,7 +389,7 @@ gboolean user_config_themes_exists()
     GError *error = NULL, *error2 = NULL;
     gchar *path;
     path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
- file = g_file_new_for_path(path);
+    file = g_file_new_for_path(path);
     if (!g_file_query_exists(file, NULL))
     {
 
@@ -400,7 +416,7 @@ gboolean user_config_themes_exists()
     return TRUE;
 }
 
-them **emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gint *len)
+them **emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len)
 {
     g_autoptr(GError) error = NULL;
     g_autoptr(GKeyFile) key_file = g_key_file_new();
@@ -444,7 +460,9 @@ them **emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gint 
     g_strfreev(val2);
     g_free(path);
     // realloc
-    *len = add_local_themes(scheme, themes, size);
+
+    themes = add_local_themes(scheme, themes, size, len);
+
     return themes;
     // fopen
 }
@@ -490,7 +508,14 @@ static gboolean emu_style_scheme_install_theme_to_dir(Emu8086AppStyleScheme *sch
     gchar *fname;
     fname = g_file_get_basename(file);
     path = g_build_filename(dirname, fname, NULL);
+    if (file_exists(path))
+    {
+        g_free(path);
+        g_free(fname);
+        return FALSE;
+    }
     GFile *dest = g_file_new_for_path(path);
+
     g_file_copy(file, dest, G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
                 NULL, NULL, NULL, &error2);
     g_free(path);
@@ -506,7 +531,7 @@ static gboolean emu_style_scheme_install_theme_to_dir(Emu8086AppStyleScheme *sch
     return TRUE;
 }
 
-gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
+them **add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size, gsize *len)
 {
 
     gchar *new_file_name = NULL;
@@ -519,8 +544,10 @@ gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
     gboolean isEmpty = FALSE;
     GFile *theme_file;
     gchar *path;
+    *len = size;
     if (!user_config_themes_exists())
-        return size;
+        return themes;
+
     path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
     theme_file = g_file_new_for_path(path);
     isEmpty = check_is_empty(theme_file, error2);
@@ -529,13 +556,15 @@ gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
         g_print(error2->message);
         g_error_free(error2);
         g_object_unref(theme_file);
-        return size;
+        *len = size;
+        return themes;
     }
     if (isEmpty)
     {
         g_free(path);
         g_object_unref(theme_file);
-        return size;
+        *len = size;
+        return themes;
     }
     g_object_unref(theme_file);
 
@@ -546,7 +575,8 @@ gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
         if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
             g_warning("Error loading key file: %s", error->message);
         g_free(path);
-        return size;
+        *len = size;
+        return themes;
     }
 
     gchar **val = NULL, **val2 = NULL;
@@ -557,6 +587,7 @@ gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
 
     gsize expanded = sizeof(them *) * (size + n_size);
     themes = g_realloc(themes, expanded);
+
     for (int i = 0; i < n_size; i++)
     {
         them *theme = (them *)malloc(sizeof(them));
@@ -564,10 +595,12 @@ gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size)
         theme->text = g_strdup(val2[i]);
         themes[i + size] = theme;
     }
+
     g_strfreev(val);
     g_strfreev(val2);
     g_free(path);
-    return size + n_size;
+    *len = size + n_size;
+    return themes;
 }
 
 const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
@@ -583,13 +616,25 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
     gboolean copied = FALSE;
     GFile *theme_file;
     gchar *path;
+
     g_autoptr(GKeyFile) keyfile = g_key_file_new();
     if (!user_config_themes_exists())
         return NULL;
+    dirname = g_build_filename(g_get_user_config_dir(), "emu8086", "themes", NULL);
+    if (emu_style_scheme_install_theme_to_dir(scheme, file, dirname))
+    {
+        g_free(dirname);
+    }
+    else
+    {
+        g_free(dirname);
+        g_print("exists");
+        return NULL;
+    }
+
     path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
     theme_file = g_file_new_for_path(path);
 
-    dirname = g_build_filename(g_get_user_config_dir(), "emu8086", "themes", NULL);
     if (check_is_empty(theme_file, error))
     {
 
@@ -654,14 +699,4 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
     }
 
     g_free(path);
-    if (emu_style_scheme_install_theme_to_dir(scheme, file, dirname))
-    {
-        g_free(dirname);
-        return g_file_get_basename(file);
-    }
-    else
-    {
-        g_free(dirname);
-        return NULL;
-    }
 }

@@ -19,11 +19,40 @@
 #include <gtk/gtk.h>
 #include "emu8086win.h"
 
+G_BEGIN_DECLS
 #define EMU_8086_APP_CODE_TYPE (emu_8086_app_code_get_type())
+#define EMU_8086_APP_CODE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU_8086_APP_CODE_TYPE, Emu8086AppCode))
+#define EMU_8086_APP_CODE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU_8086_APP_CODE_TYPE, Emu8086AppCodeClass))
+#define EMU_8086_IS_APP_CODE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU_8086_APP_CODE_TYPE))
+#define EMU_8086_IS_APP_CODE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_CODE_TYPE))
+#define EMU_8086_APP_CODE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), EMU_8086_APP_CODE_TYPE, Emu8086AppCodeClass))
 #define PRIV_CODE Emu8086AppCodePrivate *priv = code->priv
 
-G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
+typedef struct _Emu8086AppCode Emu8086AppCode;
+typedef struct _Emu8086AppCodeClass Emu8086AppCodeClass;
+typedef struct _Emu8086AppCodePrivate Emu8086AppCodePrivate;
 
+struct _Emu8086AppCode
+{
+    GtkTextView parent;
+    gchar *font;
+    gchar *color;
+    Emu8086AppCodePrivate *priv;
+};
+
+struct _Emu8086AppCodeClass
+{
+    GtkTextViewClass parent_class;
+    /* Signals */
+    void (*undo)(Emu8086AppCode *);
+    void (*redo)(Emu8086AppCode *);
+    void (*move_lines)(Emu8086AppCode *code,
+                       gboolean down);
+    gpointer padding[2];
+};
+
+// G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu_8086_app_code, EMU_8086, APP_CODE, GtkTextView)
+GType emu_8086_app_code_get_type(void) G_GNUC_CONST;
 Emu8086AppCode *emu_8086_app_code_new(void);
 gboolean check_for_break_points(Emu8086AppCode *code, gint line_num,
                                 gboolean toggle);
@@ -33,5 +62,5 @@ void editFontSize(Emu8086AppCode *code, gint size);
 void set_win(Emu8086AppCode *code, GtkWidget *win);
 void get_break_points(Emu8086AppCode *code, gint *bps, gint *len);
 Emu8086AppCode *create_new();
-
+G_END_DECLS
 #endif // MACRO

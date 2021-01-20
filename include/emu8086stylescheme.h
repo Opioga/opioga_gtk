@@ -68,11 +68,11 @@ GType emu_8086_app_style_scheme_get_type(void) G_GNUC_CONST;
 Emu8086AppStyleScheme *emu_8086_app_style_scheme_get_default();
 gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index);
 gchar *emu_8086_app_style_scheme_get_color(Emu8086AppStyleScheme *scheme, const gchar *key);
-them ** emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gint *len);
+them ** emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len);
 void emu8086_theme_free(them *themes);
 const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
                                            const GFile *file);
-gsize add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size);
+them **  add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size, gsize *len);
 gboolean file_exists(const gchar *path);
 
 G_END_DECLS
