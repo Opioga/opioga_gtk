@@ -58,9 +58,13 @@ emu_8086_app_code_buffer_new(GtkTextTagTable *table);
 void refreshLines(Emu8086AppCodeBuffer *buffer);
 void emu_8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer);
 
-gboolean emu_8086_app_code_get_can_redo(Emu8086AppCodeBuffer *buffer);
-gboolean emu_8086_app_code_get_can_undo(Emu8086AppCodeBuffer *buffer);
+gboolean emu_8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer);
+gboolean emu_8086_app_code_buffer_get_can_undo(Emu8086AppCodeBuffer *buffer);
 
+
+// TODO implement redo and undo 
+void emu_8086_app_code_buffer_redo(Emu8086AppCodeBuffer *buffer);
+void emu_8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer);
 G_END_DECLS
 
 #endif

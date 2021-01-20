@@ -463,10 +463,7 @@ emu_8086_app_code_buffer_get_property(GObject *object,
     }
 }
 
-static void emu_8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer)
-{
-    g_print("undo");
-}
+
 
 static void emu_8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
 {
@@ -599,9 +596,17 @@ void emu_8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer)
     gtk_text_buffer_end_user_action(_buffer);
 }
 
-gboolean emu_8086_app_code_get_can_undo(Emu8086AppCodeBuffer *buffer){
+gboolean emu_8086_app_code_buffer_get_can_undo(Emu8086AppCodeBuffer *buffer){
 return buffer->priv->can_undo;
 }
-gboolean emu_8086_app_code_get_can_redo(Emu8086AppCodeBuffer *buffer){
+gboolean emu_8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer){
 return buffer->priv->can_redo;
 }
+
+void emu_8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer){
+    g_print("here\n");
+}
+void emu_8086_app_code_buffer_redo(Emu8086AppCodeBuffer *buffer){
+    g_print("here\n");
+}
+

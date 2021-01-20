@@ -172,6 +172,37 @@ cut_activated(GSimpleAction *action,
     }
 }
 
+static void
+redo_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+    Emu8086AppCodeBuffer *buffer;
+    buffer = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+    g_print("here: redo\n");
+    if (emu_8086_app_code_buffer_get_can_redo(buffer))
+    {
+        emu_8086_app_code_buffer_redo(buffer);
+    }
+}
+
+static void
+undo_activated(GSimpleAction *action,
+               GVariant *parameter,
+               gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    PRIV;
+    Emu8086AppCodeBuffer *buffer;
+    buffer = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
+    if (emu_8086_app_code_buffer_get_can_undo(buffer))
+    {
+        emu_8086_app_code_buffer_undo(buffer);
+    }
+}
+
 static GActionEntry win_entries[] = {
     {"find", find_activated, NULL, NULL, NULL},
     {"copy", copy_activated, NULL, NULL, NULL},
@@ -180,7 +211,9 @@ static GActionEntry win_entries[] = {
 
     {"paste", paste_activated, NULL, NULL, NULL},
 
-    {"select", select_all_activated, NULL, NULL, NULL}
+    {"select", select_all_activated, NULL, NULL, NULL},
+    {"redo", redo_activated, NULL, NULL, NULL},
+    {"undo", undo_activated, NULL, NULL, NULL}
 
 };
 
@@ -722,7 +755,8 @@ emu_8086_window_set_property(GObject *object,
 {
     Emu8086AppWindow *self = EMU_8086_APP_WINDOW(object);
     // g_print("l %d\n", *value);
-  gchar *men;  Emu8086AppWindowPrivate *priv = emu_8086_app_window_get_instance_private(self);
+    gchar *men;
+    Emu8086AppWindowPrivate *priv = emu_8086_app_window_get_instance_private(self);
     switch ((Emu8086AppWindowProperty)property_id)
     {
     case PROP_UPDATES:
@@ -742,10 +776,11 @@ emu_8086_window_set_property(GObject *object,
     case PROP_LF:
         // *v = (gboolean *)value;
         men = g_value_get_string(value);
-        
-       if(priv->lf != NULL) g_free(priv->lf);
+
+        if (priv->lf != NULL)
+            g_free(priv->lf);
         priv->lf = g_strdup(men);
-        
+
         // g_print("filename: %s\n", self->filename);
         break;
 
@@ -1331,9 +1366,11 @@ static void load_license(Emu8086AppWindow *win)
     if (priv->ul && strcmp(priv->lf, "none") != 0)
     {
         gchar *buf[256];
-        FILE *file;file=NULL;
+        FILE *file;
+        file = NULL;
         file = fopen(priv->lf, "r");
-        if(file==NULL)return;
+        if (file == NULL)
+            return;
         GString *s;
         s = g_string_new("  ;\n");
         while (fgets(buf, sizeof buf, file))
@@ -1341,13 +1378,12 @@ static void load_license(Emu8086AppWindow *win)
             /* code */
             gchar *lin = g_strconcat("  ; ", buf, NULL);
             g_string_append(s, lin);
-
         }
         g_string_append(s,
-         ";--------------------------------------------------------------------------------------------");
+                        ";--------------------------------------------------------------------------------------------");
         fclose(file);
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
-        gtk_text_buffer_set_text (buffer, g_string_free(s, FALSE), -1);
+        gtk_text_buffer_set_text(buffer, g_string_free(s, FALSE), -1);
     }
 }
 

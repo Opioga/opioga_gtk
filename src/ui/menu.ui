@@ -77,7 +77,7 @@
                 </item>
                              <item>
                     <attribute name="label" translatable="yes">Format Document</attribute>
-                    <!-- <attribute name="icon">edit-format</attribute>  -->
+                    <attribute name="icon">format-indent-more</attribute> 
                     <attribute name="accel">&lt;Primary&gt;i</attribute>
             
 
@@ -87,15 +87,17 @@
             <section>
                  <item>
                     <attribute name="label" translatable="yes">Undo</attribute>
-                    <!-- <attribute name="icon">edit-format</attribute>  -->
-                    <attribute name="accel">&lt;Primary&gt;i</attribute>
+                     <attribute name="action">win.undo</attribute>
+                    <attribute name="icon">edit-undo</attribute> 
+                    <attribute name="accel">&lt;Primary&gt;z</attribute>
             
 
                 </item>
                  <item>
                     <attribute name="label" translatable="yes">Redo</attribute>
-                    <!-- <attribute name="icon">edit-format</attribute>  -->
-                    <attribute name="accel">&lt;Primary&gt;i</attribute>
+                    <attribute name="icon">edit-redo</attribute>  
+                    <attribute name="action">win.redo</attribute>
+                    <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;z</attribute>
             
 
                 </item>
