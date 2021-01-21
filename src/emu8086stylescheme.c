@@ -258,16 +258,15 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
         "selectionbg", "text",
         "linecolor",
 
-
-        "#96CBFE", // 0
-        "#B5CAE8", // 1
-        "#CE9178", // 2
-        "#ebeb8d", // 3
-        "#B5CEA8", // 4
-        "#C586C0", // 5
-        "#6A9955", // 6
-        "rgba(100,100,100,0.5)",// 7
-        "rgba(56,56,56,1)", // 8
+        "#96CBFE",               // 0
+        "#B5CAE8",               // 1
+        "#CE9178",               // 2
+        "#ebeb8d",               // 3
+        "#B5CEA8",               // 4
+        "#C586C0",               // 5
+        "#6A9955",               // 6
+        "rgba(100,100,100,0.5)", // 7
+        "rgba(56,56,56,1)",      // 8
         "#ffffff",
         "#ffffff",
         "#001b33",
@@ -347,24 +346,6 @@ gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *schem
 
     return emu_8086_app_style_scheme_get_col(scheme, TRUE, index, NULL);
 }
-static gboolean create_config_dir()
-{
-    GFile *file;
-    GError *error = NULL;
-    gchar *path;
-    gboolean ret;
-    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
-    file = g_file_new_for_path(path);
-    ret = g_file_make_directory(file, NULL, &error);
-    if (error != NULL)
-    {
-        g_print("%s\n", error->message);
-        g_error_free(error);
-    }
-    g_object_unref(file);
-    g_free(path);
-    return ret;
-}
 
 gboolean file_exists(const gchar *path)
 {
@@ -383,6 +364,53 @@ gboolean file_exists(const gchar *path)
     return TRUE;
 }
 
+gboolean user_config_dir_exists()
+{
+    // g_file_make_directory
+    GFile *file;
+    GError *error = NULL, *error2 = NULL;
+    gchar *path;
+    gboolean ret;
+    path = g_build_filename(g_get_user_config_dir(), "emu8086", NULL);
+    if (file_exists(path))
+    {
+        g_free(path);
+        return TRUE;
+    }
+
+    file = g_file_new_for_path(path);
+
+    ret = g_file_make_directory(file, NULL, &error);
+    if (error != NULL)
+    {
+        g_print("%s\n", error->message);
+        g_error_free(error);
+    }
+    g_object_unref(file);
+    g_free(path);
+    return ret;
+}
+
+static gboolean emu_create_config_dir()
+{
+    GFile *file;
+    GError *error = NULL;
+    gchar *path;
+    gboolean ret;
+    user_config_dir_exists();
+    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
+    file = g_file_new_for_path(path);
+    ret = g_file_make_directory(file, NULL, &error);
+    if (error != NULL)
+    {
+        g_print("%s\n", error->message);
+        g_error_free(error);
+    }
+    g_object_unref(file);
+    g_free(path);
+    return ret;
+}
+
 gboolean user_config_themes_exists()
 {
     GFile *file;
@@ -393,7 +421,7 @@ gboolean user_config_themes_exists()
     if (!g_file_query_exists(file, NULL))
     {
 
-        if (create_config_dir())
+        if (emu_create_config_dir())
         {
             g_file_create(file, G_FILE_CREATE_NONE, NULL, &error2);
             if (error2 != NULL)
@@ -650,7 +678,7 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
         g_output_stream_write(stream, out, (sizeof(gchar)) * strlen(out), NULL, &error);
         g_free(name);
         g_free(out);
-        g_io_stream_close(stream, NULL, &error);
+
         g_object_unref(stream);
     }
     else
@@ -698,5 +726,6 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
         g_print("here g_strfreev(themes);\n");
     }
 
-    g_free(path);
+    g_free(path);  
+    return g_strdup("lol");
 }

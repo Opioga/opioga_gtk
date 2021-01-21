@@ -57,7 +57,7 @@ struct _Emu8086AppPrefsPrivate
   GtkWidget *themes_treeview;
   GtkWidget *indent;
   GtkWidget *pluginsbox;
-  GtkAdjustment *update_frequency;
+  GtkAdjustment *update_frequency;GtkWidget *uninstall_scheme_button;
   GtkWidget *install_scheme_button;
   GtkWidget *install_scheme_file_schooser;
   them **themes;
@@ -175,8 +175,11 @@ add_scheme_chooser_response_cb(GtkDialog *chooser,
   {
     emu8086_theme_free(dlg->priv->themes[i - 1]);
   }
-  dlg->priv->themes = NULL;
+  
+
+  dlg->priv->themes = NULL;g_print("here\n");
   refresh_themes(dlg);
+  // gtk_list_store_clear(dlg->priv->themes_treeview_model);
 }
 
 static void
@@ -238,12 +241,13 @@ static refresh_themes(Emu8086AppPrefs *dlg)
   Emu8086AppPrefsPrivate *priv = dlg->priv;
   Emu8086AppStyleScheme *scheme = priv->scheme;
   gsize theme_size = 0;
+ gtk_list_store_clear(priv->themes_treeview_model);
 
   them **ths = emu_8086_app_style_scheme_get_themes(scheme, &theme_size);
   
   gchar *selected_theme = g_settings_get_string(priv->settings, "theme");
- gtk_list_store_clear(priv->themes_treeview_model);
-   g_print("%d\n", theme_size);
+   g_print("heren %d\n", theme_size);
+   
   for (int i = 0; i < theme_size; i++)
   {
     const gchar *id;
@@ -320,6 +324,8 @@ static void populate_schemes(Emu8086AppPrefs *dlg)
                    "clicked",
                    G_CALLBACK(install_scheme_clicked),
                    dlg);  refresh_themes(dlg);
+
+                   gtk_button_set_label(dlg->priv->uninstall_scheme_button, "More Info");
 }
 static void license_file_chosen(GtkFileChooserButton *fcb, Emu8086AppPrefs *dlg)
 {
@@ -421,6 +427,7 @@ emu8086_app_prefs_class_init(Emu8086AppPrefsClass *class)
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, indent);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, pluginsbox);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, install_scheme_button);
+   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, uninstall_scheme_button);
   gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppPrefs, update_frequency);
 }
 

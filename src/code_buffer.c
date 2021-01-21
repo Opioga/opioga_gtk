@@ -16,7 +16,11 @@
 
 #include <code_buffer.h>
 #include <emu_8086_app_utils.h>
+#include <string.h>
 #include <emu8086stylescheme.h>
+#include <emu8086appuredomanager.h>
+
+
 typedef enum
 {
     PROP_0,
@@ -245,7 +249,7 @@ struct _Emu8086AppCodeBufferPrivate
     GList *search_contexts;
     gint max_undo_levels;
     gboolean can_undo;
-    gboolean can_redo;
+    gboolean can_redo;Emu8086AppURdoManager *manager;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu_8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
@@ -259,6 +263,7 @@ static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
     PRIV_CODE_BUFFER;
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->scheme = emu_8086_app_style_scheme_get_default();
+    priv->manager = emu_8086_app_urdo_manager_new(buffer, 100);
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
 
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "keyword", NULL);
@@ -603,10 +608,12 @@ gboolean emu_8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer){
 return buffer->priv->can_redo;
 }
 
+
 void emu_8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer){
-    g_print("here\n");
+   emu_8086_app_urdo_manager_undo_impl(buffer->priv->manager);
 }
 void emu_8086_app_code_buffer_redo(Emu8086AppCodeBuffer *buffer){
-    g_print("here\n");
+       emu_8086_app_urdo_manager_redo_impl(buffer->priv->manager);
+
 }
 

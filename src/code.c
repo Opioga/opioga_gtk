@@ -487,13 +487,14 @@ static void emu_8086_app_code_draw_layer(GtkTextView *text_view,
     cairo_restore(cr);
 }
 
-static void emu_8086_app_code_undo(Emu8086AppCode *code)
+void emu_8086_app_code_undo(Emu8086AppCode *code)
 {
- g_print("undo\n");
+emu_8086_app_code_buffer_undo(code->priv->buffer);
 }
-static void emu_8086_app_code_redo(Emu8086AppCode *code)
+ void emu_8086_app_code_redo(Emu8086AppCode *code)
 {
- g_print("redo\n");
+ emu_8086_app_code_buffer_redo(code->priv->buffer);
+
 }
 static void emu_8086_app_code_class_init(Emu8086AppCodeClass *klass)
 {

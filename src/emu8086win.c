@@ -179,13 +179,7 @@ redo_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     PRIV;
-    Emu8086AppCodeBuffer *buffer;
-    buffer = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
-    g_print("here: redo\n");
-    if (emu_8086_app_code_buffer_get_can_redo(buffer))
-    {
-        emu_8086_app_code_buffer_redo(buffer);
-    }
+    emu_8086_app_code_redo(priv->code);
 }
 
 static void
@@ -195,12 +189,7 @@ undo_activated(GSimpleAction *action,
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
     PRIV;
-    Emu8086AppCodeBuffer *buffer;
-    buffer = EMU_8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code)));
-    if (emu_8086_app_code_buffer_get_can_undo(buffer))
-    {
-        emu_8086_app_code_buffer_undo(buffer);
-    }
+    emu_8086_app_code_undo(priv->code);
 }
 
 static GActionEntry win_entries[] = {
@@ -992,11 +981,12 @@ gboolean emu_8086_app_window_save_doc(Emu8086AppWindow *win)
     gchar buf[5];
     strncpy(buf, fname, 4);
     buf[4] = '\0';
+
     if (strcmp(buf, "/usr") == 0)
     {
         return;
     }
-
+    gtk_text_buffer_set_modified(gtk_text_view_get_buffer(GTK_TEXT_VIEW(win->priv->code)), FALSE);
     if (!win->state.isSaved)
     {
         PRIV;

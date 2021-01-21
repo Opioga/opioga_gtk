@@ -62,5 +62,7 @@ void editFontSize(Emu8086AppCode *code, gint size);
 void set_win(Emu8086AppCode *code, GtkWidget *win);
 void get_break_points(Emu8086AppCode *code, gint *bps, gint *len);
 Emu8086AppCode *create_new();
+void emu_8086_app_code_undo(Emu8086AppCode *code);
+void emu_8086_app_code_redo(Emu8086AppCode *code);
 G_END_DECLS
 #endif // MACRO
