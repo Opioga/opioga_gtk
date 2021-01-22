@@ -16,7 +16,7 @@
 #include <emu8086win.h>
 #include <emu8086app.h>
 #include <emu8086stylescheme.h>
-
+#include <emu8086searchbar.h>
 #include <code.h>
 #include <code_buffer.h>
 #include <emu_8086_app_runner.h>
@@ -32,7 +32,8 @@ typedef enum
     PROP_MEM,
     PROP_THEME,
     PROP_UL,
-    PROP_LF
+    PROP_LF,
+    PROP_SEARCH_SHOW,
 } Emu8086AppWindowProperty;
 
 typedef struct _Emu8086AppWindowPrivate Emu8086AppWindowPrivate;
@@ -75,6 +76,9 @@ struct _Emu8086AppWindowPrivate
     Emu8086AppStyleScheme *scheme;
     gboolean ul;
     gchar *lf;
+    GtkWidget *revealer_search;
+    Emu8086AppSearchBar *search_bar;
+    gboolean search_show;
 };
 
 struct _Emu8086AppWindow
@@ -97,6 +101,7 @@ static void emu_8086_app_window_flash2(Emu8086AppWindow *win, gchar *message);
 static void add_recent(gchar *uri);
 static void emu_8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title);
 static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWindow *win);
+static void emu_8086_window_set_search(Emu8086AppWindow *win, gboolean b);
 static void
 copy_activated(GSimpleAction *action,
                GVariant *parameter,
@@ -121,7 +126,7 @@ find_activated(GSimpleAction *action,
                gpointer appe)
 {
     Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
-    g_print("active\n");
+    emu_8086_window_set_search(win, TRUE);
 }
 
 static void
@@ -206,6 +211,15 @@ static GActionEntry win_entries[] = {
 
 };
 
+static void
+close_search(GtkButton *button,
+             gpointer appe)
+{
+    Emu8086AppWindow *win = EMU_8086_APP_WINDOW(appe);
+    emu_8086_window_set_search(win, FALSE);
+    emu_8086_app_search_bar_clear_out(win->priv->search_bar);
+}
+
 Emu8086AppWindow *emu_8086_app_window_new(Emu8086App *app)
 {
 
@@ -220,7 +234,13 @@ static void open_memory(Emu8086AppWindow *win, gboolean b)
     PRIV;
     gtk_revealer_set_reveal_child(GTK_REVEALER(priv->revealer), b);
 }
+static void emu_8086_window_set_search(Emu8086AppWindow *win, gboolean b)
+{
 
+     g_return_if_fail(EMU_8086_IS_APP_WINDOW(win));
+    win->priv->search_show = b;
+    g_object_notify(G_OBJECT(win), "search-show");
+}
 void emu_8086_window_set_memory(Emu8086AppWindow *win, gboolean b)
 {
     open_memory(win, b);
@@ -397,7 +417,11 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
 
     Emu8086AppPluginBox *box;
     box = emu_8086_app_plugin_box_new(win, priv->runner);
+    // gtk_revealer_set_transition_type(GTK_REVEALER(priv->revealer_search), GTK_REVEALER_TRANSITION_TYPE_SLIDE_DOWN);
+    g_object_bind_property(win, "search-show", priv->revealer_search, "reveal-child", G_BINDING_DEFAULT);
+
     gtk_container_add(GTK_CONTAINER(priv->stack), box);
+
     gtk_widget_show_all(box);
     g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
     g_object_unref(builder);
@@ -598,6 +622,12 @@ emu_8086_window_key_press_event(GtkWidget *widget,
             handled = TRUE;
             emu_8086_app_window_save_doc(EMU_8086_APP_WINDOW(widget));
         }
+
+        else if ((event->keyval == GDK_KEY_F) || (event->keyval == GDK_KEY_f))
+        {
+            handled = TRUE;
+            emu_8086_window_set_search(EMU_8086_APP_WINDOW(widget), TRUE);
+        }
         // else if( )
     }
     if (grand_parent_class == NULL)
@@ -746,6 +776,7 @@ emu_8086_window_set_property(GObject *object,
     // g_print("l %d\n", *value);
     gchar *men;
     Emu8086AppWindowPrivate *priv = emu_8086_app_window_get_instance_private(self);
+
     switch ((Emu8086AppWindowProperty)property_id)
     {
     case PROP_UPDATES:
@@ -780,6 +811,13 @@ emu_8086_window_set_property(GObject *object,
         // g_print("filename: %s\n", self->filename);
         break;
 
+    case PROP_SEARCH_SHOW:
+        // *v = (gboolean *)value;
+        g_print("lll\n");
+        priv->search_show = g_value_get_boolean(value);
+        // g_print("filename: %s\n", self->filename);
+        break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -802,6 +840,11 @@ emu_8086_window_get_property(GObject *object,
     case PROP_MEM:
         g_value_set_boolean(value, self->memory);
         break;
+
+    case PROP_SEARCH_SHOW:
+        g_value_set_boolean(value, self->priv->search_show);
+        break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -839,6 +882,7 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ip);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, CS_);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ES_);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, revealer_search);
 
     g_object_class_install_property(object_class, PROP_THEME,
                                     g_param_spec_string("theme",
@@ -872,6 +916,13 @@ static void emu_8086_app_window_class_init(Emu8086AppWindowClass *class)
                                     g_param_spec_boolean("memory",
                                                          "Memory",
                                                          "Toggle memory view",
+                                                         FALSE,
+                                                         G_PARAM_READWRITE));
+
+    g_object_class_install_property(object_class, PROP_SEARCH_SHOW,
+                                    g_param_spec_boolean("search-show",
+                                                         "searchShow",
+                                                         "Toggle search",
                                                          FALSE,
                                                          G_PARAM_READWRITE));
 };
@@ -1297,7 +1348,7 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_window_set_default_size(GTK_WINDOW(win), 800, 600);
 
     GtkWidget *scrolled;
-    GtkWidget *code;
+    GtkWidget *code, *btn_close;
     int be = 0;
 
 #ifdef __linux__
@@ -1333,9 +1384,18 @@ static void populate_win(Emu8086AppWindow *win)
     gtk_widget_show_all(scrolled);
 
     priv->code = code;
+    btn_close = gtk_button_new_from_icon_name("gtk-close", GTK_ICON_SIZE_BUTTON);
+    gtk_button_set_relief(btn_close, GTK_RELIEF_NONE);
+    priv->search_bar = emu_8086_app_search_bar_create(GTK_TEXT_VIEW(code));
+    gtk_grid_attach(GTK_GRID(priv->search_bar), btn_close, 4, 0, 1, 1);
+    gtk_container_add(GTK_CONTAINER(priv->revealer_search), priv->search_bar);
+
+    gtk_widget_show_all(GTK_WIDGET(priv->search_bar));
+
     emu8086_win_change_theme(NULL, win);
     // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
     g_signal_connect(buffer, "modified-changed", G_CALLBACK(modified_changed), win);
+    g_signal_connect(btn_close, "clicked", G_CALLBACK(close_search), win);
     // priv->scrolled = scrolled;
     priv->tos = 0;
     strcpy(win->state.file_name, "Untitled.asm");

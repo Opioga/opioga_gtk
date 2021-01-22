@@ -265,7 +265,7 @@ static void emu_8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
     priv->scheme = emu_8086_app_style_scheme_get_default();
     priv->manager = emu_8086_app_urdo_manager_new(buffer, 100);
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
-
+gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "find-text", "background", "#ffffff", "foreground", "#5e91f2", NULL);
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "keyword", NULL);
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "reg", "weight", PANGO_WEIGHT_BOLD, NULL);
     gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "string", NULL);

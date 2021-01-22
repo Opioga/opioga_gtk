@@ -34,6 +34,7 @@ emu8086win.c \
 emu_8086_plugins_engine.c \
 emu8086stylescheme.c \
 emu8086appuredomanager.c \
+emu8086searchbar.c \
 emu8086app.c \
 emu8086appprefs.c \
 emu8086aboutwin.c \

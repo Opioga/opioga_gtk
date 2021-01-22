@@ -125,7 +125,8 @@
 
                                 <item>
                     <attribute name="label" translatable="yes">Go to Line...</attribute>
-                   
+                   <attribute name="action">win.find</attribute>
+                   <attribute name="icon">go-last-view</attribute> 
             
 
                 </item>
