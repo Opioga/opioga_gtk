@@ -56,6 +56,7 @@ static void emu_8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
     search_bar->priv = emu_8086_app_search_bar_get_instance_private(search_bar);
     PRIV_EMU_8086_APP_SEARCH_BAR;
     priv->count = 0;
+    priv->case_sensitive = TRUE;
     priv->current_index = 0;
     priv->case_sensitive = FALSE;
     priv->buffer = NULL;
@@ -92,6 +93,7 @@ static void emu_8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
 
     gtk_widget_set_margin_bottom(GTK_WIDGET(search_bar), 5);
     g_object_bind_property(priv->check_button, "active", search_bar, "case-sensitive", G_BINDING_DEFAULT);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(priv->check_button), TRUE);
     priv->entry_buffer = gtk_entry_get_buffer(GTK_ENTRY(priv->search_entry));
     priv->go_to_line_buffer = gtk_entry_get_buffer(GTK_ENTRY(priv->go_to_line_entry));
     gtk_entry_set_placeholder_text(GTK_ENTRY(priv->go_to_line_entry), "Go to line...");
@@ -184,7 +186,7 @@ static void emu_8086_app_search_bar_class_init(Emu8086AppSearchBarClass *klass)
                                     g_param_spec_boolean("case-sensitive",
                                                          "caseSensitive",
                                                          "whether search is case sensitive",
-                                                         FALSE,
+                                                         TRUE,
                                                          G_PARAM_READWRITE));
     // g_object_class_install_properties
 }
@@ -204,7 +206,12 @@ static gboolean find_text(Emu8086AppSearchBar *search_bar, const gchar *text, Gt
     buffer = priv->buffer;
     gboolean found;
     g_return_val_if_fail(GTK_IS_TEXT_BUFFER(buffer), FALSE);
-    found = gtk_text_iter_forward_search(iter, text, 0, &mstart, &mend, NULL);
+    
+    GtkTextSearchFlags flag = !priv->case_sensitive ? (GTK_TEXT_SEARCH_TEXT_ONLY |GTK_TEXT_SEARCH_CASE_INSENSITIVE) 
+                            :GTK_TEXT_SEARCH_TEXT_ONLY  ;
+
+
+    found = gtk_text_iter_forward_search(iter, text, flag, &mstart, &mend, NULL);
     if (found)
     {
         if (applyTag)
