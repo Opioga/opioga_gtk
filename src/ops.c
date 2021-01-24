@@ -6301,7 +6301,7 @@ void neg_addr8(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
 
-    if (opn == 0x16)
+    if (opn == 0x1e)
     {
         IP++;
         op1 = DATA_SEGMENT;
@@ -6352,7 +6352,7 @@ void mul_addr8(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
     is_16 = 0;
-    if (opn == 0x16)
+    if (opn == 0x26)
     {
         IP++;
         op1 = DATA_SEGMENT;
@@ -6399,7 +6399,7 @@ void imul_addr8(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
     is_16 = 0;
-    if (opn == 0x16)
+    if (opn == 0x2e)
     {
         IP++;
         op1 = DATA_SEGMENT;
@@ -6449,7 +6449,7 @@ void div_addr8(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
     is_16 = 0;
-    if (opn == 0x16)
+    if (opn == 0x36)
     {
         IP++;
         op1 = DATA_SEGMENT;
@@ -6504,7 +6504,7 @@ void idiv_addr8(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
     is_16 = 0;
-    if (opn == 0x16)
+    if (opn == 0x3e)
     {
         IP++;
         op1 = DATA_SEGMENT;

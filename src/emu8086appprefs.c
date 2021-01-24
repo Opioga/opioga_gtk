@@ -96,7 +96,6 @@ static void
 dialog_response_handler(GtkDialog *dlg,
                         gint res_id)
 {
-  g_print("here");
   switch (res_id)
   {
   case GTK_RESPONSE_HELP:
@@ -177,7 +176,8 @@ add_scheme_chooser_response_cb(GtkDialog *chooser,
   }
   
 
-  dlg->priv->themes = NULL;g_print("here\n");
+  dlg->priv->themes = NULL;
+  
   refresh_themes(dlg);
   // gtk_list_store_clear(dlg->priv->themes_treeview_model);
 }
@@ -246,7 +246,8 @@ static refresh_themes(Emu8086AppPrefs *dlg)
   them **ths = emu_8086_app_style_scheme_get_themes(scheme, &theme_size);
   
   gchar *selected_theme = g_settings_get_string(priv->settings, "theme");
-   g_print("heren %d\n", theme_size);
+  
+  
    
   for (int i = 0; i < theme_size; i++)
   {

@@ -52,5 +52,7 @@ mime/Makefile
 plugins/Makefile
 plugins/lcdhitachi/Makefile
 plugins/lcdhitachi/lcdhitachi/Makefile
+plugins/hexcalculator/Makefile
+plugins/hexcalculator/hexcalculator/Makefile
 themes/Makefile
 ])

@@ -1,3 +1,20 @@
+/* gtkemu8086
+ * Copyright 2020 KRC
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * emu8086searchbar.c
+ * App class
+ */
+
+
 #include <emu8086searchbar.h>
 
 enum
@@ -63,13 +80,12 @@ static void emu_8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
     priv->button_box = gtk_button_box_new(GTK_ORIENTATION_HORIZONTAL);
     priv->button_next = gtk_button_new_from_icon_name("go-next", GTK_ICON_SIZE_BUTTON);
     gtk_button_set_label(priv->button_next, "Next");
-    // priv->button_prev = gtk_button_new_from_icon_name("go-previous", GTK_ICON_SIZE_BUTTON);
-    // gtk_button_set_label(priv->button_prev, "Previous");
+
+
     gtk_box_set_spacing(GTK_BOX(priv->button_box), 6);
-    // gtk_container_add(GTK_CONTAINER(priv->button_box), priv->button_prev);
+
     gtk_container_add(GTK_CONTAINER(priv->button_box), priv->button_next);
     gtk_button_set_relief(GTK_BUTTON(priv->button_next), GTK_RELIEF_NONE);
-    // gtk_button_set_relief(GTK_BUTTON(priv->button_prev), GTK_RELIEF_NONE);
 
     priv->check_button = gtk_check_button_new_with_label("Case Sensitive");
 
@@ -316,16 +332,7 @@ static void find_once(Emu8086AppSearchBar *search_bar, const gchar *text, gboole
             gtk_text_view_scroll_mark_onscreen(priv->text_view, last_pos);
         };
     }
-    // while (find_text(search_bar, text, &iter))
-    // {
-    //     last_pos = gtk_text_buffer_get_mark(buffer, "last_pos");
-    //     if (last_pos == NULL)
-    //         break;
-    //     gtk_text_buffer_get_iter_at_mark(buffer, &iter, last_pos);
-    //     if (last_pos != NULL)
-    //         gtk_text_buffer_delete_mark(buffer, last_pos);
-    //     /* code */
-    // }
+
 }
 
 static void clear_selections(Emu8086AppSearchBar *search_bar)

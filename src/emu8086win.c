@@ -422,7 +422,7 @@ static void emu_8086_app_window_init(Emu8086AppWindow *win)
 
     gtk_container_add(GTK_CONTAINER(priv->stack), box);
 
-    gtk_widget_show_all(box);
+    // gtk_widget_show_all(box);
     g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
     g_object_unref(builder);
 };

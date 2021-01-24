@@ -37,7 +37,7 @@ typedef struct _Emu8086AppPluginBoxPrivate Emu8086AppPluginBoxPrivate;
 typedef struct _Emu8086AppPluginBox Emu8086AppPluginBox;
 struct _Emu8086AppPluginBox
 {
-    GtkBox parent;
+    GtkGrid parent;
     Emu8086AppPluginBoxPrivate *priv;
 };
 
@@ -45,7 +45,7 @@ typedef struct _Emu8086AppPluginBoxClass Emu8086AppPluginBoxClass;
 
 struct _Emu8086AppPluginBoxClass
 {
-    GtkBoxClass parent_class;
+    GtkGridClass parent_class;
     GtkWidget *(*get_stack)(Emu8086AppPluginBox *box);
 };
 

@@ -47,45 +47,26 @@
 rev_str:
         xor cx, cx
         mov cl, [si]
-     
-        push cx
-        push si
-        add si, cx    
-        mov di, 500
+        mov bx, si
+        mov dx, cx
+L1:
+        inc si
+        mov al, [si]
+        push ax 
+        loop L1
 
+        mov cx, dx
+        mov si, bx
 
-
-rev:
-        std     ; set D flag.
-        lodsb
-        cld     ; Clear D flag.
-        stosb
-        loop rev
-        pop si
-        pop cx
-        call bio
-        xor ax, ax
+L2:
+        inc si
+        pop ax 
+        mov [si], al
+        loop L2
         ret
 
 
 
-
-bio:
-        cld
-        push cx
-        push si
-         
-        inc si
-        mov di, si
-        mov si, 500
-        
-        rep movsb
-        pop si
-        pop cx
-         
-        inc si
-        rep lodsb
-        ret
 
 string:
         db 4,"lion"

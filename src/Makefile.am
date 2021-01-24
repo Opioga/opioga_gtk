@@ -16,7 +16,8 @@ libemu8086_la_CFLAGS = -I $(srcdir)/../include
 
 bin_PROGRAMS = emu8086
 AM_CFLAGS = $(EMU8086_CFLAGS) 	
-emu8086_CFLAGS = -I $(srcdir)/../include $(EMU8086_CFLAGS) -DDATADIR=\""$(datadir)"\"
+emu8086_CFLAGS = -I $(srcdir)/../include $(EMU8086_CFLAGS) -DDATADIR=\""$(datadir)"\" \
+-DLIBDIR=\""$(libdir)"\"
 
 
 

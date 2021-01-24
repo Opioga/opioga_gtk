@@ -1,7 +1,12 @@
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#else
 #define LIBDIR "/usr/local/lib"
-
+#define DATADIR "/usr/local/share"
+#endif
+// #define EMU_DEBUG 1
 #include <string.h>
 
 #include <glib/gi18n.h>
@@ -22,7 +27,7 @@ Emu8086PluginsEngine *default_engine = NULL;
 static void
 emu8086_plugins_engine_init(Emu8086PluginsEngine *engine)
 {
-	gchar *private_path;
+	gchar *private_path, *plugins_path;
 	GError *error = NULL;
 	g_print(g_get_user_data_dir());
 
@@ -59,18 +64,18 @@ emu8086_plugins_engine_init(Emu8086PluginsEngine *engine)
 	g_free(private_path);
 
 #ifdef EMU_DEBUG
+
 	peas_engine_add_search_path(PEAS_ENGINE(engine),
 								"/home/lion/Desktop/kosyWork/Desktop/gtkemu8086/plugins",
 								"/home/lion/Desktop/kosyWork/Desktop/gtkemu8086/plugins");
 
 #else
+	plugins_path = g_build_filename(DATADIR, "emu8086/plugins", NULL);
 	peas_engine_add_search_path(PEAS_ENGINE(engine),
-								"/usr/local/share/emu8086/plugins",
-								"/usr/local/share/emu8086/plugins");
+								plugins_path,
+								plugins_path);
 
-	peas_engine_add_search_path(PEAS_ENGINE(engine),
-								"/usr/share/emu8086/plugins",
-								"/usr/share/emu8086/plugins");
+	g_free(plugins_path);
 #endif
 }
 

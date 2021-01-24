@@ -19,12 +19,9 @@
 #include <libpeas/peas-activatable.h>
 #include <libpeas/peas-extension-set.h>
 
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-
 
 struct _Emu8086AppPluginBoxPrivate
 {
@@ -33,7 +30,7 @@ struct _Emu8086AppPluginBoxPrivate
     Emu8086AppCodeRunner *runner;
     GtkBox *v_box;
 };
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPluginBox, emu_8086_app_plugin_box, GTK_TYPE_BOX);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPluginBox, emu_8086_app_plugin_box, GTK_TYPE_GRID);
 
 static void emu_8086_app_plugin_box_init(Emu8086AppPluginBox *runner);
 
@@ -115,7 +112,7 @@ emu_8086_app_plugin_box_get_property(GObject *object,
         break;
 
     case PROP_VBOX:
-        g_value_set_object(value, self->priv->v_box);
+        g_value_set_object(value, self);
         break;
     default:
         /* We don't have any other property... */
@@ -129,7 +126,7 @@ Emu8086AppPluginBox *emu_8086_app_plugin_box_new(GtkApplicationWindow *win, Emu8
     return g_object_new(EMU_8086_APP_PLUGIN_BOX_TYPE,
                         "window", win,
                         "runner", runner,
-
+"row-spacing", 30,
                         NULL);
 };
 
@@ -141,14 +138,6 @@ static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
     klass->get_stack = emu8086_app_window_get_stack;
     // PROP_MY_RUNNER;
 
-    g_object_class_install_property(object_class,
-                                    PROP_VBOX,
-                                    g_param_spec_object("v_box",
-                                                        "Vertical Container",
-                                                        "",
-
-                                                        GTK_TYPE_BOX,
-                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
     g_object_class_install_property(object_class,
                                     PROP_MY_RUNNER,
                                     g_param_spec_object("runner",
@@ -172,8 +161,6 @@ static void emu_8086_app_plugin_box_init(Emu8086AppPluginBox *box)
 {
     box->priv = emu_8086_app_plugin_box_get_instance_private(box);
     PRIV_BOX;
-    priv->v_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_box_pack_start(box, priv->v_box, TRUE, TRUE, 15);
 
     priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
                                               PEAS_TYPE_ACTIVATABLE, "object", box, NULL);
@@ -206,7 +193,7 @@ on_extension_added(PeasExtensionSet *extensions,
                    Emu8086AppPluginBox *box)
 {
     PRIV_BOX;
-
+    gtk_widget_show_all(box);
     //  g_print("0x%x", priv->runner);
     peas_activatable_activate(PEAS_ACTIVATABLE(exten));
     // peas_extension_call (exten, "kon",box);

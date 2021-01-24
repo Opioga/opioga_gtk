@@ -27,6 +27,7 @@
 	; warning! if you run this program outside of the emulator 
 	;           it may corrupt existing data. use with caution.
 	; do not play with floppies that contain valuable data.
+org 100h
 main: jmp st	
 	inc si
 	inc di

@@ -116,21 +116,4 @@ g_application_run(G_APPLICATION(a), argc, argv);
     // a = emu_8086_app_get_default();
    
    g_option_context_free(context);
-    // if (file_list != NULL)
-    // {
-    //     while (file_list != NULL)
-    //     {
-    //         window = emu_8086_app_window_new(a);
-    //         emu_8086_app_window_open(window, file_list->data);
-    //     }
-    // }
-    // else
-    // {
-    //     window = emu_8086_app_window_new(a);
-    //     emu_8086_app_window_up(window);
-    // }
-    // gtk_main();
-    // Emu8086App *a = emu_8086_app_new();
-    // gint l = g_timeout_add(interval, (GSourceFunc)emu_8086_app_update_usage, a);
-    // return
 }
