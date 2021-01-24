@@ -16,3 +16,5 @@ update-mime-databases:
 	echo "*** Mime database not updated. After (un)install, run this:"; \
 	echo "*** $(update_mime_database)"; \
 	fi
+
+-include $(top_srcdir)/git.mk

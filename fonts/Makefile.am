@@ -18,3 +18,5 @@ update-font-cache:
 	echo "*** $(gtk_update_font_cache)"; \
 	fi
 
+
+-include $(top_srcdir)/git.mk
