@@ -28,7 +28,7 @@
 
 #include <emu8086stylescheme.h>
 
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppStyleScheme, emu_8086_app_style_scheme, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppStyleScheme, emu8086_app_style_scheme, G_TYPE_OBJECT);
 
 enum Emu8086StyleSchemeSignals
 {
@@ -39,16 +39,16 @@ enum Emu8086StyleSchemeSignals
 };
 
 static guint signals[LAST_SIGNAL] = {0};
-static void emu_8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme);
-static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme);
-static void emu_8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *klass);
+static void emu8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme);
+static void emu8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme);
+static void emu8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *klass);
 
-static void emu_8086_app_style_scheme_set_property(GObject *object,
+static void emu8086_app_style_scheme_set_property(GObject *object,
                                                    guint property_id,
                                                    const GValue *value,
                                                    GParamSpec *pspec)
 {
-    Emu8086AppStyleScheme *self = EMU_8086_APP_STYLE_SCHEME(object);
+    Emu8086AppStyleScheme *self = EMU8086_APP_STYLE_SCHEME(object);
     // g_print("l %d\n", *value);
     gchar *m;
     switch ((Emu8086AppStyleSchemeProperty)property_id)
@@ -69,7 +69,7 @@ static void emu_8086_app_style_scheme_set_property(GObject *object,
         }
 
         self->priv->theme = g_strdup(m);
-        emu_8086_app_style_scheme_load(self);
+        emu8086_app_style_scheme_load(self);
 
         break;
 
@@ -81,12 +81,12 @@ static void emu_8086_app_style_scheme_set_property(GObject *object,
 }
 
 static void
-emu_8086_app_style_scheme_get_property(GObject *object,
+emu8086_app_style_scheme_get_property(GObject *object,
                                        guint property_id,
                                        GValue *value,
                                        GParamSpec *pspec)
 {
-    Emu8086AppStyleScheme *self = EMU_8086_APP_STYLE_SCHEME(object);
+    Emu8086AppStyleScheme *self = EMU8086_APP_STYLE_SCHEME(object);
 
     switch ((Emu8086AppStyleSchemeProperty)property_id)
     {
@@ -100,17 +100,17 @@ emu_8086_app_style_scheme_get_property(GObject *object,
         break;
     }
 }
-static void emu_8086_app_style_scheme_theme_changed(Emu8086AppStyleScheme *scheme)
+static void emu8086_app_style_scheme_theme_changed(Emu8086AppStyleScheme *scheme)
 {
     return;
 }
 
-static void emu_8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *klass)
+static void emu8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->set_property = emu_8086_app_style_scheme_set_property;
-    object_class->get_property = emu_8086_app_style_scheme_get_property;
-    klass->theme_changed = emu_8086_app_style_scheme_theme_changed;
+    object_class->set_property = emu8086_app_style_scheme_set_property;
+    object_class->get_property = emu8086_app_style_scheme_get_property;
+    klass->theme_changed = emu8086_app_style_scheme_theme_changed;
 
     g_object_class_install_property(object_class,
                                     PROP_SCHEME_THEME,
@@ -127,10 +127,10 @@ static void emu_8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *kla
                                               G_TYPE_NONE, 0);
 }
 
-static void emu_8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme)
+static void emu8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme)
 {
 
-    scheme->priv = emu_8086_app_style_scheme_get_instance_private(scheme);
+    scheme->priv = emu8086_app_style_scheme_get_instance_private(scheme);
     scheme->priv->color_comment = NULL;
     scheme->priv->color_keyword = NULL;
     scheme->priv->color_special = NULL;
@@ -146,32 +146,32 @@ static void emu_8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme)
     g_object_unref(settings);
 }
 static void
-emu_8086_app_scheme_weak_notify(gpointer data,
+emu8086_app_scheme_weak_notify(gpointer data,
                                 GObject *where_the_scheme_was)
 {
     g_print("destroyed\n");
 }
 
-static Emu8086AppStyleScheme *emu_8086_app_style_scheme_new()
+static Emu8086AppStyleScheme *emu8086_app_style_scheme_new()
 {
-    return g_object_new(EMU_8086_APP_STYLE_SCHEME_TYPE,
+    return g_object_new(EMU8086_APP_STYLE_SCHEME_TYPE,
                         NULL);
 };
-Emu8086AppStyleScheme *emu_8086_app_style_scheme_get_default()
+Emu8086AppStyleScheme *emu8086_app_style_scheme_get_default()
 {
     static Emu8086AppStyleScheme *scheme = NULL;
     if (scheme != NULL)
         return scheme;
-    scheme = emu_8086_app_style_scheme_new();
+    scheme = emu8086_app_style_scheme_new();
     g_object_add_weak_pointer(G_OBJECT(scheme),
                               (gpointer)&scheme);
     g_object_weak_ref(G_OBJECT(scheme),
-                      emu_8086_app_scheme_weak_notify,
+                      emu8086_app_scheme_weak_notify,
                       NULL);
     return scheme;
 }
 
-static gchar *emu_8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, gboolean ret, gint index, gchar *val)
+static gchar *emu8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, gboolean ret, gint index, gchar *val)
 {
     gchar **col;
     switch (index)
@@ -245,7 +245,7 @@ static gchar *emu_8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, g
     return NULL;
 }
 
-static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
+static void emu8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
 {
     PRIV_STYLE_SCHEME;
     if (priv->theme == NULL)
@@ -315,7 +315,7 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
             gchar *val = NULL;
             val = keystr[i + 14];
 
-            emu_8086_app_style_scheme_get_col(scheme, FALSE, i, val);
+            emu8086_app_style_scheme_get_col(scheme, FALSE, i, val);
         }
     }
 
@@ -347,7 +347,7 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
                 val = g_strdup(keystr[i + 14]);
             }
 
-            emu_8086_app_style_scheme_get_col(scheme, FALSE, i, val);
+            emu8086_app_style_scheme_get_col(scheme, FALSE, i, val);
             g_free(val);
         }
     }
@@ -357,10 +357,10 @@ static void emu_8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
     //   priv
 }
 
-gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index)
+gchar *emu8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index)
 {
 
-    return emu_8086_app_style_scheme_get_col(scheme, TRUE, index, NULL);
+    return emu8086_app_style_scheme_get_col(scheme, TRUE, index, NULL);
 }
 
 gboolean file_exists(const gchar *path)
@@ -460,7 +460,7 @@ gboolean user_config_themes_exists()
     return TRUE;
 }
 
-them **emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len)
+them **emu8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len)
 {
     g_autoptr(GError) error = NULL;
     g_autoptr(GKeyFile) key_file = g_key_file_new();

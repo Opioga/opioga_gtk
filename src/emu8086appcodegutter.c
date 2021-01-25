@@ -15,22 +15,23 @@
  */
 
 #include <gtk/gtk.h>
-#include <code_gutter.h>
-#include <code_buffer.h>
+#include <emu8086appcode.h>
+#include <emu8086appcodebuffer.h>
+#include <emu8086appcodegutter.h>
 #include <emu8086stylescheme.h>
 
-static void emu_8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter);
+static void emu8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter);
 static void set_code(Emu8086AppCodeGutter *gutter, Emu8086AppCode *code);
 
-static void emu_8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass);
+static void emu8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass);
 
-static void emu_8086_app_code_gutter_set_property(GObject *object,
+static void emu8086_app_code_gutter_set_property(GObject *object,
                                                   guint property_id,
                                                   const GValue *value,
                                                   GParamSpec *pspec);
 
 static void
-emu_8086_app_code_gutter_get_property(GObject *object,
+emu8086_app_code_gutter_get_property(GObject *object,
                                       guint property_id,
                                       GValue *value,
                                       GParamSpec *pspec);
@@ -99,11 +100,11 @@ struct _Emu8086AppCodeGutter
     Emu8086AppCodeGutterPrivate *priv;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeGutter, emu_8086_app_code_gutter, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeGutter, emu8086_app_code_gutter, G_TYPE_OBJECT);
 
-Emu8086AppCodeGutter *emu_8086_app_code_gutter_new(Emu8086AppCode *code, GtkTextWindowType type)
+Emu8086AppCodeGutter *emu8086_app_code_gutter_new(Emu8086AppCode *code, GtkTextWindowType type)
 {
-    return g_object_new(EMU_8086_APP_CODE_GUTTER_TYPE,
+    return g_object_new(EMU8086_APP_CODE_GUTTER_TYPE,
                         "code", code,
                         "window_type", type,
                         NULL);
@@ -118,12 +119,12 @@ static void set_code(Emu8086AppCodeGutter *gutter, Emu8086AppCode *code)
     priv->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
 }
 
-static void emu_8086_app_code_gutter_set_property(GObject *object,
+static void emu8086_app_code_gutter_set_property(GObject *object,
                                                   guint property_id,
                                                   const GValue *value,
                                                   GParamSpec *pspec)
 {
-    Emu8086AppCodeGutter *self = EMU_8086_APP_CODE_GUTTER(object);
+    Emu8086AppCodeGutter *self = EMU8086_APP_CODE_GUTTER(object);
     // g_print("l %d\n", *value);
 
     switch ((Emu8086AppCodeGutterProperty)property_id)
@@ -144,7 +145,7 @@ static void emu_8086_app_code_gutter_set_property(GObject *object,
         break;
 
     case PROP_GUTTER_CODE:
-        set_code(self, EMU_8086_APP_CODE(g_value_get_object(value)));
+        set_code(self, EMU8086_APP_CODE(g_value_get_object(value)));
         break;
 
     case PROP_GUTTER_WINDOW_TYPE:
@@ -157,12 +158,12 @@ static void emu_8086_app_code_gutter_set_property(GObject *object,
     }
 }
 static void
-emu_8086_app_code_gutter_get_property(GObject *object,
+emu8086_app_code_gutter_get_property(GObject *object,
                                       guint property_id,
                                       GValue *value,
                                       GParamSpec *pspec)
 {
-    Emu8086AppCodeGutter *self = EMU_8086_APP_CODE_GUTTER(object);
+    Emu8086AppCodeGutter *self = EMU8086_APP_CODE_GUTTER(object);
 
     switch ((Emu8086AppCodeGutterProperty)property_id)
     {
@@ -179,18 +180,18 @@ emu_8086_app_code_gutter_get_property(GObject *object,
     }
 }
 
-static void emu_8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass)
+static void emu8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->set_property = emu_8086_app_code_gutter_set_property;
-    object_class->get_property = emu_8086_app_code_gutter_get_property;
+    object_class->set_property = emu8086_app_code_gutter_set_property;
+    object_class->get_property = emu8086_app_code_gutter_get_property;
 
     g_object_class_install_property(object_class,
                                     PROP_GUTTER_CODE,
                                     g_param_spec_object("code",
                                                         "Code",
                                                         "",
-                                                        EMU_8086_APP_CODE_TYPE,
+                                                        EMU8086_APP_CODE_TYPE,
                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property(object_class,
@@ -206,16 +207,16 @@ static void emu_8086_app_code_gutter_class_init(Emu8086AppCodeGutterClass *klass
 static void emu8086_code_gutter_refresh_fg(Emu8086AppStyleScheme *scheme,Emu8086AppCodeGutter *gutter)
 {
     PRIV_CODE_GUTTER;
-     priv->foreground = emu_8086_app_style_scheme_get_color_by_index(scheme,
+     priv->foreground = emu8086_app_style_scheme_get_color_by_index(scheme,
                                                                     13);
 }
 
-static void emu_8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter)
+static void emu8086_app_code_gutter_init(Emu8086AppCodeGutter *gutter)
 {
-    gutter->priv = emu_8086_app_code_gutter_get_instance_private(gutter);
+    gutter->priv = emu8086_app_code_gutter_get_instance_private(gutter);
     gutter->priv->text = NULL;
-    gutter->priv->scheme = emu_8086_app_style_scheme_get_default();
-    gutter->priv->foreground = emu_8086_app_style_scheme_get_color_by_index(gutter->priv->scheme,
+    gutter->priv->scheme = emu8086_app_style_scheme_get_default();
+    gutter->priv->foreground = emu8086_app_style_scheme_get_color_by_index(gutter->priv->scheme,
                                                                             13);
     gutter->priv->cached_layout = NULL;
     gutter->priv->cl = -1;

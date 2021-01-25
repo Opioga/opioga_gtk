@@ -44,7 +44,7 @@ struct _Emu8086AppSearchBarPrivate
     GtkTextView *text_view;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppSearchBar, emu_8086_app_search_bar, GTK_TYPE_GRID);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppSearchBar, emu8086_app_search_bar, GTK_TYPE_GRID);
 static void next_clicked_cb(GtkButton *button, Emu8086AppSearchBar *search_bar);
 static void prev_clicked_cb(GtkButton *button, Emu8086AppSearchBar *search_bar);
 static void text_inserted(GtkEntryBuffer *buffer,
@@ -68,10 +68,10 @@ static void line_text_deleted(GtkEntryBuffer *buffer,
                               guint n_chars,
                               gpointer user_data);
 
-static void emu_8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
+static void emu8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
 {
-    search_bar->priv = emu_8086_app_search_bar_get_instance_private(search_bar);
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    search_bar->priv = emu8086_app_search_bar_get_instance_private(search_bar);
+    PRIV_EMU8086_APP_SEARCH_BAR;
     priv->count = 0;
     priv->case_sensitive = TRUE;
     priv->current_index = 0;
@@ -121,12 +121,12 @@ static void emu_8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
     g_signal_connect(priv->button_next, "clicked", G_CALLBACK(next_clicked_cb), search_bar);
 }
 
-static void emu_8086_app_search_bar_set_property(GObject *object,
+static void emu8086_app_search_bar_set_property(GObject *object,
                                                  guint property_id,
                                                  const GValue *value,
                                                  GParamSpec *pspec)
 {
-    Emu8086AppSearchBar *self = EMU_8086_APP_SEARCH_BAR(object);
+    Emu8086AppSearchBar *self = EMU8086_APP_SEARCH_BAR(object);
     switch (property_id)
     {
     case PROP_TEXT_VIEW:
@@ -153,12 +153,12 @@ static void emu_8086_app_search_bar_set_property(GObject *object,
         break;
     }
 }
-static void emu_8086_app_search_bar_get_property(GObject *object,
+static void emu8086_app_search_bar_get_property(GObject *object,
                                                  guint property_id,
                                                  const GValue *value,
                                                  GParamSpec *pspec)
 {
-    Emu8086AppSearchBar *self = EMU_8086_APP_SEARCH_BAR(object);
+    Emu8086AppSearchBar *self = EMU8086_APP_SEARCH_BAR(object);
     switch (property_id)
     {
     case PROP_TEXT_VIEW:
@@ -178,11 +178,11 @@ static void emu_8086_app_search_bar_get_property(GObject *object,
         break;
     }
 }
-static void emu_8086_app_search_bar_class_init(Emu8086AppSearchBarClass *klass)
+static void emu8086_app_search_bar_class_init(Emu8086AppSearchBarClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->set_property = emu_8086_app_search_bar_set_property;
-    object_class->get_property = emu_8086_app_search_bar_set_property;
+    object_class->set_property = emu8086_app_search_bar_set_property;
+    object_class->get_property = emu8086_app_search_bar_set_property;
     g_object_class_install_property(object_class,
                                     PROP_TEXT_VIEW,
                                     g_param_spec_object("text-view",
@@ -207,16 +207,16 @@ static void emu_8086_app_search_bar_class_init(Emu8086AppSearchBarClass *klass)
     // g_object_class_install_properties
 }
 
-Emu8086AppSearchBar *emu_8086_app_search_bar_create(GtkTextView *view)
+Emu8086AppSearchBar *emu8086_app_search_bar_create(GtkTextView *view)
 {
 
-    return g_object_new(EMU_8086_APP_SEARCH_BAR_TYPE, "text-view", view, "buffer", gtk_text_view_get_buffer(view), NULL);
+    return g_object_new(EMU8086_APP_SEARCH_BAR_TYPE, "text-view", view, "buffer", gtk_text_view_get_buffer(view), NULL);
 }
 
 static gboolean find_text(Emu8086AppSearchBar *search_bar, const gchar *text, GtkTextIter *iter,
                           gboolean applyTag)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     GtkTextIter mstart, mend;
     GtkTextBuffer *buffer;
     buffer = priv->buffer;
@@ -242,7 +242,7 @@ static gboolean find_text_backwards(Emu8086AppSearchBar *search_bar,
                                     const gchar *text,
                                     GtkTextIter *iter)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     GtkTextIter mstart, mend;
     GtkTextBuffer *buffer;
     buffer = priv->buffer;
@@ -259,7 +259,7 @@ static gboolean find_text_backwards(Emu8086AppSearchBar *search_bar,
 
 static void find_all(Emu8086AppSearchBar *search_bar, const gchar *text)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
 
     GtkTextBuffer *buffer;
     GtkTextMark *last_pos;
@@ -293,7 +293,7 @@ static void find_all(Emu8086AppSearchBar *search_bar, const gchar *text)
 
 static void find_once(Emu8086AppSearchBar *search_bar, const gchar *text, gboolean backward)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
 
     GtkTextBuffer *buffer;
     GtkTextMark *last_pos;
@@ -338,7 +338,7 @@ static void find_once(Emu8086AppSearchBar *search_bar, const gchar *text, gboole
 static void clear_selections(Emu8086AppSearchBar *search_bar)
 
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
 
     GtkTextIter start;
     GtkTextIter end;
@@ -356,7 +356,7 @@ static void clear_selections(Emu8086AppSearchBar *search_bar)
 
 static void next_clicked_cb(GtkButton *button, Emu8086AppSearchBar *search_bar)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     gchar *text;
     text = gtk_entry_buffer_get_text(priv->entry_buffer);
     if (strlen(text) == 0)
@@ -371,7 +371,7 @@ static void text_inserted(GtkEntryBuffer *buffer,
                           guint n_chars,
                           gpointer user_data)
 {
-    Emu8086AppSearchBar *search_bar = EMU_8086_APP_SEARCH_BAR(user_data);
+    Emu8086AppSearchBar *search_bar = EMU8086_APP_SEARCH_BAR(user_data);
 
     gchar *text;
 
@@ -388,7 +388,7 @@ static void text_deleted(GtkEntryBuffer *buffer,
                          guint n_chars,
                          gpointer user_data)
 {
-    Emu8086AppSearchBar *search_bar = EMU_8086_APP_SEARCH_BAR(user_data);
+    Emu8086AppSearchBar *search_bar = EMU8086_APP_SEARCH_BAR(user_data);
 
     gchar *text;
 
@@ -403,7 +403,7 @@ static void text_deleted(GtkEntryBuffer *buffer,
 
 static void go_to_line(Emu8086AppSearchBar *search_bar, gchar *text)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     GtkTextIter iter;
     gint line = g_ascii_strtoll(text, NULL, 10);
     g_return_if_fail(GTK_IS_TEXT_BUFFER(priv->buffer));
@@ -424,7 +424,7 @@ static void line_text_inserted(GtkEntryBuffer *buffer,
                                guint n_chars,
                                gpointer user_data)
 {
-    Emu8086AppSearchBar *search_bar = EMU_8086_APP_SEARCH_BAR(user_data);
+    Emu8086AppSearchBar *search_bar = EMU8086_APP_SEARCH_BAR(user_data);
 
     gchar *text;
 
@@ -440,7 +440,7 @@ static void line_text_deleted(GtkEntryBuffer *buffer,
                               guint n_chars,
                               gpointer user_data)
 {
-    Emu8086AppSearchBar *search_bar = EMU_8086_APP_SEARCH_BAR(user_data);
+    Emu8086AppSearchBar *search_bar = EMU8086_APP_SEARCH_BAR(user_data);
 
     gchar *text;
 
@@ -453,7 +453,7 @@ static void line_text_deleted(GtkEntryBuffer *buffer,
 
 gboolean find(Emu8086AppSearchBar *search_bar, const gchar *text)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     GtkTextIter mstart, mend;
     GtkTextBuffer *buffer;
     buffer = priv->buffer;
@@ -467,9 +467,9 @@ gboolean find(Emu8086AppSearchBar *search_bar, const gchar *text)
     }
 }
 
-void emu_8086_app_search_bar_clear_out(Emu8086AppSearchBar *search_bar)
+void emu8086_app_search_bar_clear_out(Emu8086AppSearchBar *search_bar)
 {
-    PRIV_EMU_8086_APP_SEARCH_BAR;
+    PRIV_EMU8086_APP_SEARCH_BAR;
     gtk_entry_set_text(GTK_ENTRY(priv->search_entry), "");
     gtk_entry_set_text(GTK_ENTRY(priv->go_to_line_entry), "");
     clear_selections(search_bar);

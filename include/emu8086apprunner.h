@@ -10,23 +10,24 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  *
- * emu_8086_app_runner.h
+ * emu8086_app_runner.h
  * Runner class
  */
 
 #ifndef _EMU_CODE_RUNNER_C
 #define _EMU_CODE_RUNNER_C
 #include <gtk/gtk.h>
-#include <code.h>
+#include "emu8086apptypes.h"
+
 
 G_BEGIN_DECLS
 struct emu8086;
-#define EMU_8086_APP_CODE_RUNNER_TYPE (emu_8086_app_code_runner_get_type())
-#define EMU_8086_CODE_RUNNER_IS_RUNNER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU_8086_APP_CODE_RUNNER_TYPE))
+#define EMU8086_APP_CODE_RUNNER_TYPE (emu8086_app_code_runner_get_type())
+#define EMU8086_CODE_RUNNER_IS_RUNNER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU8086_APP_CODE_RUNNER_TYPE))
 #define PRIV_CODE_RUNNER Emu8086AppCodeRunnerPrivate *priv = runner->priv
-#define EMU_8086_APP_CODE_RUNNER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU_8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunner))
-#define EMU_8086_APP_CODE_RUNNER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU_8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunnerClass))
-#define EMU_8086_CODE_RUNNER_IS_RUNNER_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_CODE_RUNNER_TYPE)
+#define EMU8086_APP_CODE_RUNNER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunner))
+#define EMU8086_APP_CODE_RUNNER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU8086_APP_CODE_RUNNER_TYPE, Emu8086AppCodeRunnerClass))
+#define EMU8086_CODE_RUNNER_IS_RUNNER_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU8086_APP_CODE_RUNNER_TYPE)
 
 typedef struct _Emu8086AppCodeRunnerPrivate Emu8086AppCodeRunnerPrivate;
 struct _Emu8086AppCodeRunnerPrivate
@@ -44,7 +45,7 @@ struct _Emu8086AppCodeRunnerPrivate
     gint m_ins;
     gint update_frequency;
 };
-typedef struct _Emu8086AppCodeRunner Emu8086AppCodeRunner;
+
 struct _Emu8086AppCodeRunner
 {
     GObject parent;
@@ -82,10 +83,10 @@ typedef enum
     STEP_OVER
 } Emu8086AppCodeRunnerState;
 
-GType emu_8086_app_code_runner_get_type(void) G_GNUC_CONST;
-gboolean emu_8086_app_code_runner_get_can_run(Emu8086AppCodeRunner *runner);
-gchar *emu_8086_app_code_runner_get_fname(Emu8086AppCodeRunner *runner);
-Emu8086AppCodeRunner *emu_8086_app_code_runner_new(gchar *fname, gboolean can_run);
+GType emu8086_app_code_runner_get_type(void) G_GNUC_CONST;
+gboolean emu8086_app_code_runner_get_can_run(Emu8086AppCodeRunner *runner);
+gchar *emu8086_app_code_runner_get_fname(Emu8086AppCodeRunner *runner);
+Emu8086AppCodeRunner *emu8086_app_code_runner_new(gchar *fname, gboolean can_run);
 void set_fname(Emu8086AppCodeRunner *runner, gchar *fname);
 void run_clicked_app(Emu8086AppCodeRunner *runner);
 void step_clicked_app(Emu8086AppCodeRunner *runner);

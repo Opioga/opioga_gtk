@@ -33,8 +33,8 @@
 #endif
 
 #include "emu8086app.h"
-#include <emu8086win.h>
-#include <emu_8086_plugins_engine.h>
+#include <emu8086appwin.h>
+#include <emu8086apppluginsengine.h>
 
 static gboolean new_window_option = FALSE;
 static gboolean new_document_option = FALSE;
@@ -87,11 +87,11 @@ emu8086_get_command_line_data(void)
 int main(int argc, char *argv[])
 {
     Emu8086App *a;GOptionContext *context;
-    a = emu_8086_app_get_default();
+    a = emu8086_app_get_default();
     context = g_option_context_new(_("- Edit text files"));
     g_application_add_main_option_entries(a, options);
     //g_option_context_add_group(context, gtk_get_option_group(TRUE));
-g_application_run(G_APPLICATION(a), argc, argv);
+//
    
     Emu8086PluginsEngine *engine;
 
@@ -113,7 +113,7 @@ g_application_run(G_APPLICATION(a), argc, argv);
     // 
 
     engine = emu8086_plugins_engine_get_default();
-    // a = emu_8086_app_get_default();
-   
+    // a = emu8086_app_get_default();
+    g_application_run(G_APPLICATION(a), argc, argv);
    g_option_context_free(context);
 }

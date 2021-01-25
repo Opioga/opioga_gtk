@@ -10,12 +10,14 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  *
- * emu_8086_app_runner.h
+ * emu8086_app_runner.h
  * Runner class
  */
+#include <emu8086apprunner.h>
+#include <emu8086appwin.h>
 
-#include <emu_plugin_box.h>
-#include <emu_8086_plugins_engine.h>
+#include <emu8086apppluginbox.h>
+#include <emu8086apppluginsengine.h>
 #include <libpeas/peas-activatable.h>
 #include <libpeas/peas-extension-set.h>
 
@@ -30,11 +32,11 @@ struct _Emu8086AppPluginBoxPrivate
     Emu8086AppCodeRunner *runner;
     GtkBox *v_box;
 };
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPluginBox, emu_8086_app_plugin_box, GTK_TYPE_GRID);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppPluginBox, emu8086_app_plugin_box, GTK_TYPE_GRID);
 
-static void emu_8086_app_plugin_box_init(Emu8086AppPluginBox *runner);
+static void emu8086_app_plugin_box_init(Emu8086AppPluginBox *runner);
 
-static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass);
+static void emu8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass);
 static void
 on_extension_removed(PeasExtensionSet *extensions,
                      PeasPluginInfo *info,
@@ -47,22 +49,22 @@ on_extension_added(PeasExtensionSet *extensions,
                    PeasExtension *exten,
                    Emu8086AppPluginBox *window);
 
-static void emu_8086_app_plugin_box_set_property(GObject *object,
+static void emu8086_app_plugin_box_set_property(GObject *object,
                                                  guint property_id,
                                                  const GValue *value,
                                                  GParamSpec *pspec);
 static void
-emu_8086_app_plugin_box_get_property(GObject *object,
+emu8086_app_plugin_box_get_property(GObject *object,
                                      guint property_id,
                                      GValue *value,
                                      GParamSpec *pspec);
 
-static void emu_8086_app_plugin_box_set_property(GObject *object,
+static void emu8086_app_plugin_box_set_property(GObject *object,
                                                  guint property_id,
                                                  const GValue *value,
                                                  GParamSpec *pspec)
 {
-    Emu8086AppPluginBox *self = EMU_8086_APP_PLUGIN_BOX(object);
+    Emu8086AppPluginBox *self = EMU8086_APP_PLUGIN_BOX(object);
     // g_print("l %d\n", *value);
 
     switch ((Emu8086AppPluginBoxProperty)property_id)
@@ -70,19 +72,19 @@ static void emu_8086_app_plugin_box_set_property(GObject *object,
 
     case PROP_WIN:
 
-        self->priv->win = EMU_8086_APP_WINDOW(g_value_get_object(value));
+        self->priv->win = EMU8086_APP_WINDOW(g_value_get_object(value));
         // emu8086_win_change_theme(self);
         // g_print("filename: %s\n", self->filename);
         break;
     case PROP_MY_RUNNER:
 
-        self->priv->runner = EMU_8086_APP_CODE_RUNNER(g_value_get_object(value));
+        self->priv->runner = EMU8086_APP_CODE_RUNNER(g_value_get_object(value));
         // emu8086_win_change_theme(self);
         // g_print("filename: %s\n", self->filename);
         break;
     case PROP_VBOX:
 
-        // self->priv->v_box = EMU_8086_APP_CODE_RUNNER(g_value_get_object(value));
+        // self->priv->v_box = EMU8086_APP_CODE_RUNNER(g_value_get_object(value));
         // emu8086_win_change_theme(self);
         // g_print("filename: %s\n", self->filename);
         break;
@@ -94,12 +96,12 @@ static void emu_8086_app_plugin_box_set_property(GObject *object,
 }
 
 static void
-emu_8086_app_plugin_box_get_property(GObject *object,
+emu8086_app_plugin_box_get_property(GObject *object,
                                      guint property_id,
                                      GValue *value,
                                      GParamSpec *pspec)
 {
-    Emu8086AppPluginBox *self = EMU_8086_APP_PLUGIN_BOX(object);
+    Emu8086AppPluginBox *self = EMU8086_APP_PLUGIN_BOX(object);
 
     switch ((Emu8086AppPluginBoxProperty)property_id)
     {
@@ -121,21 +123,21 @@ emu_8086_app_plugin_box_get_property(GObject *object,
     }
 }
 
-Emu8086AppPluginBox *emu_8086_app_plugin_box_new(GtkApplicationWindow *win, Emu8086AppCodeRunner *runner)
+Emu8086AppPluginBox *emu8086_app_plugin_box_new(GtkApplicationWindow *win, Emu8086AppCodeRunner *runner)
 {
-    return g_object_new(EMU_8086_APP_PLUGIN_BOX_TYPE,
+    return g_object_new(EMU8086_APP_PLUGIN_BOX_TYPE,
                         "window", win,
                         "runner", runner,
 "row-spacing", 30,
                         NULL);
 };
 
-static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
+static void emu8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->set_property = emu_8086_app_plugin_box_set_property;
-    object_class->get_property = emu_8086_app_plugin_box_get_property;
-    klass->get_stack = emu8086_app_window_get_stack;
+    object_class->set_property = emu8086_app_plugin_box_set_property;
+    object_class->get_property = emu8086_app_plugin_box_get_property;
+    // klass->get_stack = emu8086_app_window_get_stack;
     // PROP_MY_RUNNER;
 
     g_object_class_install_property(object_class,
@@ -144,7 +146,7 @@ static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
                                                         "Runner",
                                                         "",
 
-                                                        EMU_8086_APP_CODE_RUNNER_TYPE,
+                                                        EMU8086_APP_CODE_RUNNER_TYPE,
                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property(object_class,
@@ -153,13 +155,13 @@ static void emu_8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
                                                         "Window",
                                                         "",
 
-                                                        EMU_8086_APP_WINDOW_TYPE,
+                                                        EMU8086_APP_WINDOW_TYPE,
                                                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
-static void emu_8086_app_plugin_box_init(Emu8086AppPluginBox *box)
+static void emu8086_app_plugin_box_init(Emu8086AppPluginBox *box)
 {
-    box->priv = emu_8086_app_plugin_box_get_instance_private(box);
+    box->priv = emu8086_app_plugin_box_get_instance_private(box);
     PRIV_BOX;
 
     priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
@@ -199,9 +201,4 @@ on_extension_added(PeasExtensionSet *extensions,
     // peas_extension_call (exten, "kon",box);
     // peas_
     // peas_extension_set_call_valist
-}
-
-GtkWidget *emu8086_app_window_get_stack(Emu8086AppPluginBox *box)
-{
-    return GTK_WIDGET(box);
 }

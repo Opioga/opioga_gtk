@@ -4,12 +4,12 @@
 
 G_BEGIN_DECLS
 
-#define EMU_8086_APP_STYLE_SCHEME_TYPE (emu_8086_app_style_scheme_get_type())
-#define EMU_8086_STYLE_SCHEME_IS_scheme(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU_8086_APP_STYLE_SCHEME_TYPE))
+#define EMU8086_APP_STYLE_SCHEME_TYPE (emu8086_app_style_scheme_get_type())
+#define EMU8086_STYLE_SCHEME_IS_scheme(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU8086_APP_STYLE_SCHEME_TYPE))
 #define PRIV_STYLE_SCHEME Emu8086AppStyleSchemePrivate *priv = scheme->priv
-#define EMU_8086_APP_STYLE_SCHEME(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU_8086_APP_STYLE_SCHEME_TYPE, Emu8086AppStyleScheme))
-#define EMU_8086_APP_STYLE_SCHEME_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU_8086_APP_STYLE_SCHEME_TYPE, Emu8086AppStyleSchemeClass))
-#define EMU_8086_STYLE_SCHEME_IS_scheme_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_STYLE_SCHEME_TYPE)
+#define EMU8086_APP_STYLE_SCHEME(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU8086_APP_STYLE_SCHEME_TYPE, Emu8086AppStyleScheme))
+#define EMU8086_APP_STYLE_SCHEME_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU8086_APP_STYLE_SCHEME_TYPE, Emu8086AppStyleSchemeClass))
+#define EMU8086_STYLE_SCHEME_IS_scheme_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU8086_APP_STYLE_SCHEME_TYPE)
 
 typedef struct _Emu8086AppStyleSchemePrivate Emu8086AppStyleSchemePrivate;
 typedef struct _theme them;
@@ -63,12 +63,12 @@ typedef enum
 
 } Emu8086AppStyleSchemeProperty;
 
-GType emu_8086_app_style_scheme_get_type(void) G_GNUC_CONST;
+GType emu8086_app_style_scheme_get_type(void) G_GNUC_CONST;
 
-Emu8086AppStyleScheme *emu_8086_app_style_scheme_get_default();
-gchar *emu_8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index);
-gchar *emu_8086_app_style_scheme_get_color(Emu8086AppStyleScheme *scheme, const gchar *key);
-them ** emu_8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len);
+Emu8086AppStyleScheme *emu8086_app_style_scheme_get_default();
+gchar *emu8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index);
+gchar *emu8086_app_style_scheme_get_color(Emu8086AppStyleScheme *scheme, const gchar *key);
+them ** emu8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len);
 void emu8086_theme_free(them *themes);
 const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
                                            const GFile *file);

@@ -84,7 +84,7 @@ struct _Emu8086AppURdoManagerPrivate
 	guint has_saved_location : 1;
     guint running_user_action : 1;
 };
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppURdoManager, emu_8086_app_urdo_manager, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppURdoManager, emu8086_app_urdo_manager, G_TYPE_OBJECT);
 
 enum
 {
@@ -101,12 +101,12 @@ static void
 set_buffer(Emu8086AppURdoManager *manager,
            GtkTextBuffer *buffer);
 
-static void emu_8086_app_urdo_manager_set_property(GObject *object,
+static void emu8086_app_urdo_manager_set_property(GObject *object,
                                                    guint property_id,
                                                    const GValue *value,
                                                    GParamSpec *pspec)
 {
-    Emu8086AppURdoManager *self = EMU_8086_APP_URDO_MANAGER(object);
+    Emu8086AppURdoManager *self = EMU8086_APP_URDO_MANAGER(object);
     // g_print("l %d\n", *value);
 
     switch (property_id)
@@ -133,12 +133,12 @@ static void emu_8086_app_urdo_manager_set_property(GObject *object,
     }
 }
 static void
-emu_8086_app_urdo_manager_get_property(GObject *object,
+emu8086_app_urdo_manager_get_property(GObject *object,
                                        guint property_id,
                                        GValue *value,
                                        GParamSpec *pspec)
 {
-    Emu8086AppURdoManager *self = EMU_8086_APP_URDO_MANAGER(object);
+    Emu8086AppURdoManager *self = EMU8086_APP_URDO_MANAGER(object);
 
     switch (property_id)
     {
@@ -156,9 +156,9 @@ emu_8086_app_urdo_manager_get_property(GObject *object,
 }
 
 static void
-emu_8086_app_urdo_manager_dispose (GObject *object)
+emu8086_app_urdo_manager_dispose (GObject *object)
 {
-	Emu8086AppURdoManager *manager = EMU_8086_APP_URDO_MANAGER (object);
+	Emu8086AppURdoManager *manager = EMU8086_APP_URDO_MANAGER (object);
 
 	if (manager->priv->buffer != NULL)
 	{
@@ -168,34 +168,34 @@ emu_8086_app_urdo_manager_dispose (GObject *object)
 		manager->priv->buffer = NULL;
 	}
 
-	G_OBJECT_CLASS (emu_8086_app_urdo_manager_parent_class)->dispose (object);
+	G_OBJECT_CLASS (emu8086_app_urdo_manager_parent_class)->dispose (object);
 }
 
 static void
-emu_8086_app_urdo_manager_finalize (GObject *object)
+emu8086_app_urdo_manager_finalize (GObject *object)
 {
-	Emu8086AppURdoManager *manager = EMU_8086_APP_URDO_MANAGER (object);
+	Emu8086AppURdoManager *manager = EMU8086_APP_URDO_MANAGER (object);
 
 	g_queue_free_full (manager->priv->action_groups,
 			   (GDestroyNotify) action_group_free);
 
 	action_group_free (manager->priv->new_action_group);
 
-	G_OBJECT_CLASS (emu_8086_app_urdo_manager_parent_class)->finalize (object);
+	G_OBJECT_CLASS (emu8086_app_urdo_manager_parent_class)->finalize (object);
 }
 
 
 
-static void emu_8086_app_urdo_manager_class_init(Emu8086AppURdoManagerClass *klass)
+static void emu8086_app_urdo_manager_class_init(Emu8086AppURdoManagerClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->set_property = emu_8086_app_urdo_manager_set_property;
+    object_class->set_property = emu8086_app_urdo_manager_set_property;
 
-    object_class->get_property = emu_8086_app_urdo_manager_get_property;
+    object_class->get_property = emu8086_app_urdo_manager_get_property;
 
 
-	object_class->dispose = emu_8086_app_urdo_manager_dispose;
-	object_class->finalize = emu_8086_app_urdo_manager_finalize;
+	object_class->dispose = emu8086_app_urdo_manager_dispose;
+	object_class->finalize = emu8086_app_urdo_manager_finalize;
     g_object_class_install_property(object_class,
                                     PROP_MBUFFER,
                                     g_param_spec_object("buffer",
@@ -213,18 +213,18 @@ static void emu_8086_app_urdo_manager_class_init(Emu8086AppURdoManagerClass *kla
                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
-static void emu_8086_app_urdo_manager_init(Emu8086AppURdoManager *manager)
+static void emu8086_app_urdo_manager_init(Emu8086AppURdoManager *manager)
 {
-    manager->priv = emu_8086_app_urdo_manager_get_instance_private(manager);
-    PRIV_EMU_8086_APP_URDO_MANAGER;
+    manager->priv = emu8086_app_urdo_manager_get_instance_private(manager);
+    PRIV_EMU8086_APP_URDO_MANAGER;
    
    
     manager->priv->action_groups = g_queue_new();
 }
 
-Emu8086AppURdoManager *emu_8086_app_urdo_manager_new(GtkTextBuffer *buffer, gint max_undo)
+Emu8086AppURdoManager *emu8086_app_urdo_manager_new(GtkTextBuffer *buffer, gint max_undo)
 {
-    return g_object_new(EMU_8086_APP_URDO_MANAGER_TYPE,
+    return g_object_new(EMU8086_APP_URDO_MANAGER_TYPE,
                         "buffer", buffer,
                         "max-undo-levels", max_undo,
                         NULL);
@@ -301,13 +301,13 @@ update_can_undo_can_redo (Emu8086AppURdoManager *manager)
 	if (manager->priv->can_undo != can_undo)
 	{
 		manager->priv->can_undo = can_undo;
-		// emu_8086_app_urdo_manager_can_undo_changed (EMU_8086_APP_URDO_MANAGER (manager));
+		// emu8086_app_urdo_manager_can_undo_changed (EMU8086_APP_URDO_MANAGER (manager));
 	}
 
 	if (manager->priv->can_redo != can_redo)
 	{
 		manager->priv->can_redo = can_redo;
-		// emu_8086_app_urdo_manager_can_redo_changed (EMU_8086_APP_URDO_MANAGER (manager));
+		// emu8086_app_urdo_manager_can_redo_changed (EMU8086_APP_URDO_MANAGER (manager));
 	}
 }
 static void
@@ -1329,7 +1329,7 @@ set_buffer (Emu8086AppURdoManager *manager,
 
 
 void
-emu_8086_app_urdo_manager_undo_impl (Emu8086AppURdoManager *manager)
+emu8086_app_urdo_manager_undo_impl (Emu8086AppURdoManager *manager)
 {
  
 	GList *old_location;
@@ -1379,7 +1379,7 @@ emu_8086_app_urdo_manager_undo_impl (Emu8086AppURdoManager *manager)
 }
 
 void
-emu_8086_app_urdo_manager_redo_impl (Emu8086AppURdoManager *manager)
+emu8086_app_urdo_manager_redo_impl (Emu8086AppURdoManager *manager)
 {
  	GList *old_location;
 	GList *new_location;

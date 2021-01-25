@@ -22,14 +22,14 @@
 #define EMU_APP_C
 #include <gtk/gtk.h>
 
-#define EMU_8086_APP_TYPE (emu_8086_app_get_type())
-#define _PRIV Emu8086AppPrivate *priv = emu_8086_app_get_instance_private(app)
+#define EMU8086_APP_TYPE (emu8086_app_get_type())
+#define _PRIV Emu8086AppPrivate *priv = emu8086_app_get_instance_private(app)
 
-G_DECLARE_FINAL_TYPE(Emu8086App, emu_8086_app, EMU_8086, APP, GtkApplication)
-Emu8086App *emu_8086_app_new(void);
-void emu_8086_open_file(Emu8086App *app, GFile *file);
+G_DECLARE_FINAL_TYPE(Emu8086App, emu8086_app, EMU8086, APP, GtkApplication)
+Emu8086App *emu8086_app_new(void);
+void emu8086_app_open_file(Emu8086App *app, GFile *file);
 Emu8086App *
-emu_8086_app_get_default (void);
+emu8086_app_get_default (void);
 
 // void quit(Emu8086AppWindow *app);
 

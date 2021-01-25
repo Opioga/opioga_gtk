@@ -6,14 +6,14 @@
 #define LIBDIR "/usr/local/lib"
 #define DATADIR "/usr/local/share"
 #endif
-// #define EMU_DEBUG 1
+#define EMU_DEBUG 1
 #include <string.h>
 
 #include <glib/gi18n.h>
 #include <girepository.h>
 
-#include <emu_8086_plugins_engine.h>
-#include <emu_8086_app_main.h>
+#include <emu8086apppluginsengine.h>
+#include <emu8086appmain.h>
 
 struct _Emu8086PluginsEnginePrivate
 {

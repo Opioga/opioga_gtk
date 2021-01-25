@@ -17,8 +17,8 @@
 #include <gtk/gtk.h>
 
 #include <emu8086app.h>
-#include <emu8086win.h>
-#include <emu_8086_plugins_engine.h>
+#include <emu8086appwin.h>
+#include <emu8086apppluginsengine.h>
 #include <emu8086stylescheme.h>
 #include <emu8086appprefs.h>
 #include <libpeas-gtk/peas-gtk-plugin-manager.h>
@@ -243,7 +243,7 @@ static refresh_themes(Emu8086AppPrefs *dlg)
   gsize theme_size = 0;
  gtk_list_store_clear(priv->themes_treeview_model);
 
-  them **ths = emu_8086_app_style_scheme_get_themes(scheme, &theme_size);
+  them **ths = emu8086_app_style_scheme_get_themes(scheme, &theme_size);
   
   gchar *selected_theme = g_settings_get_string(priv->settings, "theme");
   
@@ -280,7 +280,7 @@ static void populate_schemes(Emu8086AppPrefs *dlg)
   Emu8086AppPrefsPrivate *priv = dlg->priv;
   GSList *schemes;
   GSList *l;
-  Emu8086AppStyleScheme *scheme = emu_8086_app_style_scheme_get_default();
+  Emu8086AppStyleScheme *scheme = emu8086_app_style_scheme_get_default();
 
   GtkTreePath *tree;
   GtkListStore *store;

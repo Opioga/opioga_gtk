@@ -1,0 +1,2 @@
+#ifndef _EMU_CODE_RUNNER_C
+#define _EMU_CODE_RUNNER_C

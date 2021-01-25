@@ -20,26 +20,26 @@
 
 
 
-#ifndef _EMU_EMU_8086_APP_URDO_MANAGER_C
-#define _EMU_EMU_8086_APP_URDO_MANAGER_C
+#ifndef _EMU_EMU8086_APP_URDO_MANAGER_C
+#define _EMU_EMU8086_APP_URDO_MANAGER_C
 #include <gtk/gtk.h>
+#include "emu8086apptypes.h"
 
 
 G_BEGIN_DECLS
 
-#define EMU_8086_APP_URDO_MANAGER_TYPE (emu_8086_app_urdo_manager_get_type())
+#define EMU8086_APP_URDO_MANAGER_TYPE (emu8086_app_urdo_manager_get_type())
 
-#define EMU_8086_APP_URDO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU_8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManager))
-#define EMU_8086_APP_URDO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU_8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManagerClass))
-#define EMU_8086_IS_APP_EMU_8086_APP_URDO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU_8086_APP_URDO_MANAGER_TYPE))
-#define EMU_8086_IS_APP_EMU_8086_APP_URDO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EMU_8086_APP_URDO_MANAGER_TYPE))
-#define EMU_8086_APP_URDO_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), EMU_8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManagerClass))
-#define PRIV_EMU_8086_APP_URDO_MANAGER Emu8086AppURdoManagerPrivate *priv = manager->priv
+#define EMU8086_APP_URDO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), EMU8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManager))
+#define EMU8086_APP_URDO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManagerClass))
+#define EMU8086_IS_APP_EMU8086_APP_URDO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), EMU8086_APP_URDO_MANAGER_TYPE))
+#define EMU8086_IS_APP_EMU8086_APP_URDO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EMU8086_APP_URDO_MANAGER_TYPE))
+#define EMU8086_APP_URDO_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), EMU8086_APP_URDO_MANAGER_TYPE, Emu8086AppURdoManagerClass))
+#define PRIV_EMU8086_APP_URDO_MANAGER Emu8086AppURdoManagerPrivate *priv = manager->priv
 
-// #define PRIV_EMU_8086_APP_URDO_MANAGER Emu8086AppURdoManagerPrivate *priv = manager->priv
+// #define PRIV_EMU8086_APP_URDO_MANAGER Emu8086AppURdoManagerPrivate *priv = manager->priv
 
-// G_DECLARE_FINAL_TYPE(Emu8086AppURdoManager, emu_8086_app_urdo_manager, EMU_8086, APP_EMU_8086_APP_URDO_MANAGER, GtkTextManager)
-typedef struct _Emu8086AppURdoManager Emu8086AppURdoManager;
+// G_DECLARE_FINAL_TYPE(Emu8086AppURdoManager, emu8086_app_urdo_manager, EMU8086, APP_EMU8086_APP_URDO_MANAGER, GtkTextManager)
 typedef struct _Emu8086AppURdoManagerClass Emu8086AppURdoManagerClass;
 typedef struct _Emu8086AppURdoManagerPrivate Emu8086AppURdoManagerPrivate;
 
@@ -59,17 +59,17 @@ struct _Emu8086AppURdoManagerClass
     void (*redo)(Emu8086AppURdoManager *manager);
     gpointer padding[20];
 };
-GType emu_8086_app_urdo_manager_get_type(void) G_GNUC_CONST;
+GType emu8086_app_urdo_manager_get_type(void) G_GNUC_CONST;
 
-Emu8086AppURdoManager *emu_8086_app_urdo_manager_new(GtkTextBuffer *buffer, gint max_undo);
+Emu8086AppURdoManager *emu8086_app_urdo_manager_new(GtkTextBuffer *buffer, gint max_undo);
 
 // TODO implement redo and undo 
-void emu_8086_app_urdo_manager_redo(Emu8086AppURdoManager *manager);
-void emu_8086_app_urdo_manager_undo(Emu8086AppURdoManager *manager);
+void emu8086_app_urdo_manager_redo(Emu8086AppURdoManager *manager);
+void emu8086_app_urdo_manager_undo(Emu8086AppURdoManager *manager);
 void
-emu_8086_app_urdo_manager_undo_impl (Emu8086AppURdoManager *manager);
+emu8086_app_urdo_manager_undo_impl (Emu8086AppURdoManager *manager);
 void
-emu_8086_app_urdo_manager_redo_impl (Emu8086AppURdoManager *manager);
+emu8086_app_urdo_manager_redo_impl (Emu8086AppURdoManager *manager);
 G_END_DECLS
 
 #endif
