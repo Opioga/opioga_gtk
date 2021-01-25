@@ -35,6 +35,7 @@ emu8086apppluginsengine.c \
 emu8086stylescheme.c \
 emu8086appuredomanager.c \
 emu8086searchbar.c \
+emu8086appsidepane.c \
 emu8086app.c \
 emu8086appprefs.c \
 emu8086aboutwin.c 
@@ -60,6 +61,7 @@ INST_H_FILES =			\
     $(top_srcdir)/include/emu8086searchbar.h \
     $(top_srcdir)/include/emu8086app.h \
     $(top_srcdir)/include/emu8086appprefs.h \
+    $(top_srcdir)/include/emu8086appsidepane.h \
     $(top_srcdir)/include/emu8086aboutwin.h 
 
 

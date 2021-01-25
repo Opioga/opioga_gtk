@@ -23,11 +23,13 @@
 #include <emu8086.h>
 #include <assembler.h>
 
+G_BEGIN_DECLS
+
 #define PRIV Emu8086AppWindowPrivate *priv = win->priv
 #define EMU8086_APP_WINDOW_TYPE (emu8086_app_window_get_type())
 G_DECLARE_FINAL_TYPE(Emu8086AppWindow, emu8086_app_window, EMU8086, APP_WINDOW, GtkApplicationWindow)
 
-G_BEGIN_DECLS
+
 
 
 typedef struct _Emu8086AppWindowState Emu8086AppWindowState;

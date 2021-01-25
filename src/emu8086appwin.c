@@ -18,6 +18,8 @@
 #include <emu8086stylescheme.h>
 #include <emu8086searchbar.h>
 #include <emu8086appcode.h>
+#include <emu8086appsidepane.h>
+
 #include <emu8086appcodebuffer.h>
 #include <emu8086apprunner.h>
 #include <emu8086apppluginbox.h>
@@ -42,25 +44,11 @@ struct _Emu8086AppWindowPrivate
     PeasExtensionSet *exten_set;
 
     guint tos;
-    // GtkWidget *AX_;
-    // GtkWidget *CX_;
-    // GtkWidget *DX_;
-    // GtkWidget *BX_;
-    // GtkWidget *SP_;
-    // GtkWidget *BP_;
-    // GtkWidget *SI_;
-    // GtkWidget *DI_;
 
-    // GtkWidget *FLAGS_;
-    // GtkWidget *IP_;
-    // GtkWidget *CS_;
-    // GtkWidget *DS_;
-    // GtkWidget *ip;
-    // GtkWidget *SS_;
     GtkWidget *stack;
     GtkWidget *spinner;
     GtkWidget *tool_bar;
-    GtkWidget *ES_;
+
     Emu8086AppCode *code;
     Emu8086AppCodeRunner *runner;
 
@@ -237,7 +225,7 @@ static void open_memory(Emu8086AppWindow *win, gboolean b)
 static void emu8086_window_set_search(Emu8086AppWindow *win, gboolean b)
 {
 
-     g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
+    g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
     win->priv->search_show = b;
     g_object_notify(G_OBJECT(win), "search-show");
 }
@@ -367,6 +355,15 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     gtk_widget_init_template(GTK_WIDGET(win));
     win->priv = emu8086_app_window_get_instance_private(win);
     PRIV;
+    priv->revealer = emu8086_app_side_pane_new(GTK_(win));
+    gtk_revealer_set_transition_type(GTK_REVEALER(priv->revealer), GTK_REVEALER_TRANSITION_TYPE_SLIDE_RIGHT);
+    gtk_widget_show_all(priv->revealer);
+
+    priv->scrolled = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_show_all(priv->scrolled);
+    gtk_container_add(GTK_CONTAINER(priv->stack), priv->revealer);
+    gtk_container_add(GTK_CONTAINER(priv->stack), priv->scrolled);
+
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2;
     priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
@@ -576,7 +573,7 @@ static void _open(Emu8086AppWindow *win)
 
 static gboolean
 emu8086_window_key_press_event(GtkWidget *widget,
-                                GdkEventKey *event)
+                               GdkEventKey *event)
 {
     static gpointer grand_parent_class = NULL;
     gboolean handled = FALSE;
@@ -768,9 +765,9 @@ static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWi
 
 static void
 emu8086_window_set_property(GObject *object,
-                             guint property_id,
-                             const GValue *value,
-                             GParamSpec *pspec)
+                            guint property_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
 {
     Emu8086AppWindow *self = EMU8086_APP_WINDOW(object);
     // g_print("l %d\n", *value);
@@ -826,9 +823,9 @@ emu8086_window_set_property(GObject *object,
 }
 static void
 emu8086_window_get_property(GObject *object,
-                             guint property_id,
-                             GValue *value,
-                             GParamSpec *pspec)
+                            guint property_id,
+                            GValue *value,
+                            GParamSpec *pspec)
 {
     Emu8086AppWindow *self = EMU8086_APP_WINDOW(object);
 
@@ -862,26 +859,11 @@ static void emu8086_app_window_class_init(Emu8086AppWindowClass *class)
     widget_class->key_press_event = emu8086_window_key_press_event;
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, gears);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, spinner);
-    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, revealer);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, messages);
+    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, stack);
 
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, tool_bar);
-    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, stack);
-    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, scrolled);
-    gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, messages);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, FLAGS_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, AX_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, BX_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, CX_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, DX_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, SP_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, BP_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, SI_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, DI_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, DS_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, SS_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ip);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, CS_);
-    // gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, ES_);
+
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, revealer_search);
 
     g_object_class_install_property(object_class, PROP_THEME,
@@ -1448,12 +1430,6 @@ void emu8086_app_window_up(Emu8086AppWindow *win)
     //  g_print("herre %s\n", "string");
 }
 
-char *milli(GtkWidget *label, char *r, int reg)
-{
-    char buf[9];
-    sprintf(buf, "%s: %04x", r, reg);
-    gtk_label_set_text(GTK_LABEL(label), buf);
-}
 
 static void emu8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointer user_data)
 {
@@ -1462,6 +1438,7 @@ static void emu8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointe
     struct emu8086 *aCPU;
     aCPU = getCPU(runner);
     PRIV;
+    emu8086_app_side_pane_update_view(EMU8086_APP_SIDE_PANE(priv->revealer),aCPU->mSFR);
     // milli(priv->AX_, "AX", AX);
     // milli(priv->BX_, "BX", BX);
 
@@ -1674,8 +1651,6 @@ GtkWidget *emu8086_app_window_get_revealer(Emu8086AppWindow *win)
     return priv->revealer;
 }
 
-
-
 gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win)
 {
     GtkWidget *dialog;
@@ -1761,6 +1736,3 @@ gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win)
     }
     gtk_widget_destroy(dialog);
 }
-
-
-
