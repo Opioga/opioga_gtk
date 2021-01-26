@@ -71,8 +71,19 @@ static void emu8086_app_side_pane_class_init(Emu8086AppSidePaneClass *klass)
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    // object_class->set_property = emu8086_app_side_pane_set_property;
-    // object_class->get_property = emu8086_app_side_pane_get_property;
+
+    
+    object_class->set_property = emu8086_app_side_pane_set_property;
+    object_class->get_property = emu8086_app_side_pane_get_property;
+
+    g_object_class_install_property(object_class,
+                                    PROP_SIDE_PANE_WINDOW,
+                                    g_param_spec_object("window",
+                                                        "Window",
+                                                        "The side panel's window",
+
+                                                        EMU8086_APP_WINDOW_TYPE,
+                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void emu8086_app_side_pane_init(Emu8086AppSidePane *pane)
@@ -123,11 +134,11 @@ static void emu8086_app_side_pane_set_property(GObject *object,
 {
     Emu8086AppSidePane *pane = EMU8086_APP_SIDE_PANE(object);
     PRIV_SP;
-
+ gpointer v;
     switch ((Emu8086AppSidePaneProperty)property_id)
     {
     case PROP_SIDE_PANE_WINDOW:
-        gpointer v = g_value_get_object(value);
+        v = g_value_get_object(value);
         if (v != NULL)
             priv->window = EMU8086_APP_WINDOW(v);
         break;
@@ -165,7 +176,7 @@ static void emu8086_app_side_pane_get_property(GObject *object,
     }
 }
 
-void milli(GtkWidget *label, char *r, unsigned short reg)
+void milli(GtkLabel *label, char *r, unsigned short reg)
 {
     char buf[20];
     sprintf(buf, "%s: %04x", r, reg);
@@ -205,6 +216,12 @@ void emu8086_app_side_pane_update_view(Emu8086AppSidePane *pane, unsigned short 
 
         milli(label, ren, value);
         //     // sprintf(buf, "%s: %04x", r, value);
-        g_print("%s\n %d", ren, value);
+      
     }
+}
+
+
+GtkWidget *emu8086_app_side_pane_get_box(Emu8086AppSidePane *pane){
+    PRIV_SP;
+    return priv->box;
 }

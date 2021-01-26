@@ -40,6 +40,6 @@ GType emu8086_app_side_pane_get_type(void) G_GNUC_CONST;
 Emu8086AppSidePane *emu8086_app_side_pane_new(GtkApplicationWindow *window);
 gboolean *emu8086_app_side_pane_use_default(Emu8086AppSidePane *pane,gboolean use_default);
 void emu8086_app_side_pane_update_view(Emu8086AppSidePane *pane, unsigned short *values);
-
+GtkWidget *emu8086_app_side_pane_get_box(Emu8086AppSidePane *pane);
 G_END_DECLS
 #endif

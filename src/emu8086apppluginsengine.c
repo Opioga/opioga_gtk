@@ -6,7 +6,8 @@
 #define LIBDIR "/usr/local/lib"
 #define DATADIR "/usr/local/share"
 #endif
-#define EMU_DEBUG 1
+
+
 #include <string.h>
 
 #include <glib/gi18n.h>

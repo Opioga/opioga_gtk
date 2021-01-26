@@ -10,10 +10,15 @@
       </item>
     </section>
     <section>
+          <item>
+        <attribute name="label" translatable="yes">Open Bottom Pane</attribute>
+        <attribute name="action">win.open_bottom_pane</attribute>
+
+      </item>
       <item>
         <attribute name="label" translatable="yes">Open Memory</attribute>
         <attribute name="action">win.open_mem</attribute>
-
+        <attribute name="accel">&lt;Primary&gt;g</attribute>
       </item>
     </section>
   </menu>

@@ -65,11 +65,13 @@ gchar *emu8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *bu
 gboolean emu8086_app_window_save_doc(Emu8086AppWindow *win);
 
 GtkWidget *emu8086_app_window_get_revealer(Emu8086AppWindow *win);
-
+GtkWidget *emu8086_app_window_get_bottom_pane(Emu8086AppWindow *win);
+GtkWidget *emu8086_app_window_get_bottom_bar(Emu8086AppWindow *win);
+GtkWidget *emu8086_app_window_get_left_box(Emu8086AppWindow *win);
 
 
 GtkWidget *emu8086_app_window_get_stack(Emu8086AppWindow *win);
 gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win);
-
+void emu8086_app_window_set_bottom_pane(Emu8086AppWindow *win, gboolean open);
 G_END_DECLS
 #endif /* __EXAMPLEAPPWIN_H */

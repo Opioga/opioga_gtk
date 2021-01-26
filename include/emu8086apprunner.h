@@ -97,6 +97,6 @@ void open_help();
 void _step(Emu8086AppCodeRunner *runner);
 void stop(Emu8086AppCodeRunner *runner, gboolean reset);
 struct emu8086 *getCPU(Emu8086AppCodeRunner *runner);
-
+gchar *emu8086_app_code_runner_get_errors(Emu8086AppCodeRunner *runner);
 G_END_DECLS
 #endif

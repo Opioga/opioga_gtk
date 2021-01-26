@@ -44,6 +44,8 @@ emu8086aboutwin.c
 emu8086_SOURCES = \
 resources.c \
 pango_css.c \
+emu8086apperrtextview.c \
+emu8086apptopgutter.c \
 $(emu8086app_c_files) \
 main.c 
 

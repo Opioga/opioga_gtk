@@ -6,7 +6,7 @@
     <file preprocess="xml-stripblanks">ui/menu.ui</file>
     <file preprocess="xml-stripblanks">ui/gears.ui</file>
     <file preprocess="xml-stripblanks">ui/pref.ui</file>
-
+    <file>ui/errtv.ui</file>
     <file>css/text.css</file>
     <file>pics/emu8086.png</file>
   </gresource>

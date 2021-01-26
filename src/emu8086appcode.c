@@ -184,7 +184,7 @@ emu8086_app_code_set_property(GObject *object,
     {
     case PROP_FONT:
 
-        gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+     
         v = g_value_get_string(value);
         desc = pango_font_description_from_string(v);
         // m = emu8086_pango_font_description_to_css(desc, emu8086_app_style_scheme_get_color_by_index(priv->scheme, 5));
@@ -807,7 +807,7 @@ Emu8086AppCode *create_new(Emu8086AppWindow *win)
     gtk_window_add_accel_group(GTK_WINDOW(win), ag);
     priv->win = win;
     priv->ag = ag;
-    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
+  //  g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 
     // g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);

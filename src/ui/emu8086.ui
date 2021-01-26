@@ -8,7 +8,7 @@
       <placeholder/>
     </child>
     <child>
-      <object class="GtkBox">
+      <object class="GtkBox" id="main_box">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
@@ -70,34 +70,28 @@
             <property name="position">1</property>
           </packing>
         </child>
-        <child>
-          <object class="GtkBox" id="stack">
+
+ <child>
+          <object class="GtkBox" id="editor_box">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+               <property name="orientation">vertical</property>
+           <property name="margin_top">2</property>
 
-            <!-- <child>
-              <object class="GtkScrolledWindow" id="scrolled">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="padding">3</property>
-                <property name="position">1</property>
-              </packing>
-            </child> -->
+
+
+
+
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">4</property>
           </packing>
         </child>
+
+ 
+ 
         <child>
           <object class="GtkRevealer" id="revealer_search">
             <property name="visible">True</property>
@@ -113,19 +107,23 @@
             <property name="position">3</property>
           </packing>
         </child>
+      
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="bottom_bar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="margin_left">6</property>
             <property name="margin_right">3</property>
-            <property name="margin_top">7</property>
+            <property name="margin_top">5</property>
             <property name="margin_bottom">6</property>
             <property name="spacing">11</property>
             <child>
-              <object class="GtkSpinner" id="spinner">
+              <object class="GtkBox" id="left_box">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                        <property name="orientation">horizontal</property>
+            <property name="spacing">5</property>
+
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -144,24 +142,13 @@
                 <property name="position">1</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkLabel" id="ip">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">IP</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="pack_type">end</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
+
+
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">5</property>
           </packing>
         </child>
       </object>

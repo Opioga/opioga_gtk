@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<interface>
+
+    <menu id="err_tv_menu">
+      <section>
+        <item>
+            <attribute name="label" translatable="yes">Clear All Errors</attribute>
+            <attribute name="action">err_text_view.clear</attribute>
+
+        </item>
+        <item>
+            <attribute name="label" translatable="yes">Close Bottom Pane</attribute>
+            <attribute name="action">err_text_view.close_bottom_pane</attribute>
+
+        </item>
+        
+    </section>
+    </menu>
+
+</interface>
+
