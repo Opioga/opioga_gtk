@@ -6108,7 +6108,7 @@ void test_addr16_i16(struct emu8086 *aCPU, int *handled)
 
     unsigned short *op2 = NULL, *op3 = NULL, value;
     op1 = &opn;
- unsigned char reg = (opn & 0b00111000) >> 3;
+    unsigned char reg = (opn & 0b00111000) >> 3;
     if (reg == 2)
     {
         return not_addr16(aCPU, handled);
@@ -6180,7 +6180,6 @@ void test_addr16_i16(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-
 void not_addr16(struct emu8086 *aCPU, int *handled)
 {
     unsigned short offset = 0;
@@ -6221,8 +6220,8 @@ void not_addr16(struct emu8086 *aCPU, int *handled)
     }
 
     value = (*op1);
-    
-    value |= (*(op1 +1)<< 8);
+
+    value |= (*(op1 + 1) << 8);
     invert_bits(&value, 16, 0xffff);
     *op1 = value & 0xff;
     *(op1 + 1) = value >> 8;
@@ -6230,7 +6229,6 @@ void not_addr16(struct emu8086 *aCPU, int *handled)
     IP++;
     return;
 }
-
 
 void neg_addr16(struct emu8086 *aCPU, int *handled)
 {
@@ -6256,7 +6254,7 @@ void neg_addr16(struct emu8086 *aCPU, int *handled)
     {
         value = 0;
 
-  value = *op4;
+        value = *op4;
         invert_bits(&value, 16, 0xffff);
 
         value += 1;
@@ -6272,8 +6270,8 @@ void neg_addr16(struct emu8086 *aCPU, int *handled)
     }
 
     value = (*op1);
-    
-    value |= (*(op1 +1)<< 8);
+
+    value |= (*(op1 + 1) << 8);
     invert_bits(&value, 16, 0xffff);
     value += 1;
     *op1 = value & 0xff;
@@ -6309,13 +6307,11 @@ void mul_addr16(struct emu8086 *aCPU, int *handled)
         value = 0;
 
         value = *op4;
-        
 
         int temp = value;
         temp *= AX;
         DX = temp >> 16;
         AX = temp & 0xffff;
-
 
         *handled = 1;
         IP++;
@@ -6326,21 +6322,20 @@ void mul_addr16(struct emu8086 *aCPU, int *handled)
         IP++;
         return;
     }
-   value = (*op1);
-    
-    value |= (*(op1 +1)<< 8);
+    value = (*op1);
 
-        int temp = value;
-        temp *= AX;
-      
-        DX = temp >> 16;
-        AX = temp & 0xffff;
+    value |= (*(op1 + 1) << 8);
+
+    int temp = value;
+    temp *= AX;
+
+    DX = temp >> 16;
+    AX = temp & 0xffff;
 
     *handled = 1;
     IP++;
     return;
 }
-
 
 void imul_addr16(struct emu8086 *aCPU, int *handled)
 {
@@ -6362,8 +6357,8 @@ void imul_addr16(struct emu8086 *aCPU, int *handled)
         op1 += offset;
         // offset = INSTRUCTIONS->value;
     }
-  
-      else if (get_ops_reg_8(aCPU, opn, &op3, &op4))
+
+    else if (get_ops_reg_8(aCPU, opn, &op3, &op4))
     {
         value = 0;
 
@@ -6374,7 +6369,6 @@ void imul_addr16(struct emu8086 *aCPU, int *handled)
         DX = temp >> 16;
         AX = temp & 0xffff;
 
-
         *handled = 1;
         IP++;
         return;
@@ -6384,23 +6378,20 @@ void imul_addr16(struct emu8086 *aCPU, int *handled)
         IP++;
         return;
     }
-   value = (*op1);
-    
-    value |= (*(op1 +1)<< 8);
+    value = (*op1);
 
+    value |= (*(op1 + 1) << 8);
 
-        int temp = value;
-        temp *= AX;
-        setFlags(aCPU, temp);
-        DX = temp >> 16;
-        AX = temp & 0xffff;
+    int temp = value;
+    temp *= AX;
+    setFlags(aCPU, temp);
+    DX = temp >> 16;
+    AX = temp & 0xffff;
 
     *handled = 1;
     IP++;
     return;
 }
-
-
 
 void div_addr16(struct emu8086 *aCPU, int *handled)
 {
@@ -6411,7 +6402,7 @@ void div_addr16(struct emu8086 *aCPU, int *handled)
     unsigned short dividend, modulus;
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
-    is_16 =1;
+    is_16 = 1;
     if (opn == 0x36)
     {
         IP++;
@@ -6428,12 +6419,11 @@ void div_addr16(struct emu8086 *aCPU, int *handled)
         value = 0;
 
         value = *op4;
-       // // printf("%x %x %d %x", value, AX, high_reg, *op4);
-   int temp = AX;
-   temp|= (DX << 16);
-   dividend = temp / value;
-   modulus =  temp % value;
-  
+        // // printf("%x %x %d %x", value, AX, high_reg, *op4);
+        int temp = AX;
+        temp |= (DX << 16);
+        dividend = temp / value;
+        modulus = temp % value;
 
         AX = dividend;
         DX = modulus;
@@ -6449,21 +6439,19 @@ void div_addr16(struct emu8086 *aCPU, int *handled)
         return;
     }
     value = *op1;
-        value |= (*(op1 +1)<< 8);
+    value |= (*(op1 + 1) << 8);
 
-   int temp = AX;
-   temp|= (DX << 16);
-   dividend = temp / value;
-   modulus =  temp % value;
-  
+    int temp = AX;
+    temp |= (DX << 16);
+    dividend = temp / value;
+    modulus = temp % value;
 
-        AX = dividend;
-        DX = modulus;
+    AX = dividend;
+    DX = modulus;
     *handled = 1;
     IP++;
     return;
 }
-
 
 void idiv_addr16(struct emu8086 *aCPU, int *handled)
 {
@@ -6474,7 +6462,7 @@ void idiv_addr16(struct emu8086 *aCPU, int *handled)
     unsigned short dividend, modulus;
 
     unsigned short *op2, *op3 = NULL, *op4 = NULL, value;
-    is_16 =1;
+    is_16 = 1;
     if (opn == 0x3e)
     {
         IP++;
@@ -6491,12 +6479,11 @@ void idiv_addr16(struct emu8086 *aCPU, int *handled)
         value = 0;
 
         value = *op4;
-       // // printf("%x %x %d %x", value, AX, high_reg, *op4);
-   int temp = AX;
-   temp|= (DX << 16);
-   dividend = temp / value;
-   modulus =  temp % value;
-  
+        // // printf("%x %x %d %x", value, AX, high_reg, *op4);
+        int temp = AX;
+        temp |= (DX << 16);
+        dividend = temp / value;
+        modulus = temp % value;
 
         AX = dividend;
         DX = modulus;
@@ -6512,21 +6499,19 @@ void idiv_addr16(struct emu8086 *aCPU, int *handled)
         return;
     }
     value = *op1;
-        value |= (*(op1 +1)<< 8);
+    value |= (*(op1 + 1) << 8);
 
-   int temp = AX;
-   temp|= (DX << 16);
-   dividend = temp / value;
-   modulus =  temp % value;
-  
+    int temp = AX;
+    temp |= (DX << 16);
+    dividend = temp / value;
+    modulus = temp % value;
 
-        AX = dividend;
-        DX = modulus;
+    AX = dividend;
+    DX = modulus;
     *handled = 1;
     IP++;
     return;
 }
-
 
 void test_addr8_i8(struct emu8086 *aCPU, int *handled)
 {
@@ -6581,7 +6566,7 @@ void test_addr8_i8(struct emu8086 *aCPU, int *handled)
         value = *(CODE_SEGMENT_IP);
 
         value &= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
-setFlags(aCPU, value);
+        setFlags(aCPU, value);
         *handled = 1;
         IP++;
         return;
@@ -6839,8 +6824,8 @@ void div_addr8(struct emu8086 *aCPU, int *handled)
 
         value = (high_reg == 3 ? (*op4 >> 8) : (*op4 & 0xff));
         // printf("%x %x %d %x", value, AX, high_reg, *op4);
-    dividend = AX / value;
-    modulus =  AX % value;
+        dividend = AX / value;
+        modulus = AX % value;
         value = dividend;
         value |= (modulus << 8);
 
@@ -6858,7 +6843,7 @@ void div_addr8(struct emu8086 *aCPU, int *handled)
     }
     value = *op1;
     dividend = AX / value;
-    modulus =  AX % value;
+    modulus = AX % value;
     value = dividend;
     value |= (modulus << 8);
     AX = value;
@@ -6894,8 +6879,8 @@ void idiv_addr8(struct emu8086 *aCPU, int *handled)
 
         value = (high_reg == 3 ? (*op4 >> 8) : (*op4 & 0xff));
         // printf("%x %x %d %x", value, AX, high_reg, *op4);
-     dividend = AX / value;
-    modulus =  AX % value;
+        dividend = AX / value;
+        modulus = AX % value;
         value = dividend;
         value |= (modulus << 8);
 
@@ -6912,8 +6897,8 @@ void idiv_addr8(struct emu8086 *aCPU, int *handled)
         return;
     }
     value = *op1;
-   dividend = AX / value;
-    modulus =  AX % value;
+    dividend = AX / value;
+    modulus = AX % value;
     value = dividend;
     value |= (modulus << 8);
     AX = value;

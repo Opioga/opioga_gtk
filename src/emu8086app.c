@@ -66,9 +66,10 @@ emu8086_activate(GApplication *app)
     Emu8086AppWindow *win;
     _PRIV;
     win = emu8086_app_window_new(EMU8086_APP(app));
-    priv->win = win; emu8086_app_window_set_app(win, app);
+    priv->win = win;
+    emu8086_app_window_set_app(win, app);
     emu8086_app_window_up(win);
-   
+
     gtk_window_present(GTK_WINDOW(win));
 }
 
@@ -78,19 +79,18 @@ void emu8086_app_open_file(Emu8086App *app, GFile *file)
     Emu8086AppWindow *win; // *win;
 
     win = emu8086_app_window_new(EMU8086_APP(app));
-     emu8086_app_window_set_app(win, app);
+    emu8086_app_window_set_app(win, app);
     emu8086_app_window_open(win, file);
 
-   
     gtk_window_present(GTK_WINDOW(win));
 
     priv->win = win;
 }
 
 void emu8086_app_open(GApplication *appe,
-                   GFile **files,
-                   gint n_files,
-                   const gchar *hint)
+                      GFile **files,
+                      gint n_files,
+                      const gchar *hint)
 {
     Emu8086App *app;
     app = EMU8086_APP(appe); // GList *windows;
@@ -162,8 +162,8 @@ save_activated(GSimpleAction *action,
 }
 static void
 emu8086_action3(GSimpleAction *action,
-                 GVariant *parameter,
-                 gpointer appe)
+                GVariant *parameter,
+                gpointer appe)
 {
     Emu8086App *app = EMU8086_APP(appe);
     _PRIV;
@@ -235,8 +235,8 @@ pref_activated(GSimpleAction *action,
     gtk_widget_show_all(prefs);
 }
 static void emu8086_app_open_doc(GSimpleAction *action,
-                             GVariant *parameter,
-                             gpointer app)
+                                 GVariant *parameter,
+                                 gpointer app)
 {
     GtkWindow *win;
 
@@ -367,7 +367,6 @@ emu8086_app_get_default(void)
 
     return app;
 }
-
 
 void emu8086_app_quick_message(GtkWindow *parent, gchar *message, gchar *title)
 {

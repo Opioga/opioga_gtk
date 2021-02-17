@@ -60,7 +60,7 @@ static const GOptionEntry options[] =
         {"new-document", '\0', 0, G_OPTION_ARG_NONE, &new_document_option,
          N_("Create a new document in an existing instance of emu8086"), NULL},
 
- /* collects file arguments */
+        /* collects file arguments */
 
         {NULL}};
 
@@ -86,13 +86,14 @@ emu8086_get_command_line_data(void)
 
 int main(int argc, char *argv[])
 {
-    Emu8086App *a;GOptionContext *context;
+    Emu8086App *a;
+    GOptionContext *context;
     a = emu8086_app_get_default();
     context = g_option_context_new(_("- Edit text files"));
     g_application_add_main_option_entries(a, options);
     //g_option_context_add_group(context, gtk_get_option_group(TRUE));
-//
-   
+    //
+
     Emu8086PluginsEngine *engine;
 
     GError *error = NULL;
@@ -110,10 +111,10 @@ int main(int argc, char *argv[])
         g_option_context_free(context);
         return 1;
     }
-    // 
+    //
 
     engine = emu8086_plugins_engine_get_default();
     // a = emu8086_app_get_default();
     g_application_run(G_APPLICATION(a), argc, argv);
-   g_option_context_free(context);
+    g_option_context_free(context);
 }

@@ -113,7 +113,7 @@ menu_item_activate_rem_bps_cb(GSimpleAction *action,
 }
 
 static gboolean emu8086_app_code_popup_menu(GtkTextView *text_view,
-                                             GtkWidget *popup)
+                                            GtkWidget *popup)
 {
     Emu8086AppCode *code = EMU8086_APP_CODE(text_view);
     Emu8086AppCodeBuffer *buffer;
@@ -169,9 +169,9 @@ static gchar *emu8086_app_code_change_color(Emu8086AppCode *code)
 
 static void
 emu8086_app_code_set_property(GObject *object,
-                               guint property_id,
-                               const GValue *value,
-                               GParamSpec *pspec)
+                              guint property_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
 {
     Emu8086AppCode *code = EMU8086_APP_CODE(object);
     PRIV_CODE;
@@ -184,7 +184,6 @@ emu8086_app_code_set_property(GObject *object,
     {
     case PROP_FONT:
 
-     
         v = g_value_get_string(value);
         desc = pango_font_description_from_string(v);
         // m = emu8086_pango_font_description_to_css(desc, emu8086_app_style_scheme_get_color_by_index(priv->scheme, 5));
@@ -225,9 +224,9 @@ emu8086_app_code_set_property(GObject *object,
 }
 static void
 emu8086_app_code_get_property(GObject *object,
-                               guint property_id,
-                               GValue *value,
-                               GParamSpec *pspec)
+                              guint property_id,
+                              GValue *value,
+                              GParamSpec *pspec)
 {
     Emu8086AppCode *self = EMU8086_APP_CODE(object);
     switch ((Emu8086AppCodeProperty)property_id)
@@ -251,12 +250,12 @@ emu8086_app_code_get_property(GObject *object,
 
 static void
 emu8086_app_code_drag_data_received(GtkWidget *widget,
-                                     GdkDragContext *context,
-                                     gint x,
-                                     gint y,
-                                     GtkSelectionData *selection_data,
-                                     guint info,
-                                     guint timestamp)
+                                    GdkDragContext *context,
+                                    gint x,
+                                    gint y,
+                                    GtkSelectionData *selection_data,
+                                    guint info,
+                                    guint timestamp)
 {
     Emu8086AppCode *code;
     code = EMU8086_APP_CODE(widget);
@@ -267,7 +266,7 @@ emu8086_app_code_drag_data_received(GtkWidget *widget,
 }
 static gboolean
 emu8086_app_code_draw(GtkWidget *widget,
-                       cairo_t *cr)
+                      cairo_t *cr)
 {
     Emu8086AppCode *code = EMU8086_APP_CODE(widget);
     PRIV_CODE;
@@ -392,7 +391,7 @@ static gboolean check_prev_line(GtkTextBuffer *buffer, gint line)
 
 static gboolean
 emu8086_app_code_key_press_event(GtkWidget *widget,
-                                  GdkEventKey *event)
+                                 GdkEventKey *event)
 {
     Emu8086AppCode *code;
     GtkTextBuffer *buf;
@@ -436,10 +435,10 @@ emu8086_app_code_key_press_event(GtkWidget *widget,
 }
 
 static void emu8086_app_code_paint_line_background(GtkTextView *text_view,
-                                                    cairo_t *cr,
-                                                    int y, /* in buffer coordinates */
-                                                    int height,
-                                                    const GdkRGBA *color)
+                                                   cairo_t *cr,
+                                                   int y, /* in buffer coordinates */
+                                                   int height,
+                                                   const GdkRGBA *color)
 {
     gdouble x1, y1, x2, y2;
 
@@ -454,7 +453,7 @@ static void emu8086_app_code_paint_line_background(GtkTextView *text_view,
 
 static void emu8086_app_code_paint_current_line_highlight(GtkTextView *view,
 
-                                                           cairo_t *cr)
+                                                          cairo_t *cr)
 {
     GtkTextBuffer *buffer;
     GtkTextIter cur;
@@ -470,14 +469,14 @@ static void emu8086_app_code_paint_current_line_highlight(GtkTextView *view,
                                      gtk_text_buffer_get_insert(buffer));
     gtk_text_view_get_line_yrange(GTK_TEXT_VIEW(view), &cur, &y, &height);
     emu8086_app_code_paint_line_background(view,
-                                            cr,
-                                            y, height,
-                                            &color);
+                                           cr,
+                                           y, height,
+                                           &color);
 }
 
 static void emu8086_app_code_draw_layer(GtkTextView *text_view,
-                                         GtkTextViewLayer layer,
-                                         cairo_t *cr)
+                                        GtkTextViewLayer layer,
+                                        cairo_t *cr)
 {
     cairo_save(cr);
     if (gtk_widget_is_sensitive(GTK_WIDGET(text_view)) && layer == GTK_TEXT_VIEW_LAYER_BELOW_TEXT)
@@ -489,18 +488,18 @@ static void emu8086_app_code_draw_layer(GtkTextView *text_view,
 
 void emu8086_app_code_undo(Emu8086AppCode *code)
 {
-emu8086_app_code_buffer_undo(code->priv->buffer);
+    emu8086_app_code_buffer_undo(code->priv->buffer);
 }
- void emu8086_app_code_redo(Emu8086AppCode *code)
+void emu8086_app_code_redo(Emu8086AppCode *code)
 {
- emu8086_app_code_buffer_redo(code->priv->buffer);
-
+    emu8086_app_code_buffer_redo(code->priv->buffer);
 }
 static void emu8086_app_code_class_init(Emu8086AppCodeClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
-    GtkTextViewClass *textview_class;GtkBindingSet *binding_set;
+    GtkTextViewClass *textview_class;
+    GtkBindingSet *binding_set;
     textview_class = GTK_TEXT_VIEW_CLASS(klass);
     object_class->set_property = emu8086_app_code_set_property;
     object_class->get_property = emu8086_app_code_get_property;
@@ -513,8 +512,7 @@ static void emu8086_app_code_class_init(Emu8086AppCodeClass *klass)
     textview_class->draw_layer = emu8086_app_code_draw_layer;
 
     klass->undo = emu8086_app_code_undo;
-	klass->redo = emu8086_app_code_redo;
-
+    klass->redo = emu8086_app_code_redo;
 
     g_object_class_install_property(object_class, PROP_FONT,
                                     g_param_spec_string("font", "Font", "Editor Font", "Monospace Regular 16",
@@ -560,19 +558,15 @@ static void emu8086_app_code_class_init(Emu8086AppCodeClass *klass)
     g_signal_set_va_marshaller(code_signals[MOVE_LINES],
                                G_TYPE_FROM_CLASS(klass),
                                g_cclosure_marshal_VOID__BOOLEANv);
-binding_set = gtk_binding_set_by_class (klass);
-     	gtk_binding_entry_add_signal (binding_set,
-				      GDK_KEY_z,
-				      GDK_CONTROL_MASK,
-				      "undo", 0);
-	gtk_binding_entry_add_signal (binding_set,
-				      GDK_KEY_z,
-				      GDK_CONTROL_MASK | GDK_SHIFT_MASK,
-				      "redo", 0);                          
-
-
-
-
+    binding_set = gtk_binding_set_by_class(klass);
+    gtk_binding_entry_add_signal(binding_set,
+                                 GDK_KEY_z,
+                                 GDK_CONTROL_MASK,
+                                 "undo", 0);
+    gtk_binding_entry_add_signal(binding_set,
+                                 GDK_KEY_z,
+                                 GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                                 "redo", 0);
 }
 
 static void _refreshLines(GtkTextView *text_view,
@@ -803,10 +797,8 @@ Emu8086AppCode *create_new()
     gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
 
     priv->line = 0;
-  
-  
 
-  //  g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
+    //  g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 
     // g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);

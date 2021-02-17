@@ -60,7 +60,7 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *stack;
     GtkWidget *left_box;
     GtkWidget *tool_bar;
-Emu8086AppMemoryWindow *mem_view;
+    Emu8086AppMemoryWindow *mem_view;
     Emu8086AppCode *code;
     Emu8086AppCodeRunner *runner;
     GtkWidget *expander;
@@ -445,7 +445,8 @@ void emu8086_app_window_bottom_notebook_add_item(Emu8086AppWindow *win, GtkWidge
 static void emu8086_app_window_clear_err_msgs(Emu8086AppWindow *win)
 {
     PRIV;
-   if(priv->errs_cleared) return;
+    if (priv->errs_cleared)
+        return;
     gtk_text_buffer_set_text(priv->err_buffer, "Nothing Doing\n Errors: 0", -1);
     gtk_button_set_label(GTK_BUTTON(priv->toggle_btn), "No Errors");
     priv->errs_cleared = TRUE;
@@ -494,11 +495,11 @@ static void populate_bottom_bar(Emu8086AppWindow *win)
     GtkWidget *icon, *icon2;
     icon = gtk_image_new_from_file(path);
     icon2 = gtk_image_new_from_file(path2);
-     priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
-    priv->mem_view = emu8086_app_memory_window_open(GTK_WINDOW(win),priv->runner);
+    priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
+    priv->mem_view = emu8086_app_memory_window_open(GTK_WINDOW(win), priv->runner);
     priv->toggle_btn = gtk_button_new();
     gtk_widget_set_tooltip_text(priv->toggle_btn, "Toggle bottom panel");
-    GtkButton *btn, *btn2 ;
+    GtkButton *btn, *btn2;
     btn = GTK_BUTTON(priv->toggle_btn);
     btn2 = gtk_button_new();
     gtk_widget_set_tooltip_text(btn2, "Toggle Memory");
@@ -515,7 +516,7 @@ static void populate_bottom_bar(Emu8086AppWindow *win)
     g_signal_connect(priv->toggle_btn, "clicked",
                      G_CALLBACK(emu8086_app_window_toggle_bb), win);
     g_signal_connect(btn2, "clicked", G_CALLBACK(emu8086_app_memory_window_close), priv->mem_view);
-  gtk_label_set_text(GTK_LABEL(priv->messages), "Version 1.0.2(Beta)");
+    gtk_label_set_text(GTK_LABEL(priv->messages), "Version 1.0.2(Beta)");
 }
 
 static void load_vpaned(Emu8086AppWindow *win)
@@ -565,7 +566,8 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     gtk_widget_init_template(GTK_WIDGET(win));
     win->priv = emu8086_app_window_get_instance_private(win);
     PRIV;
-    priv->errs_cleared = FALSE;priv->stack = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    priv->errs_cleared = FALSE;
+    priv->stack = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
     priv->scrolled = gtk_scrolled_window_new(NULL, NULL);
     priv->vpaned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gtk_paned_pack1(GTK_PANED(priv->vpaned),
@@ -573,9 +575,8 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
                     TRUE,
                     TRUE);
 
-   
     load_vpaned(win);
-  populate_bottom_bar(win);//
+    populate_bottom_bar(win); //
     emu8086_app_window_clear_err_msgs(win);
 
     gtk_container_add(GTK_CONTAINER(priv->editor_box), priv->stack);
@@ -587,7 +588,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
 
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2, *action3;
-   
+
     priv->scheme = emu8086_app_style_scheme_get_default();
     g_settings_bind(priv->settings, "ul", win, "ul", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "lf", win, "lf", G_SETTINGS_BIND_GET);
@@ -718,7 +719,7 @@ static void add_recent(gchar *uri)
 
 static void _open(Emu8086AppWindow *win)
 {
-    
+
     GtkWidget *dialog;
     GtkFileChooser *chooser;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -1093,13 +1094,14 @@ emu8086_window_get_property(GObject *object,
         break;
     }
 }
-static void emu8086_app_window_dispose(GObject *object){
+static void emu8086_app_window_dispose(GObject *object)
+{
     Emu8086AppWindow *win;
     win = EMU8086_APP_WINDOW(object);
     PRIV;
     gtk_widget_destroy(priv->mem_view);
     g_print("here");
-    G_OBJECT_CLASS (emu8086_app_window_parent_class)->dispose (object);
+    G_OBJECT_CLASS(emu8086_app_window_parent_class)->dispose(object);
 }
 static void emu8086_app_window_class_init(Emu8086AppWindowClass *class)
 {
@@ -1699,11 +1701,11 @@ static void emu8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointe
     aCPU = getCPU(runner);
     PRIV;
     emu8086_app_side_pane_update_view(EMU8086_APP_SIDE_PANE(priv->revealer), aCPU->mSFR);
-if(!priv->errs_cleared)emu8086_app_window_clear_err_msgs(win);
+    if (!priv->errs_cleared)
+        emu8086_app_window_clear_err_msgs(win);
     if (_INSTRUCTIONS != NULL)
     {
-       
-      
+
         select_line(priv->code, _INSTRUCTIONS->line_number - 1);
     }
     else
@@ -1758,7 +1760,7 @@ static void emu8086_app_window_show_errors(Emu8086AppCodeRunner *runner, gint er
     sprintf(buf, "errors: %d", errors);
     gtk_button_set_label(GTK_BUTTON(priv->toggle_btn), buf);
     gtk_text_buffer_set_text(priv->err_buffer, emu8086_app_code_runner_get_errors(runner), -1);
-priv->errs_cleared = FALSE;
+    priv->errs_cleared = FALSE;
     //     gtk_label_set_text(GTK_LABEL(priv->messages), priv->runner->priv->em);
 
     //     if (priv->tos != 0)
@@ -1856,7 +1858,6 @@ void emu8086_app_window_stop_win(Emu8086AppWindow *win)
     stop(win->priv->runner, FALSE);
 }
 
-
 gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win)
 {
     GtkWidget *dialog;
@@ -1951,8 +1952,6 @@ void emu8086_app_window_set_bottom_pane(Emu8086AppWindow *win, gboolean open)
                            win->priv->bottom_notebook_visible);
 }
 
-
-
 /**
  * emu8086_app_window_get_stack:
  * @win: a #Emu8086AppWindow
@@ -1988,11 +1987,11 @@ GtkWidget *emu8086_app_window_get_revealer(Emu8086AppWindow *win)
  *
  * Returns: (transfer none): the bottom #GtkWidget.
  */
-GtkWidget *emu8086_app_window_get_bottom_pane(Emu8086AppWindow *win){
-     PRIV;
-     return priv->bottom_notebook;
+GtkWidget *emu8086_app_window_get_bottom_pane(Emu8086AppWindow *win)
+{
+    PRIV;
+    return priv->bottom_notebook;
 }
-
 
 /**
  * emu8086_app_window_get_left_box:
@@ -2002,11 +2001,11 @@ GtkWidget *emu8086_app_window_get_bottom_pane(Emu8086AppWindow *win){
  *
  * Returns: (transfer none): the bottom #GtkWidget.
  */
-GtkWidget *emu8086_app_window_get_left_box(Emu8086AppWindow *win){
-     PRIV;
-     return priv->left_box;
+GtkWidget *emu8086_app_window_get_left_box(Emu8086AppWindow *win)
+{
+    PRIV;
+    return priv->left_box;
 }
-
 
 /**
  * emu8086_app_window_get_bottom_bar:
@@ -2016,7 +2015,8 @@ GtkWidget *emu8086_app_window_get_left_box(Emu8086AppWindow *win){
  *
  * Returns: (transfer none): the bottom #GtkWidget.
  */
-GtkWidget *emu8086_app_window_get_bottom_bar(Emu8086AppWindow *win){
-     PRIV;
-     return priv->bottom_bar;
+GtkWidget *emu8086_app_window_get_bottom_bar(Emu8086AppWindow *win)
+{
+    PRIV;
+    return priv->bottom_bar;
 }
