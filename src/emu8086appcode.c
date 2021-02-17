@@ -781,7 +781,7 @@ void editFontSize(Emu8086AppCode *code, gint size)
     return;
 }
 
-Emu8086AppCode *create_new(Emu8086AppWindow *win)
+Emu8086AppCode *create_new()
 {
     Emu8086AppCode *code;
     GtkStyleProvider *provider;
@@ -803,10 +803,9 @@ Emu8086AppCode *create_new(Emu8086AppWindow *win)
     gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
 
     priv->line = 0;
-    GtkAccelGroup *ag = gtk_accel_group_new();
-    gtk_window_add_accel_group(GTK_WINDOW(win), ag);
-    priv->win = win;
-    priv->ag = ag;
+  
+  
+
   //  g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 

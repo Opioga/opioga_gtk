@@ -978,7 +978,8 @@ char *match_register(char *p, int width, int *value)
             *value = c;
             return avoid_spaces(p + 2);
         }
-    }printf("%s\n", p);
+    }
+    //printf("%s\n", p);
     return NULL;
 }
 

@@ -30,6 +30,7 @@ emu8086appcodegutter.c \
 emu8086appcode.c \
 emu8086apprunner.c \
 emu8086apppluginbox.c \
+emu8086appmemorywin.c \
 emu8086appwin.c \
 emu8086apppluginsengine.c \
 emu8086stylescheme.c \

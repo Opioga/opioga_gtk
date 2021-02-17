@@ -367,3 +367,37 @@ emu8086_app_get_default(void)
 
     return app;
 }
+
+
+void emu8086_app_quick_message(GtkWindow *parent, gchar *message, gchar *title)
+{
+    GtkWidget *dialog, *label, *content_area;
+    GtkDialogFlags flags;
+
+    // Create the widgets
+    flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+    dialog = gtk_dialog_new_with_buttons(title,
+                                         parent,
+                                         flags,
+                                         ("_OK"),
+                                         GTK_RESPONSE_NONE,
+                                         NULL);
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    label = gtk_label_new(message);
+
+    // Ensure that the dialog box is destroyed when the user responds
+
+    g_signal_connect_swapped(dialog,
+                             "response",
+                             G_CALLBACK(gtk_widget_destroy),
+                             dialog);
+
+    // Add the label, and show everything we’ve added
+    gtk_widget_set_margin_bottom(label, 20);
+    gtk_widget_set_margin_bottom(content_area, 20);
+    gtk_widget_set_margin_top(content_area, 20);
+    gtk_widget_set_margin_start(content_area, 20);
+    gtk_widget_set_margin_end(content_area, 20);
+    gtk_container_add(GTK_CONTAINER(content_area), label);
+    gtk_widget_show_all(dialog);
+}

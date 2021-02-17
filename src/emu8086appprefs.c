@@ -164,12 +164,21 @@ add_scheme_chooser_response_cb(GtkDialog *chooser,
 
   gtk_widget_hide(GTK_WIDGET(chooser));
   gchar *n_theme = emu_style_scheme_install_theme(dlg->priv->scheme, file);
-  g_print("%s \n", n_theme);
   g_object_unref(file);
   if (n_theme == NULL)
-    return;
+
+ { 
+        emu8086_app_quick_message(dlg,"Theme with same name exists", "Error");
+     return;
+     }
   else
-    g_free(n_theme);
+   {
+     gchar buf[100];
+     sprintf(buf, "Theme %s installed successfully", n_theme);
+     emu8086_app_quick_message(dlg, buf, "Success");
+     
+      g_free(n_theme);}
+
   for (int i = dlg->priv->theme_size; i > 0; i--)
   {
     emu8086_theme_free(dlg->priv->themes[i - 1]);
@@ -437,3 +446,5 @@ emu8086_app_prefs_new(Emu8086AppWindow *win)
 {
   return g_object_new(EMU8086_APP_PREFS_TYPE, "transient-for", win, "use-header-bar", FALSE, NULL);
 }
+
+

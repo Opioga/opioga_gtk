@@ -432,14 +432,14 @@ gboolean user_config_themes_exists()
     GFile *file;
     GError *error = NULL, *error2 = NULL;
     gchar *path;
-    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
+    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
     file = g_file_new_for_path(path);
     if (!g_file_query_exists(file, NULL))
     {
 
         if (emu_create_config_dir())
         {
-            g_file_create(file, G_FILE_CREATE_NONE, NULL, &error2);
+          g_file_make_directory(file, NULL, &error2);
             if (error2 != NULL)
             {
                 g_error_free(error2);
@@ -460,55 +460,103 @@ gboolean user_config_themes_exists()
     return TRUE;
 }
 
+them *emu8086_app_style_scheme_get_theme( gchar *_name,gchar *path ){
+       gchar *theme_path, *name;
+     
+       g_autoptr(GError) error4 = NULL;
+    g_autoptr(GKeyFile) key_file = g_key_file_new();
+
+    theme_path = g_build_filename(path, _name, NULL);
+    
+
+    if (!g_key_file_load_from_file(key_file, theme_path, G_KEY_FILE_NONE, &error4))
+    {
+        if (g_error_matches(error4, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+            g_print("Error loading key file: %s '%s'", error4->message,theme_path);
+        return NULL;
+    }
+    gchar *des = g_key_file_get_string(key_file, "Description", "value",  &error4);
+ 
+ 
+        if (des == NULL ||
+        g_error_matches(error4, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
+    {
+        g_print("Error finding key in key file: %s", error4->message);
+              return NULL;
+    }
+    _name[strlen(_name) - 6] = '\0';
+ 
+    name = _name;
+    them *theme = (them *)malloc(sizeof(them));
+            theme->id = g_strdup(name);
+        theme->text = des;
+        g_free(theme_path);
+        return theme;
+}
+
+
+
 them **emu8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len)
 {
-    g_autoptr(GError) error = NULL;
-    g_autoptr(GKeyFile) key_file = g_key_file_new();
-    gchar *path;
 
-    path = g_build_filename(DATADIR, "emu8086/themes", "theme.ini", NULL);
-    if (!g_key_file_load_from_file(key_file, path, G_KEY_FILE_NONE, &error))
-    {
-        if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning("Error loading key file: %s", error->message);
-        return;
-    }
-    gchar **val = NULL, **val2 = NULL;
-    gsize size = 0;
-    val = g_key_file_get_string_list(key_file, "Themes", "Values", &size, &error);
+    gchar *path2;
+  GDir *dir;
 
-    val2 = g_key_file_get_string_list(key_file, "Descriptions", "Values", &size, &error);
-    if (val == NULL &&
-        !g_error_matches(error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
-    {
-        g_warning("Error finding key in key file: %s", error->message);
-        return;
+    path2 = g_build_filename(DATADIR, "emu8086/themes",  NULL);
+  
+    dir = g_dir_open (path2, 0, NULL);
+    const gchar *_name;
+    gsize size, l = 0;
+    GSList      *filenames;
+GSList *f;
+filenames = g_slist_prepend (filenames, NULL);
+    while ((_name = g_dir_read_name (dir)) != NULL)
+	{
+        gchar *name = g_strdup(_name);
+       gchar *m = NULL;
+       m= strstr(name, ".theme");
+if(m != NULL) {
+    filenames = g_slist_prepend (filenames, name);
+    l= l+1;
+    
     }
-    if (val2 == NULL &&
-        !g_error_matches(error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
-    {
-        g_warning("Error finding key in key file: %s", error->message);
-        return;
+    else {
+        g_free (name);
     }
 
-    them **themes = (them **)malloc(sizeof(them *) * size);
-    for (int i = 0; i < size; i++)
-    {
-        them *theme = (them *)malloc(sizeof(them));
-        theme->id = g_strdup(val[i]);
-        theme->text = g_strdup(val2[i]);
-        themes[i] = theme;
     }
 
-    g_strfreev(val);
-    g_strfreev(val2);
-    g_free(path);
-    // realloc
+them **themes;
+themes = (them **)malloc(sizeof(them *) * l);
+ int o =0;
+    for (f = filenames; f != NULL; f = f->next){
+        gchar *filename;
 
+		filename = f->data;
+
+        them *_theme;
+        _theme = emu8086_app_style_scheme_get_theme(filename, path2);
+        if(_theme != NULL){ g_print("name -> %s Des -> %s\n", _theme->id, _theme->text);
+        themes[o++] = _theme;}
+
+    }
+
+
+ 
+ 
+
+
+
+    g_free(path2);
+   
+   
+    size =o;
+g_slist_free_full (filenames, g_free);
     themes = add_local_themes(scheme, themes, size, len);
 
     return themes;
-    // fopen
+  
+  
 }
 
 void emu8086_theme_free(them *themes)
@@ -591,59 +639,54 @@ them **add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size
     *len = size;
     if (!user_config_themes_exists())
         return themes;
+ path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
+      GDir *dir;
+          const gchar *_name;
 
-    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
-    theme_file = g_file_new_for_path(path);
-    isEmpty = check_is_empty(theme_file, error2);
-    if (!isEmpty && error2 != NULL)
-    {
-        g_print(error2->message);
-        g_error_free(error2);
-        g_object_unref(theme_file);
-        *len = size;
-        return themes;
+
+    GSList      *filenames;
+GSList *f;
+gsize l = 0;
+filenames = g_slist_prepend (filenames, NULL);
+    dir = g_dir_open (path, 0, NULL);
+
+    while ((_name = g_dir_read_name (dir)) != NULL)
+	{
+        gchar *name = g_strdup(_name);
+       gchar *m = NULL;
+       m= strstr(name, ".theme");
+if(m != NULL) {
+    filenames = g_slist_prepend (filenames, name);
+    l= l+1;
+    
     }
-    if (isEmpty)
-    {
-        g_free(path);
-        g_object_unref(theme_file);
-        *len = size;
-        return themes;
-    }
-    g_object_unref(theme_file);
-
-    g_autoptr(GKeyFile) keyfile = g_key_file_new();
-
-    if (!g_key_file_load_from_file(keyfile, path, G_KEY_FILE_NONE, &error))
-    {
-        if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning("Error loading key file: %s", error->message);
-        g_free(path);
-        *len = size;
-        return themes;
+    else {
+        g_free (name);
     }
 
-    gchar **val = NULL, **val2 = NULL;
-    gsize n_size = 0;
-    val = g_key_file_get_string_list(keyfile, "Themes", "Values", &n_size, &error);
-
-    val2 = g_key_file_get_string_list(keyfile, "Descriptions", "Values", &n_size, &error);
-
-    gsize expanded = sizeof(them *) * (size + n_size);
+    }
+    if(l == 0) return themes;
+    else {
+        g_print("%d \n ", l);
+    }
+    gsize expanded = sizeof(them *) * (size + l);
     themes = g_realloc(themes, expanded);
 
-    for (int i = 0; i < n_size; i++)
-    {
-        them *theme = (them *)malloc(sizeof(them));
-        theme->id = g_strdup(val[i]);
-        theme->text = g_strdup(val2[i]);
-        themes[i + size] = theme;
+    int o =0;
+    for (f = filenames; f != NULL; f = f->next){
+        gchar *filename;
+
+		filename = f->data;
+
+        them *_theme;
+        _theme = emu8086_app_style_scheme_get_theme(filename, path);
+        if(_theme != NULL){ g_print("name -> %s Des -> %s\n", _theme->id, _theme->text);
+        themes[ o+ size] = _theme;}
+o = o + 1;
     }
 
-    g_strfreev(val);
-    g_strfreev(val2);
-    g_free(path);
-    *len = size + n_size;
+g_slist_free_full (filenames, g_free);
+    *len = size + l;
     return themes;
 }
 
@@ -676,72 +719,8 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
         return NULL;
     }
 
-    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", "theme.ini", NULL);
-    theme_file = g_file_new_for_path(path);
-
-    if (check_is_empty(theme_file, error))
-    {
-
-        gchar *name = get_n(file);
-        GString *s = g_string_new("[Themes]\nValues=");
-        g_string_append(s, name);
-        g_string_append(s, "\n[Descriptions]\nValues=User defined theme");
-        gchar *out = g_string_free(s, FALSE);
-        GOutputStream *stream = g_io_stream_get_output_stream(g_file_open_readwrite(theme_file, NULL, &error));
-        if (error != NULL)
-            g_print(error->message);
-        g_return_val_if_fail(error == NULL, NULL);
-        g_output_stream_write(stream, out, (sizeof(gchar)) * strlen(out), NULL, &error);
-        g_free(name);
-        g_free(out);
-
-        g_object_unref(stream);
-    }
-    else
-    {
-        if (error != NULL)
-            return NULL;
-
-        if (!g_key_file_load_from_file(keyfile, path, G_KEY_FILE_NONE, &error))
-        {
-            if (!g_error_matches(error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-                g_warning("Error loading key file: %s", error->message);
-            return NULL;
-        }
-        gchar **themes = NULL;
-        gchar *name = get_n(file);
-        gsize s;
-        themes = g_key_file_get_string_list(keyfile, "Themes", "Values", &s, &error);
-        gint len = (gint)s;
-        gsize size = sizeof(gchar *) * (s + 1);
-
-        themes = g_realloc(themes, size);
-
-        themes[len] = name;
-
-        g_key_file_set_string_list(keyfile, "Themes", "Values", themes, s + 1);
-
-        themes = NULL;
-        themes = g_key_file_get_string_list(keyfile, "Descriptions", "Values", &s, &error);
-        len = (gint)s;
-        size = sizeof(gchar *) * (s + 1);
-
-        themes = g_realloc(themes, size);
-
-        themes[len] = g_strdup("User defined theme");
-        g_key_file_set_string_list(keyfile, "Descriptions", "Values", themes, s + 1);
-        g_key_file_save_to_file(keyfile, path, &error);
-        g_key_file_free(keyfile);
-
-        themes = NULL;
-        if (error != NULL)
-        {
-            g_error_free(error);
-            return NULL;
-        }
-        
-    }
-
-    g_free(path);  
-    return g_strdup("lol");
+ 
+ 
+  
+    return get_n(file);
 }

@@ -23,6 +23,8 @@
 
 #include <emu8086appwin.h>
 #include <emu8086app.h>
+#include <emu8086appmemorywin.h>
+
 #include <emu8086stylescheme.h>
 #include <emu8086searchbar.h>
 #include <emu8086appcode.h>
@@ -58,7 +60,7 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *stack;
     GtkWidget *left_box;
     GtkWidget *tool_bar;
-
+Emu8086AppMemoryWindow *mem_view;
     Emu8086AppCode *code;
     Emu8086AppCodeRunner *runner;
     GtkWidget *expander;
@@ -486,22 +488,34 @@ vpaned_restore_position(GtkWidget *widget,
 static void populate_bottom_bar(Emu8086AppWindow *win)
 {
     PRIV;
-    gchar *path;
+    gchar *path, *path2;
     path = g_build_filename(DATADIR, PACKAGE, "pics/errors.svg");
-    GtkWidget *icon;
+    path2 = g_build_filename(DATADIR, PACKAGE, "pics/memory.svg");
+    GtkWidget *icon, *icon2;
     icon = gtk_image_new_from_file(path);
+    icon2 = gtk_image_new_from_file(path2);
+     priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
+    priv->mem_view = emu8086_app_memory_window_open(GTK_WINDOW(win),priv->runner);
     priv->toggle_btn = gtk_button_new();
     gtk_widget_set_tooltip_text(priv->toggle_btn, "Toggle bottom panel");
-    GtkButton *btn;
+    GtkButton *btn, *btn2 ;
     btn = GTK_BUTTON(priv->toggle_btn);
+    btn2 = gtk_button_new();
+    gtk_widget_set_tooltip_text(btn2, "Toggle Memory");
     gtk_button_set_image(btn, icon);
+    gtk_button_set_image(btn2, icon2);
     gtk_button_set_image_position(btn, GTK_POS_LEFT);
     gtk_button_set_always_show_image(btn, TRUE);
     gtk_button_set_relief(btn, GTK_RELIEF_NONE);
+    gtk_button_set_relief(btn2, GTK_RELIEF_NONE);
     gtk_widget_show(priv->toggle_btn);
+    gtk_widget_show(btn2);
     gtk_container_add(GTK_CONTAINER(priv->left_box), priv->toggle_btn);
+    gtk_container_add(GTK_CONTAINER(priv->left_box), btn2);
     g_signal_connect(priv->toggle_btn, "clicked",
                      G_CALLBACK(emu8086_app_window_toggle_bb), win);
+    g_signal_connect(btn2, "clicked", G_CALLBACK(emu8086_app_memory_window_close), priv->mem_view);
+  gtk_label_set_text(GTK_LABEL(priv->messages), "Version 1.0.2(Beta)");
 }
 
 static void load_vpaned(Emu8086AppWindow *win)
@@ -573,7 +587,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
 
     priv->settings = g_settings_new("com.krc.emu8086app");
     GAction *action, *action2, *action3;
-    priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
+   
     priv->scheme = emu8086_app_style_scheme_get_default();
     g_settings_bind(priv->settings, "ul", win, "ul", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "lf", win, "lf", G_SETTINGS_BIND_GET);
@@ -704,6 +718,7 @@ static void add_recent(gchar *uri)
 
 static void _open(Emu8086AppWindow *win)
 {
+    
     GtkWidget *dialog;
     GtkFileChooser *chooser;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -1078,6 +1093,14 @@ emu8086_window_get_property(GObject *object,
         break;
     }
 }
+static void emu8086_app_window_dispose(GObject *object){
+    Emu8086AppWindow *win;
+    win = EMU8086_APP_WINDOW(object);
+    PRIV;
+    gtk_widget_destroy(priv->mem_view);
+    g_print("here");
+    G_OBJECT_CLASS (emu8086_app_window_parent_class)->dispose (object);
+}
 static void emu8086_app_window_class_init(Emu8086AppWindowClass *class)
 {
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
@@ -1086,6 +1109,7 @@ static void emu8086_app_window_class_init(Emu8086AppWindowClass *class)
     GObjectClass *object_class = G_OBJECT_CLASS(class);
     object_class->set_property = emu8086_window_set_property;
     object_class->get_property = emu8086_window_get_property;
+    object_class->dispose = emu8086_app_window_dispose;
     widget_class->key_press_event = emu8086_window_key_press_event;
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, gears);
     gtk_widget_class_bind_template_child_private(GTK_WIDGET_CLASS(class), Emu8086AppWindow, left_box);
@@ -1678,9 +1702,8 @@ static void emu8086_app_window_update_wids(Emu8086AppCodeRunner *runner, gpointe
 if(!priv->errs_cleared)emu8086_app_window_clear_err_msgs(win);
     if (_INSTRUCTIONS != NULL)
     {
-        char buf[20];
-        sprintf(buf, "ON LINE %d", _INSTRUCTIONS->line_number);
-        gtk_label_set_text(GTK_LABEL(priv->messages), buf);
+       
+      
         select_line(priv->code, _INSTRUCTIONS->line_number - 1);
     }
     else
@@ -1771,6 +1794,7 @@ void emu8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     win->state.Open = TRUE;
     populate_win(win);
     populate_tools(win);
+
     // priv->fname = fname;
     base = g_file_get_basename(file);
     strcpy(win->state.file_name, base);

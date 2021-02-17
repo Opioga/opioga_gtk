@@ -309,7 +309,7 @@ static void emu_free(Emu8086AppCodeRunner *runner)
     list_err = NULL;
 
     //  free(aCPU->mSFR);
-    // free(aCPU->mDataMem);
+    free(aCPU->mDataMem);
 
     free(aCPU);
     set_app_state(runner, STOPPED);

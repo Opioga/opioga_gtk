@@ -116,7 +116,7 @@
             <property name="margin_right">3</property>
             <property name="margin_top">5</property>
             <property name="margin_bottom">6</property>
-            <property name="spacing">11</property>
+            <property name="spacing">5</property>
             <child>
               <object class="GtkBox" id="left_box">
                 <property name="visible">True</property>
@@ -127,7 +127,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">True</property>
+                <property name="fill">False</property>
                 <property name="position">0</property>
               </packing>
             </child>

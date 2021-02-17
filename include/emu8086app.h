@@ -30,7 +30,7 @@ Emu8086App *emu8086_app_new(void);
 void emu8086_app_open_file(Emu8086App *app, GFile *file);
 Emu8086App *
 emu8086_app_get_default (void);
-
+void emu8086_app_quick_message(GtkWindow *parent, gchar *message, gchar *title);
 // void quit(Emu8086AppWindow *app);
 
 

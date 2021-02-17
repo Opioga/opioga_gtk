@@ -56,7 +56,7 @@ struct emu8086
 
     int mMemSize;
     int end_address;
-    unsigned char mDataMem[0xfffff];
+    unsigned char *mDataMem;
     char is_first;
     int code_start_addr;
     unsigned short mSFR[22];

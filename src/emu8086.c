@@ -48,8 +48,8 @@ struct emu8086 *emu8086_new(void)
     new->skip_next = 0;
     for (int i = 0; i < 22; i++)
         new->mSFR[i] = 0x0000;
-    for (int i = 0; i < 0x10000; i++)
-        *(new->mDataMem + 0x3ff0 + i) = 0;
+    
+    new->mDataMem = (unsigned char *)calloc((0xfffff + 1), sizeof(unsigned char ) );
     op_setptrs(new);
     new->instructions_list = NULL;
     new->call_stack = 0;
