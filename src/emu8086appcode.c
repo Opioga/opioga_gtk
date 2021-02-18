@@ -20,24 +20,26 @@
 #include <emu8086appcodegutter.h>
 #include <emu8086stylescheme.h>
 
-enum
+enum _Emu8086AppCodeSignals
 {
 
     CODE_UNDO,
     CODE_REDO,
     MOVE_LINES,
     CODE_N_SIGNALS
-};
+} ;
 
 static guint code_signals[CODE_N_SIGNALS] = {0};
 
-typedef enum
+ enum _Emu8086AppCodeProperty
 {
     PROP_0,
     PROP_FONT,
     PROP_CODE_THEME,
     PROP_AUTO_INDENT
-} Emu8086AppCodeProperty;
+};
+
+typedef enum  _Emu8086AppCodeProperty  Emu8086AppCodeProperty;
 
 struct _Emu8086AppCodePrivate
 {
@@ -166,6 +168,8 @@ static gchar *emu8086_app_code_change_color(Emu8086AppCode *code)
     code->color = v;
 
     pango_font_description_free(desc);
+    g_free(m);
+  
 }
 
 static void
@@ -194,26 +198,9 @@ emu8086_app_code_set_property(GObject *object,
 
         pango_font_description_free(desc);
         emu8086_app_code_change_color(code);
-        // g_print("filename: %s\n", self->font);
-        // g_free(v);
+   
         break;
-        // case PROP_CODE_THEME:
-
-        //     v = emu8086_app_code_change_color(g_value_get_string(value));
-
-        //     desc = pango_font_description_from_string(g_strdup(code->font));
-
-        //     m = emu8086_pango_font_description_to_css(desc, v);
-        //     gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
-
-        //     code->color = v;
-
-        //     pango_font_description_free(desc);
-        //     //  g_free(v);
-        //     // g_print("filename: %s\n", self->font);
-        //     // g_free(v);
-        //     break;
-
+       
     case PROP_AUTO_INDENT:
         code->priv->auto_indent = g_value_get_boolean(value);
         break;
@@ -350,13 +337,14 @@ static gboolean emu8086_app_code_button_press_event(GtkWidget *widget, GdkEventB
 
             if (!has_set_bp)
                 priv->break_points[priv->break_points_len++] = line_num;
-            // priv->break_points_len++;
+       
         }
     }
 
     return GTK_WIDGET_CLASS(emu8086_app_code_parent_class)->button_press_event(widget, event);
 }
 
+// Check if previous line is empty
 static gboolean check_prev_line(GtkTextBuffer *buffer, gint line)
 {
     if (line == 0)
@@ -629,7 +617,7 @@ static void emu8086_app_code_init(Emu8086AppCode *code)
     Emu8086AppCodeGutter *gutter;
     gutter = emu8086_app_code_gutter_new(code, GTK_TEXT_WINDOW_LEFT);
 
-    setCode(buffer, code);
+   // setCode(buffer, code);
     priv->buffer = buffer;
     priv->gutter = gutter;
 
@@ -750,17 +738,30 @@ void editFontSize(Emu8086AppCode *code, gint size)
     gchar *font = code->font, *tempsize;
     gint nsize;
     // font += strlen(font);
+    // Copy the current editor font e.g monospace 14
     tempsize = g_strdup(font);
 
-    g_strreverse(tempsize);
-    g_strcanon(tempsize, "1234567890", '\0');
+    // monospace 14 -> 41 ecapsonom
     g_strreverse(tempsize);
 
+    // Remove all the letters in the  string 
+    // 41 ecapsonom -> 41
+    g_strcanon(tempsize, "1234567890", '\0');
+
+    // 41 -> 14
+    g_strreverse(tempsize);
+
+    
     gchar tempfont[strlen(font)];
+
     strcpy(tempfont, font);
-    tempfont[strlen(font) - strlen(tempsize)] = 0;
+    // Copy only the font letters
+    tempfont[strlen(font) - strlen(tempsize)] = '\0';
+
+
     sscanf(tempsize, "%d", &priv->fontsize);
-    gchar new[strlen(tempsize) + 1];
+    
+    gchar new[strlen(tempsize) + 2];
     priv->fontsize += size;
     sprintf(new, "%d", priv->fontsize);
 
@@ -770,10 +771,12 @@ void editFontSize(Emu8086AppCode *code, gint size)
     PangoFontDescription *desc;
     desc = pango_font_description_from_string(tmp);
     gtk_css_provider_load_from_data(priv->provider, (emu8086_pango_font_description_to_css(desc, code->color)), -1, NULL);
-    // getCss(size, priv->provider);
+    
 
     pango_font_description_free(desc);
-    // g_free(tmp);
+    g_free(tempsize);
+    g_free(font);
+    
     return;
 }
 

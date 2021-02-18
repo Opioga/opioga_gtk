@@ -36,6 +36,7 @@ struct _Emu8086AppPrivate
     Emu8086AppWindow *win;
     GSettings *settings;
     gint to;
+    GdkPixbuf *pic;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086App, emu8086_app, GTK_TYPE_APPLICATION);
@@ -52,11 +53,9 @@ emu8086_app_init(Emu8086App *app)
 {
 
     Emu8086AppPrivate *priv;
-    // GApplication *application = g_application_new("com.krc.emu8086app", G_APPLICATION_NON_UNIQUE );
-    // gboolean g = g_application_register(application, NULL, NULL);
-    // g_print("%d", g);
     priv = emu8086_app_get_instance_private(app);
     priv->settings = g_settings_new("com.krc.emu8086app");
+    priv->pic = NULL;
     g_signal_connect(app, "window-removed", G_CALLBACK(user_function3), NULL);
 }
 
@@ -93,18 +92,9 @@ void emu8086_app_open(GApplication *appe,
                       const gchar *hint)
 {
     Emu8086App *app;
-    app = EMU8086_APP(appe); // GList *windows;
-    //Emu8086AppWindow *win;    // *win;
+    app = EMU8086_APP(appe);
     int i;
     _PRIV;
-    // windows = gtk_application_get_windows(GTK_APPLICATION(app));
-    // if (windows)
-    //     win = EMU8086_APP_WINDOW(windows->data);
-    // else
-    // {
-    //     win = emu8086_app_window_new(EMU8086_APP(app));
-    //     emu8086_app_window_set_app(win, app);
-    // }
 
     for (i = 0; i < n_files; i++)
     {
@@ -192,7 +182,7 @@ help_activated(GSimpleAction *action,
                gpointer appe)
 {
     Emu8086App *app = EMU8086_APP(appe);
-    open_help();
+    open_help(app);
 }
 
 static void
@@ -304,32 +294,42 @@ Emu8086App *emu8086_app_new(void)
                         NULL);
 }
 
-void open_help()
+void open_help(Emu8086App *app)
 {
+    _PRIV;
     GtkBuilder *builder;
     Emu8086AboutWindow *window;
     // const gchar *title = ;
     window = emu8086_app_about_window_new("Help");
     // gtk_window_set_icon_from_file(window, "/usr/share/datausage/resources/leo.png", NULL);
     //
-
-    // #ifdef __linux__
-    GError *error = NULL;
-    GdkPixbuf *pic;
+    if (priv->pic == NULL)
+    {
+        g_print("ran\n");
+        GError *error = NULL;
+        GdkPixbuf *pic;
 #ifdef __linux__
-    pic = gdk_pixbuf_new_from_file("/usr/local/share/emu8086/pics/leo.png", &error);
+        pic = gdk_pixbuf_new_from_file("/usr/local/share/emu8086/pics/leo.png", &error);
 
 #endif
 #ifdef _WIN32
-    pic = gdk_pixbuf_new_from_resource("/com/krc/emu8086app/pics/emu8086.png", error);
+        pic = gdk_pixbuf_new_from_resource("/com/krc/emu8086app/pics/emu8086.png", error);
 #endif
-    if (error == NULL)
-        gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(window), pic);
-    else
-        g_debug(error->message);
-    // g_free(pic);
-    if (error != NULL)
-        g_error_free(error);
+        if (error == NULL)
+        {
+            priv->pic = pic;
+        }
+        else
+        {
+            g_debug(error->message);
+            priv->pic = NULL;
+        }
+        // g_free(pic);
+        if (error != NULL)
+            g_error_free(error);
+    }
+    if (priv->pic != NULL)
+        gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(window), priv->pic);
 
     // gtk_window_set_default_icon_list()
     gtk_window_present(GTK_WINDOW(window));

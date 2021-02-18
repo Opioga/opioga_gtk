@@ -29,7 +29,12 @@ struct instruction
 
     struct instruction *next;
     struct instruction *prev;
+    
+ /*
+    The line of code which the instruction  represents
+ */
     int line_number;
+    
     int starting_address;
     int end_address;
     int is_16;
@@ -52,18 +57,63 @@ struct variable
 struct emu8086
 {
     int mCodeMemSize;
-    emu8086op op[256]; // callback: SFR register written
+    
+/*
+    An array of callbacks with each index containing a callback that emulates an 
+    8086 opcode
+*/
+    emu8086op op[256]; 
 
     int mMemSize;
+/*
+    Represents the address last address of the emulated memory that contains a
+    relevant opcode.
+*/
     int end_address;
+
+/*
+    An array with each index representing a memory address.
+*/    
     unsigned char *mDataMem;
+    
+/*
+    Indicates whether the emulated CPU is about to execute it's first instruction
+*/
     char is_first;
     int code_start_addr;
+
+/*
+    An array with each index representing an 8086 special function register
+*/
     unsigned short mSFR[22];
+    
+/*
+    Indicates whether we should skip incrementing the IP
+*/
     int skip_next;
+    
+/*
+    Linked list of instructions to emulate
+*/
     struct instruction *instructions_list;
+    
+/*
+    An Array of instructions following call instructions for example
+    10 call proc
+    11 stc
+    Instruction on line 11 is stored in this array to optimize efficiency
+
+*/
     struct instruction *instruction_cache[MAX_CALL_STACK];
+    
+/*
+    Holds the instruction that is located at the beginning of a loop
+*/
     struct instruction *instruction_cache_loop;
+    
+/*
+    Holds the current location in the instruction_cache
+*/
     int call_stack;
     struct variable *variable_list;
     int port;

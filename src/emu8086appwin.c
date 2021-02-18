@@ -79,7 +79,7 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *revealer_search;
     GtkWidget *editor_box;
     GtkWidget *vpaned;
-
+    GtkWidget *toggle_btn2;
     GtkWidget *bottom_bar;
     Emu8086AppSearchBar *search_bar;
     gboolean search_show;
@@ -449,6 +449,8 @@ static void emu8086_app_window_clear_err_msgs(Emu8086AppWindow *win)
         return;
     gtk_text_buffer_set_text(priv->err_buffer, "Nothing Doing\n Errors: 0", -1);
     gtk_button_set_label(GTK_BUTTON(priv->toggle_btn), "No Errors");
+    gtk_widget_show(priv->toggle_btn);
+    gtk_widget_hide(priv->toggle_btn2);
     priv->errs_cleared = TRUE;
 }
 static void emu8086_app_window_toggle_bb(GtkButton *button, Emu8086AppWindow *win)
@@ -489,34 +491,53 @@ vpaned_restore_position(GtkWidget *widget,
 static void populate_bottom_bar(Emu8086AppWindow *win)
 {
     PRIV;
-    gchar *path, *path2;
-    path = g_build_filename(DATADIR, PACKAGE, "pics/errors.svg");
+    GtkWidget *icon;
+    GtkWidget *icon2;
+    GtkWidget *icon3;
+    gchar *path, *path2, *path3;
+    path = g_build_filename(DATADIR, PACKAGE, "pics/good.svg");
+    path3 = g_build_filename(DATADIR, PACKAGE, "pics/errors.svg");
     path2 = g_build_filename(DATADIR, PACKAGE, "pics/memory.svg");
-    GtkWidget *icon, *icon2;
+
     icon = gtk_image_new_from_file(path);
     icon2 = gtk_image_new_from_file(path2);
+    icon3 = gtk_image_new_from_file(path3);
     priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
     priv->mem_view = emu8086_app_memory_window_open(GTK_WINDOW(win), priv->runner);
     priv->toggle_btn = gtk_button_new();
+    priv->toggle_btn2 = gtk_button_new();
     gtk_widget_set_tooltip_text(priv->toggle_btn, "Toggle bottom panel");
-    GtkButton *btn, *btn2;
+    gtk_widget_set_tooltip_text(priv->toggle_btn2, "Toggle bottom panel");
+    GtkButton *btn, *btn2, *btn3;
     btn = GTK_BUTTON(priv->toggle_btn);
     btn2 = gtk_button_new();
+    btn3 = GTK_BUTTON(priv->toggle_btn2);
     gtk_widget_set_tooltip_text(btn2, "Toggle Memory");
     gtk_button_set_image(btn, icon);
     gtk_button_set_image(btn2, icon2);
+    gtk_button_set_image(btn3, icon3);
     gtk_button_set_image_position(btn, GTK_POS_LEFT);
     gtk_button_set_always_show_image(btn, TRUE);
     gtk_button_set_relief(btn, GTK_RELIEF_NONE);
+    gtk_button_set_image_position(btn3, GTK_POS_LEFT);
+    gtk_button_set_always_show_image(btn3, TRUE);
+    gtk_button_set_relief(btn3, GTK_RELIEF_NONE);
     gtk_button_set_relief(btn2, GTK_RELIEF_NONE);
     gtk_widget_show(priv->toggle_btn);
+    gtk_widget_show(priv->toggle_btn2);
     gtk_widget_show(btn2);
     gtk_container_add(GTK_CONTAINER(priv->left_box), priv->toggle_btn);
+    gtk_container_add(GTK_CONTAINER(priv->left_box), priv->toggle_btn2);
     gtk_container_add(GTK_CONTAINER(priv->left_box), btn2);
     g_signal_connect(priv->toggle_btn, "clicked",
                      G_CALLBACK(emu8086_app_window_toggle_bb), win);
+    g_signal_connect(priv->toggle_btn2, "clicked",
+                     G_CALLBACK(emu8086_app_window_toggle_bb), win);
     g_signal_connect(btn2, "clicked", G_CALLBACK(emu8086_app_memory_window_close), priv->mem_view);
     gtk_label_set_text(GTK_LABEL(priv->messages), "Version 1.0.2(Beta)");
+    g_free(path);
+    g_free(path2);
+    g_free(path3);
 }
 
 static void load_vpaned(Emu8086AppWindow *win)
@@ -1757,8 +1778,15 @@ static void emu8086_app_window_show_errors(Emu8086AppCodeRunner *runner, gint er
     win = EMU8086_APP_WINDOW(user_data);
     PRIV;
     gchar buf[15];
+    GtkWidget *icon3;
+
+    //priv->err_prsent  = gtk_image_new_from_file(path3);
     sprintf(buf, "errors: %d", errors);
-    gtk_button_set_label(GTK_BUTTON(priv->toggle_btn), buf);
+
+    // gtk_button_set_image(btn, priv->err_prsent);
+    gtk_button_set_label(GTK_BUTTON(priv->toggle_btn2), buf);
+    gtk_widget_hide(priv->toggle_btn);
+    gtk_widget_show(priv->toggle_btn2);
     gtk_text_buffer_set_text(priv->err_buffer, emu8086_app_code_runner_get_errors(runner), -1);
     priv->errs_cleared = FALSE;
     //     gtk_label_set_text(GTK_LABEL(priv->messages), priv->runner->priv->em);
@@ -1866,7 +1894,7 @@ gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win)
     GtkWindow *window = GTK_WINDOW(win);
     gboolean found;
     stop(win->priv->runner, FALSE);
-   
+
     dialog = gtk_file_chooser_dialog_new("Open File",
                                          window,
                                          action,

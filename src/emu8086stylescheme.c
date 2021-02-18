@@ -441,14 +441,17 @@ gboolean user_config_themes_exists()
             g_file_make_directory(file, NULL, &error2);
             if (error2 != NULL)
             {
-                g_error_free(error2);
                 g_print("hhh %s\n", error2->message);
+
+                g_error_free(error2);
+                g_free(path);
                 return FALSE;
             }
         }
         else
         {
             g_print("failes \n");
+            g_free(path);
             return FALSE;
         }
     }
