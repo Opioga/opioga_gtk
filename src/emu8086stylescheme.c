@@ -14,7 +14,6 @@
  * App class
  */
 
-
 #include <stdio.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -44,9 +43,9 @@ static void emu8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme);
 static void emu8086_app_style_scheme_class_init(Emu8086AppStyleSchemeClass *klass);
 
 static void emu8086_app_style_scheme_set_property(GObject *object,
-                                                   guint property_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec)
+                                                  guint property_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec)
 {
     Emu8086AppStyleScheme *self = EMU8086_APP_STYLE_SCHEME(object);
     // g_print("l %d\n", *value);
@@ -82,9 +81,9 @@ static void emu8086_app_style_scheme_set_property(GObject *object,
 
 static void
 emu8086_app_style_scheme_get_property(GObject *object,
-                                       guint property_id,
-                                       GValue *value,
-                                       GParamSpec *pspec)
+                                      guint property_id,
+                                      GValue *value,
+                                      GParamSpec *pspec)
 {
     Emu8086AppStyleScheme *self = EMU8086_APP_STYLE_SCHEME(object);
 
@@ -147,7 +146,7 @@ static void emu8086_app_style_scheme_init(Emu8086AppStyleScheme *scheme)
 }
 static void
 emu8086_app_scheme_weak_notify(gpointer data,
-                                GObject *where_the_scheme_was)
+                               GObject *where_the_scheme_was)
 {
     g_print("destroyed\n");
 }
@@ -439,7 +438,7 @@ gboolean user_config_themes_exists()
 
         if (emu_create_config_dir())
         {
-          g_file_make_directory(file, NULL, &error2);
+            g_file_make_directory(file, NULL, &error2);
             if (error2 != NULL)
             {
                 g_error_free(error2);
@@ -460,103 +459,94 @@ gboolean user_config_themes_exists()
     return TRUE;
 }
 
-them *emu8086_app_style_scheme_get_theme( gchar *_name,gchar *path ){
-       gchar *theme_path, *name;
-     
-       g_autoptr(GError) error4 = NULL;
+them *emu8086_app_style_scheme_get_theme(gchar *_name, gchar *path)
+{
+    gchar *theme_path, *name;
+
+    g_autoptr(GError) error4 = NULL;
     g_autoptr(GKeyFile) key_file = g_key_file_new();
 
     theme_path = g_build_filename(path, _name, NULL);
-    
 
     if (!g_key_file_load_from_file(key_file, theme_path, G_KEY_FILE_NONE, &error4))
     {
         if (g_error_matches(error4, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_print("Error loading key file: %s '%s'", error4->message,theme_path);
+            g_print("Error loading key file: %s '%s'", error4->message, theme_path);
         return NULL;
     }
-    gchar *des = g_key_file_get_string(key_file, "Description", "value",  &error4);
- 
- 
-        if (des == NULL ||
+    gchar *des = g_key_file_get_string(key_file, "Description", "value", &error4);
+
+    if (des == NULL ||
         g_error_matches(error4, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND))
     {
         g_print("Error finding key in key file: %s", error4->message);
-              return NULL;
+        return NULL;
     }
     _name[strlen(_name) - 6] = '\0';
- 
+
     name = _name;
     them *theme = (them *)malloc(sizeof(them));
-            theme->id = g_strdup(name);
-        theme->text = des;
-        g_free(theme_path);
-        return theme;
+    theme->id = g_strdup(name);
+    theme->text = des;
+    g_free(theme_path);
+    return theme;
 }
-
-
 
 them **emu8086_app_style_scheme_get_themes(Emu8086AppStyleScheme *scheme, gsize *len)
 {
 
     gchar *path2;
-  GDir *dir;
+    GDir *dir;
 
-    path2 = g_build_filename(DATADIR, "emu8086/themes",  NULL);
-  
-    dir = g_dir_open (path2, 0, NULL);
+    path2 = g_build_filename(DATADIR, "emu8086/themes", NULL);
+
+    dir = g_dir_open(path2, 0, NULL);
     const gchar *_name;
     gsize size, l = 0;
-    GSList      *filenames;
-GSList *f;
-filenames = g_slist_prepend (filenames, NULL);
-    while ((_name = g_dir_read_name (dir)) != NULL)
-	{
+    GSList *filenames;
+    GSList *f;
+    filenames = g_slist_prepend(filenames, NULL);
+    while ((_name = g_dir_read_name(dir)) != NULL)
+    {
         gchar *name = g_strdup(_name);
-       gchar *m = NULL;
-       m= strstr(name, ".theme");
-if(m != NULL) {
-    filenames = g_slist_prepend (filenames, name);
-    l= l+1;
-    
-    }
-    else {
-        g_free (name);
+        gchar *m = NULL;
+        m = strstr(name, ".theme");
+        if (m != NULL)
+        {
+            filenames = g_slist_prepend(filenames, name);
+            l = l + 1;
+        }
+        else
+        {
+            g_free(name);
+        }
     }
 
-    }
-
-them **themes;
-themes = (them **)malloc(sizeof(them *) * l);
- int o =0;
-    for (f = filenames; f != NULL; f = f->next){
+    them **themes;
+    themes = (them **)malloc(sizeof(them *) * l);
+    int o = 0;
+    for (f = filenames; f != NULL; f = f->next)
+    {
         gchar *filename;
 
-		filename = f->data;
+        filename = f->data;
 
         them *_theme;
         _theme = emu8086_app_style_scheme_get_theme(filename, path2);
-        if(_theme != NULL){ g_print("name -> %s Des -> %s\n", _theme->id, _theme->text);
-        themes[o++] = _theme;}
+        if (_theme != NULL)
+        {
 
+            themes[o++] = _theme;
+        }
     }
 
-
- 
- 
-
-
-
     g_free(path2);
-   
-   
-    size =o;
-g_slist_free_full (filenames, g_free);
+
+    size = o;
+    g_slist_free_full(filenames, g_free);
     themes = add_local_themes(scheme, themes, size, len);
 
     return themes;
-  
-  
 }
 
 void emu8086_theme_free(them *themes)
@@ -639,53 +629,58 @@ them **add_local_themes(Emu8086AppStyleScheme *scheme, them **themes, gsize size
     *len = size;
     if (!user_config_themes_exists())
         return themes;
- path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
-      GDir *dir;
-          const gchar *_name;
+    path = g_build_filename(g_get_user_config_dir(), "emu8086/themes", NULL);
+    GDir *dir;
+    const gchar *_name;
 
+    GSList *filenames;
+    GSList *f;
+    gsize l = 0;
+    filenames = g_slist_prepend(filenames, NULL);
+    dir = g_dir_open(path, 0, NULL);
 
-    GSList      *filenames;
-GSList *f;
-gsize l = 0;
-filenames = g_slist_prepend (filenames, NULL);
-    dir = g_dir_open (path, 0, NULL);
-
-    while ((_name = g_dir_read_name (dir)) != NULL)
-	{
+    while ((_name = g_dir_read_name(dir)) != NULL)
+    {
         gchar *name = g_strdup(_name);
-       gchar *m = NULL;
-       m= strstr(name, ".theme");
-if(m != NULL) {
-    filenames = g_slist_prepend (filenames, name);
-    l= l+1;
-    
+        gchar *m = NULL;
+        m = strstr(name, ".theme");
+        if (m != NULL)
+        {
+            filenames = g_slist_prepend(filenames, name);
+            l = l + 1;
+        }
+        else
+        {
+            g_free(name);
+        }
     }
-    else {
-        g_free (name);
-    }
-
-    }
-    if(l == 0) return themes;
-    else {
+    if (l == 0)
+        return themes;
+    else
+    {
         g_print("%d \n ", l);
     }
     gsize expanded = sizeof(them *) * (size + l);
     themes = g_realloc(themes, expanded);
 
-    int o =0;
-    for (f = filenames; f != NULL; f = f->next){
+    int o = 0;
+    for (f = filenames; f != NULL; f = f->next)
+    {
         gchar *filename;
 
-		filename = f->data;
+        filename = f->data;
 
         them *_theme;
         _theme = emu8086_app_style_scheme_get_theme(filename, path);
-        if(_theme != NULL){ g_print("name -> %s Des -> %s\n", _theme->id, _theme->text);
-        themes[ o+ size] = _theme;}
-o = o + 1;
+        if (_theme != NULL)
+        {
+
+            themes[o + size] = _theme;
+        }
+        o = o + 1;
     }
 
-g_slist_free_full (filenames, g_free);
+    g_slist_free_full(filenames, g_free);
     *len = size + l;
     return themes;
 }
@@ -719,8 +714,5 @@ const gchar *emu_style_scheme_install_theme(Emu8086AppStyleScheme *scheme,
         return NULL;
     }
 
- 
- 
-  
     return get_n(file);
 }
