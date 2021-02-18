@@ -924,7 +924,7 @@ void emu8086_app_window_arr_sum_activate_cb(Emu8086AppWindow *win)
     g_return_if_fail(file != NULL);
     strcpy(win->state.file_path, path);
     strcpy(win->state.file_name, "ArraySum.asm");
-
+    stop(priv->runner, FALSE);
     if (g_file_load_contents(file, NULL, &con, &len, NULL, NULL))
     {
 
@@ -963,7 +963,7 @@ void emu8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win)
     g_return_if_fail(file != NULL);
     strcpy(win->state.file_path, path);
     strcpy(win->state.file_name, "RevStr.asm");
-
+    stop(priv->runner, FALSE);
     if (g_file_load_contents(file, NULL, &con, &len, NULL, NULL))
     {
 
@@ -1865,6 +1865,8 @@ gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win)
     gint res;
     GtkWindow *window = GTK_WINDOW(win);
     gboolean found;
+    stop(win->priv->runner, FALSE);
+   
     dialog = gtk_file_chooser_dialog_new("Open File",
                                          window,
                                          action,

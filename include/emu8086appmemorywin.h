@@ -31,6 +31,6 @@ G_DECLARE_FINAL_TYPE(Emu8086AppMemoryWindow, emu8086_app_memory_window, EMU_8086
 
 Emu8086AppMemoryWindow * emu8086_app_memory_window_open(GtkWindow *parent_win, Emu8086AppCodeRunner *win);
 void emu8086_app_memory_window_close(GtkButton *btn,Emu8086AppMemoryWindow *win);
-
+GtkWidget * emu8086_app_memory_window_get_box(Emu8086AppMemoryWindow *win);
 G_END_DECLS
 #endif /* __EXAMPLEAPPMEM_WIN_H */

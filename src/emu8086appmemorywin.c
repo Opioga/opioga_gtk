@@ -156,6 +156,7 @@ static void emu8086_app_memory_window_populate_body(Emu8086AppMemoryWindow *win)
     code = create_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(code), FALSE);
     gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(code), FALSE);
+    emu8086_app_code_set_show_lines(EMU8086_APP_CODE(code), FALSE);
     gtk_widget_set_hexpand(scrolled, TRUE);
     gtk_widget_set_vexpand(scrolled, TRUE);
     gtk_widget_set_hexpand(code, TRUE);
@@ -240,8 +241,11 @@ static void emu8086_app_window_memory_update(Emu8086AppCodeRunner *runner, gpoin
 
     for (gint i = start; i < (end + 1); i++)
     {
-        gchar buf[20];
-        sprintf(buf, "0x%04x : 0x%02x\n", i, aCPU->mDataMem[i]);
+        gchar buf[30];
+        unsigned char c;
+        c = aCPU->mDataMem[i];
+       if(g_ascii_isalpha(c)) sprintf(buf, "0x%04x : 0x%02x -> '%c'\n", i, c, c);
+       else sprintf(buf, "0x%04x : 0x%02x\n", i, c);
         g_string_append(s, (buf));
     }
     gchar *str;
@@ -276,4 +280,16 @@ void emu8086_app_memory_window_close(GtkButton *btn, Emu8086AppMemoryWindow *win
 static void emu8086_app_memory_window_adjust_changed(GtkAdjustment *adj, Emu8086AppMemoryWindow *win)
 {
     emu8086_app_window_memory_update(win->priv->runner, win);
+}
+
+/**
+ * emu8086_app_memory_window_get_box:
+ * @win: a #Emu8086AppMemoryWindow
+ *
+ * Gets the box of the @win.
+ *
+ * Returns: (transfer none): the bottom #GtkWidget.
+ */
+GtkWidget * emu8086_app_memory_window_get_box(Emu8086AppMemoryWindow *win){
+    return win->priv->box;
 }

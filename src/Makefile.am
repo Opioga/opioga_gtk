@@ -58,6 +58,7 @@ INST_H_FILES =			\
     $(top_srcdir)/include/emu8086appcode.h \
     $(top_srcdir)/include/emu8086apprunner.h \
     $(top_srcdir)/include/emu8086apppluginbox.h \
+    $(top_srcdir)/include/emu8086appmemorywin.h \
     $(top_srcdir)/include/emu8086appwin.h \
     $(top_srcdir)/include/emu8086stylescheme.h \
     $(top_srcdir)/include/emu8086appuredomanager.h \

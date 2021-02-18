@@ -56,6 +56,7 @@ struct _Emu8086AppCodePrivate
     int *break_points[100];
     int break_points_len;
     gboolean auto_indent;
+    gboolean show_line_numbers;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu8086_app_code, GTK_TYPE_TEXT_VIEW);
@@ -273,7 +274,7 @@ emu8086_app_code_draw(GtkWidget *widget,
     gboolean event_handled;
     event_handled = GTK_WIDGET_CLASS(emu8086_app_code_parent_class)->draw(widget, cr);
 
-    if (priv->gutter != NULL)
+    if (priv->gutter != NULL && priv->show_line_numbers)
     {
         draw(priv->gutter, cr);
     }
@@ -601,6 +602,7 @@ static void emu8086_app_code_init(Emu8086AppCode *code)
     priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     priv->mark = NULL;
     priv->gutter = NULL;
+    priv->show_line_numbers = TRUE;
     priv->scheme = emu8086_app_style_scheme_get_default();
     priv->hl = emu8086_app_style_scheme_get_color_by_index(priv->scheme, 7);
     gtk_accel_map_add_entry("<Code-Widget>/Format", GDK_KEY_I, GDK_CONTROL_MASK);
@@ -818,4 +820,10 @@ void get_break_points(Emu8086AppCode *code, gint *bps, gint *len)
     *len = priv->break_points_len;
 
     bps = priv->break_points;
+}
+
+void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show)
+{
+    g_return_if_fail(EMU8086_IS_APP_CODE(code));
+    code->priv->show_line_numbers = show;
 }

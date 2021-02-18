@@ -948,7 +948,7 @@ char *match_register(char *p, int width, int *value)
         return NULL;
     }
 
-    if (p[2] && (!isspace(p[2]) && p[2] != ',' &&p[2] !=']'))
+    if (p[2] && (!isspace(p[2]) && p[2] != ',' &&p[2] !=']' && p[2] != '+' && p[2] != '-'))
     {
      
 

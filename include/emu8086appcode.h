@@ -63,5 +63,6 @@ void get_break_points(Emu8086AppCode *code, gint *bps, gint *len);
 Emu8086AppCode *create_new();
 void emu8086_app_code_undo(Emu8086AppCode *code);
 void emu8086_app_code_redo(Emu8086AppCode *code);
+void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show);
 G_END_DECLS
 #endif // MACRO
