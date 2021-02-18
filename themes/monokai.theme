@@ -13,3 +13,5 @@ selection=#ffffff
 selectionbg=#575b6180
 text=#F8F8F2
 linecolor=#fcfcfc
+[Description]
+value=Monokai Theme Sublime text
