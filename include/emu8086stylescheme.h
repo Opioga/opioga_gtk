@@ -11,6 +11,24 @@ G_BEGIN_DECLS
 #define EMU8086_APP_STYLE_SCHEME_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), EMU8086_APP_STYLE_SCHEME_TYPE, Emu8086AppStyleSchemeClass))
 #define EMU8086_STYLE_SCHEME_IS_scheme_CLASS(klass)(G_TYPE_CHECK_CLASS_TYPE((klass), EMU8086_APP_STYLE_SCHEME_TYPE)
 
+enum _Emu8086AppStyleSchemeColor
+{
+    COLOR_KEYWORD=1,
+    COLOR_REG,
+    COLOR_STRING,
+    COLOR_LABEL_DEF,
+    COLOR_NUM,
+    COLOR_SPECIAL,
+    COLOR_COMMENT,
+    COLOR_BACKGROUND,
+    COLOR_CURSOR,
+    COLOR_SELECTION,
+    COLOR_SELECTIONBG,
+    COLOR_TEXT,
+    COLOR_LINECOLOR,
+    COLOR_HIGHLIGHT,
+};
+
 typedef struct _Emu8086AppStyleSchemePrivate Emu8086AppStyleSchemePrivate;
 typedef struct _theme them;
 struct _theme

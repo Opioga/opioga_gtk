@@ -20,15 +20,15 @@
 #include <ctype.h>
 
 #include <emu8086app.h>
+#include <emu8086apppluginsengine.h>
 #include <emu8086appwin.h>
 #include <emu8086aboutwin.h>
 #include <emu8086appprefs.h>
 #include <emu8086apprunner.h>
+#include <emu8086stylescheme.h>
+
 static void quit(Emu8086AppWindow *win);
-struct _Emu8086App
-{
-    GtkApplication parent;
-};
+
 typedef struct _Emu8086AppPrivate Emu8086AppPrivate;
 
 struct _Emu8086AppPrivate
@@ -38,6 +38,14 @@ struct _Emu8086AppPrivate
     gint to;
     GdkPixbuf *pic;
 };
+
+
+struct _Emu8086App
+{
+    GtkApplication parent; Emu8086AppPrivate *priv;
+};
+
+static void emu8086_app_shutdown(GApplication *application);
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086App, emu8086_app, GTK_TYPE_APPLICATION);
 
@@ -56,15 +64,18 @@ emu8086_app_init(Emu8086App *app)
     priv = emu8086_app_get_instance_private(app);
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->pic = NULL;
+    app->priv = priv;
     g_signal_connect(app, "window-removed", G_CALLBACK(user_function3), NULL);
 }
 
 static void
-emu8086_activate(GApplication *app)
+emu8086_activate(GApplication *appe)
 {
     Emu8086AppWindow *win;
+    Emu8086App *app;
+    app = EMU8086_APP(appe);
     _PRIV;
-    win = emu8086_app_window_new(EMU8086_APP(app));
+    win = emu8086_app_window_new(app);
     priv->win = win;
     emu8086_app_window_set_app(win, app);
     emu8086_app_window_up(win);
@@ -98,7 +109,7 @@ void emu8086_app_open(GApplication *appe,
 
     for (i = 0; i < n_files; i++)
     {
-        // win = emu8086_app_window_new(EMU8086_APP(app));
+        
 
         emu8086_app_open_file(app, files[i]);
 
@@ -109,12 +120,14 @@ void emu8086_app_open(GApplication *appe,
 static void
 quit_activated(GSimpleAction *action,
                GVariant *parameter,
-               gpointer app)
+               gpointer appe)
 {
 
     GList *windows;
     Emu8086AppWindow *win; // *win;
     gint i;
+    Emu8086App *app;
+    app = EMU8086_APP(appe);
     _PRIV;
     windows = gtk_application_get_windows(GTK_APPLICATION(app));
     i = g_list_length(windows);
@@ -133,10 +146,10 @@ open_activated(GSimpleAction *action,
                GVariant *parameter,
                gpointer appe)
 {
-    Emu8086App *app = EMU8086_APP(appe);
+  
     // _PRIV;
     // gtk_application_g
-    emu8086_activate(app);
+    emu8086_activate(G_APPLICATION(appe));
 }
 static void
 save_activated(GSimpleAction *action,
@@ -146,7 +159,7 @@ save_activated(GSimpleAction *action,
     Emu8086App *app = EMU8086_APP(appe);
     _PRIV;
 
-    priv->win = gtk_application_get_active_window(app);
+   priv->win = EMU8086_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
 
     emu8086_app_window_save_activate_cb(priv->win);
 }
@@ -158,7 +171,7 @@ emu8086_action3(GSimpleAction *action,
     Emu8086App *app = EMU8086_APP(appe);
     _PRIV;
 
-    priv->win = gtk_application_get_active_window(app);
+   priv->win = EMU8086_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
 
     emu8086_app_window_open_egs(priv->win);
 }
@@ -171,7 +184,7 @@ save_as_activated(GSimpleAction *action,
     Emu8086App *app = EMU8086_APP(appe);
     _PRIV;
 
-    priv->win = gtk_application_get_active_window(app);
+   priv->win = EMU8086_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
 
     emu8086_app_window_save_as_activate_cb(priv->win);
 }
@@ -193,7 +206,7 @@ ex1_activated(GSimpleAction *action,
     Emu8086App *app = EMU8086_APP(appe);
 
     _PRIV;
-    priv->win = gtk_application_get_active_window(app);
+   priv->win = EMU8086_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
 
     emu8086_app_window_arr_sum_activate_cb(priv->win);
 }
@@ -205,7 +218,7 @@ ex2_activated(GSimpleAction *action,
 {
     Emu8086App *app = EMU8086_APP(appe);
     _PRIV;
-    priv->win = gtk_application_get_active_window(app);
+   priv->win = EMU8086_APP_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
 
     emu8086_app_window_rev_str_activate_cb(priv->win);
 }
@@ -221,8 +234,8 @@ pref_activated(GSimpleAction *action,
     Emu8086AppPrefs *prefs;
     prefs = emu8086_app_prefs_new(EMU8086_APP_WINDOW(win));
     // gtk_window_set_default_size(GTK_WINDOW(prefs), 400, 500);
-    gtk_window_set_title(prefs, "Settings");
-    gtk_widget_show_all(prefs);
+    gtk_window_set_title(GTK_WINDOW(prefs), "Emulator Preferences");
+    gtk_widget_show_all(GTK_WIDGET(prefs));
 }
 static void emu8086_app_open_doc(GSimpleAction *action,
                                  GVariant *parameter,
@@ -278,12 +291,30 @@ static void emu8086_startup(GApplication *app)
     g_object_unref(builder);
 }
 
-static void
-emu8086_app_class_init(Emu8086AppClass *class)
+
+static void emu8086_app_shutdown(GApplication *application)
 {
-    G_APPLICATION_CLASS(class)->startup = emu8086_startup;
-    G_APPLICATION_CLASS(class)->activate = emu8086_activate;
-    G_APPLICATION_CLASS(class)->open = emu8086_app_open;
+    Emu8086PluginsEngine *engine;
+    Emu8086AppStyleScheme *scheme;
+    
+    engine = emu8086_plugins_engine_get_default();
+    
+
+    scheme = emu8086_app_style_scheme_get_default();
+
+    g_object_unref(engine);
+    g_object_unref(scheme);
+    G_APPLICATION_CLASS(emu8086_app_parent_class)->shutdown(application);
+}
+static void
+emu8086_app_class_init(Emu8086AppClass *klass)
+{
+    GApplicationClass *app_class;
+    app_class = G_APPLICATION_CLASS(klass);
+    app_class->startup = emu8086_startup;
+    app_class->activate = emu8086_activate;
+    app_class->open = emu8086_app_open;
+    app_class->shutdown = emu8086_app_shutdown;
 }
 
 Emu8086App *emu8086_app_new(void)
@@ -321,7 +352,8 @@ void open_help(Emu8086App *app)
         }
         else
         {
-            g_debug(error->message);
+        
+            g_debug("%s", error->message);
             priv->pic = NULL;
         }
         // g_free(pic);
@@ -338,7 +370,7 @@ void open_help(Emu8086App *app)
 static void quit(Emu8086AppWindow *win)
 {
     emu8086_app_window_stop_win(win);
-    gtk_widget_destroy(win);
+    gtk_widget_destroy(GTK_WIDGET(win));
     // exit(EXIT_SUCCESS);
 }
 

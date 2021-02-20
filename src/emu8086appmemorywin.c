@@ -153,7 +153,7 @@ static void emu8086_app_memory_window_populate_body(Emu8086AppMemoryWindow *win)
     GtkWidget *code, *vbox;
 
     scrolled = gtk_scrolled_window_new(NULL, NULL);
-    code = create_new();
+    code = create_new(MEM_VIEW);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(code), FALSE);
     gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(code), FALSE);
     emu8086_app_code_set_show_lines(EMU8086_APP_CODE(code), FALSE);

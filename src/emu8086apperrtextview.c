@@ -61,7 +61,7 @@ menu_item_activate_clear(GSimpleAction *action,
     Emu8086AppErrTextView *view;
     view = EMU8086_APP_ERR_TEXT_VIEW(appe);
     PRIV_ERR_TEXT_VIEW;
-    g_print("lol\n");
+
     if(!GTK_IS_TEXT_BUFFER(priv->buffer))
         priv->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(appe));
     gtk_text_buffer_set_text(priv->buffer, "Nothing Doing\n Errors: 0", -1);
@@ -102,9 +102,10 @@ emu8086_app_err_text_view_set_property(GObject *object,
     {
     case PROP_ERR_TEXT_VIEW_FONT:
 
-        v = g_value_get_string(value);
+        v = g_strdup(g_value_get_string(value));
         desc = pango_font_description_from_string(v);
-        priv->font = g_strdup(v);
+        if(priv->font != NULL) g_free(priv->font);
+        priv->font = v;
 
         pango_font_description_free(desc);
         emu8086_app_err_text_view_change_color(view);
@@ -249,6 +250,7 @@ static void emu8086_app_err_text_view_init(Emu8086AppErrTextView *view)
     priv->popup = NULL;
     priv->attached = FALSE;
     GMenuModel *_menu;
+    priv->font = NULL;
     GtkBuilder *builder;
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/errtv.ui");
     _menu = G_MENU_MODEL(gtk_builder_get_object(builder, "err_tv_menu"));

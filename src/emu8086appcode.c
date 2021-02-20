@@ -13,7 +13,7 @@
  * code.c
  * Code class
  */
-
+#include <emu8086appwin.h>
 #include <emu8086appcode.h>
 #include <emu8086appcodebuffer.h>
 #include <pango_css.h>
@@ -27,19 +27,21 @@ enum _Emu8086AppCodeSignals
     CODE_REDO,
     MOVE_LINES,
     CODE_N_SIGNALS
-} ;
+};
 
 static guint code_signals[CODE_N_SIGNALS] = {0};
 
- enum _Emu8086AppCodeProperty
+enum _Emu8086AppCodeProperty
 {
     PROP_0,
     PROP_FONT,
     PROP_CODE_THEME,
-    PROP_AUTO_INDENT
+    PROP_AUTO_INDENT,
+    PROP_HIGHLIGHT_LINE,
+    PROP_CODE_TYPE
 };
 
-typedef enum  _Emu8086AppCodeProperty  Emu8086AppCodeProperty;
+typedef enum _Emu8086AppCodeProperty Emu8086AppCodeProperty;
 
 struct _Emu8086AppCodePrivate
 {
@@ -55,15 +57,18 @@ struct _Emu8086AppCodePrivate
     GtkAccelGroup *ag;
     GtkTextMark *mark;
     Emu8086AppCodeGutter *gutter;
-    int *break_points[100];
+    int break_points[100];
     int break_points_len;
     gboolean auto_indent;
+    gboolean highlight_line;
     gboolean show_line_numbers;
+    Emu8086AppCodeType m_type;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCode, emu8086_app_code, GTK_TYPE_TEXT_VIEW);
 
 static void emu8086_app_code_remove_all_break_points(Emu8086AppCode *code);
+static Emu8086AppCode *emu8086_app_code_new(Emu8086AppCodeType type);
 
 static void menu_item_activate_indent_cb(GSimpleAction *action,
                                          GVariant *parameter,
@@ -115,8 +120,8 @@ menu_item_activate_rem_bps_cb(GSimpleAction *action,
     emu8086_app_code_remove_all_break_points(code);
 }
 
-static gboolean emu8086_app_code_popup_menu(GtkTextView *text_view,
-                                            GtkWidget *popup)
+static void emu8086_app_code_popup_menu(GtkTextView *text_view,
+                                        GtkWidget *popup)
 {
     Emu8086AppCode *code = EMU8086_APP_CODE(text_view);
     Emu8086AppCodeBuffer *buffer;
@@ -124,7 +129,7 @@ static gboolean emu8086_app_code_popup_menu(GtkTextView *text_view,
     GtkWidget *menu_item;
     buffer = code->priv->buffer;
 
-    if (!EMU8086_IS_APP_CODE_BUFFER(buffer))
+    if (!EMU8086_IS_APP_CODE_BUFFER(buffer) || code->priv->m_type == MEM_VIEW)
     {
         return;
     }
@@ -135,14 +140,14 @@ static gboolean emu8086_app_code_popup_menu(GtkTextView *text_view,
     }
     PRIV_CODE;
     menu = GTK_MENU_SHELL(popup);
-    gtk_menu_set_accel_group(menu, priv->ag);
+    gtk_menu_set_accel_group(GTK_MENU(menu), priv->ag);
     menu_item = gtk_separator_menu_item_new();
     gtk_menu_shell_append(menu, menu_item);
     gtk_widget_show(menu_item);
 
     menu_item = gtk_menu_item_new_with_mnemonic(("_Format Document"));
     gtk_menu_shell_append(menu, menu_item);
-    gtk_menu_item_set_accel_path(menu_item, "<Code-Widget>/Format");
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(menu_item), "<Code-Widget>/Format");
     gtk_actionable_set_action_name(GTK_ACTIONABLE(menu_item), "code.format");
 
     gtk_widget_show(menu_item);
@@ -152,24 +157,24 @@ static gboolean emu8086_app_code_popup_menu(GtkTextView *text_view,
     gtk_actionable_set_action_name(GTK_ACTIONABLE(menu_item), "code.remove_bps");
 
     gtk_widget_show(menu_item);
+    return;
 };
 
 static gchar *emu8086_app_code_change_color(Emu8086AppCode *code)
 {
 
     PRIV_CODE;
-    gchar *v = emu8086_app_style_scheme_get_color_by_index(priv->scheme, 12);
+    gchar *v = emu8086_app_style_scheme_get_color_by_index(priv->scheme, COLOR_TEXT);
 
     PangoFontDescription *desc = pango_font_description_from_string(g_strdup(code->font));
 
     gchar *m = emu8086_pango_font_description_to_css(desc, v);
-    gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
+    gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(priv->provider), m, -1, NULL);
 
     code->color = v;
 
     pango_font_description_free(desc);
     g_free(m);
-  
 }
 
 static void
@@ -189,21 +194,28 @@ emu8086_app_code_set_property(GObject *object,
     {
     case PROP_FONT:
 
-        v = g_value_get_string(value);
+        v = g_strdup(g_value_get_string(value));
         desc = pango_font_description_from_string(v);
-        // m = emu8086_pango_font_description_to_css(desc, emu8086_app_style_scheme_get_color_by_index(priv->scheme, 5));
-        // gtk_css_provider_load_from_data(priv->provider, m, -1, NULL);
 
-        code->font = g_strdup(v);
+        code->font = v;
 
         pango_font_description_free(desc);
         emu8086_app_code_change_color(code);
-   
+
         break;
-       
+
     case PROP_AUTO_INDENT:
         code->priv->auto_indent = g_value_get_boolean(value);
         break;
+
+    case PROP_HIGHLIGHT_LINE:
+        code->priv->highlight_line = g_value_get_boolean(value);
+        break;
+
+    case PROP_CODE_TYPE:
+        code->priv->m_type = g_value_get_int(value);
+        break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -247,6 +259,8 @@ emu8086_app_code_drag_data_received(GtkWidget *widget,
 {
     Emu8086AppCode *code;
     code = EMU8086_APP_CODE(widget);
+    g_return_if_fail(EMU8086_IS_APP_CODE(code));
+
     PRIV_CODE;
     // ;
     emu8086_app_window_open_drag_data(priv->win, selection_data);
@@ -320,11 +334,17 @@ static gboolean emu8086_app_code_button_press_event(GtkWidget *widget, GdkEventB
                                               &first_y_buffer_coord);
         gtk_text_view_get_line_at_y(view, &iter, first_y_buffer_coord, NULL);
         line_num = gtk_text_iter_get_line(&iter);
+
+        // We only want to allow 100 breakpoints
+        if (priv->break_points_len >= 99)
+            return GTK_WIDGET_CLASS(emu8086_app_code_parent_class)->button_press_event(widget, event);
+
         if (!check_for_break_points(code, line_num, TRUE))
 
         {
             gint len = priv->break_points_len;
             gboolean has_set_bp = FALSE;
+
             for (gint i = 0; i < len; i++)
             {
                 int *l = priv->break_points + i;
@@ -337,7 +357,6 @@ static gboolean emu8086_app_code_button_press_event(GtkWidget *widget, GdkEventB
 
             if (!has_set_bp)
                 priv->break_points[priv->break_points_len++] = line_num;
-       
         }
     }
 
@@ -436,8 +455,10 @@ static void emu8086_app_code_paint_line_background(GtkTextView *text_view,
     gdk_cairo_set_source_rgba(cr, (GdkRGBA *)color);
     cairo_set_line_width(cr, 1);
     cairo_rectangle(cr, x1 + .5, y + .5, x2 - x1 - 1, height - 1);
+
     cairo_stroke_preserve(cr);
     cairo_fill(cr);
+    // cairo_stroke(cr)
 }
 
 static void emu8086_app_code_paint_current_line_highlight(GtkTextView *view,
@@ -467,6 +488,11 @@ static void emu8086_app_code_draw_layer(GtkTextView *text_view,
                                         GtkTextViewLayer layer,
                                         cairo_t *cr)
 {
+    Emu8086AppCode *code;
+    code = EMU8086_APP_CODE(text_view);
+    g_return_if_fail(EMU8086_IS_APP_CODE(code));
+    if (!code->priv->highlight_line)
+        return;
     cairo_save(cr);
     if (gtk_widget_is_sensitive(GTK_WIDGET(text_view)) && layer == GTK_TEXT_VIEW_LAYER_BELOW_TEXT)
     {
@@ -512,6 +538,11 @@ static void emu8086_app_code_class_init(Emu8086AppCodeClass *klass)
     g_object_class_install_property(object_class, PROP_AUTO_INDENT,
                                     g_param_spec_boolean("auto_indent", "AutoIndent", "Editor auto indent", FALSE,
                                                          G_PARAM_READWRITE));
+    g_object_class_install_property(object_class, PROP_HIGHLIGHT_LINE,
+                                    g_param_spec_boolean("highlight_line", "HighlightLine", "Editor highlight line", TRUE,
+                                                         G_PARAM_READWRITE));
+    g_object_class_install_property(object_class, PROP_CODE_TYPE,
+                                    g_param_spec_int("code_type", "CodeType", "The text view type", 0, 1, CODE_VIEW, G_PARAM_READWRITE));
     code_signals[CODE_UNDO] =
         g_signal_new("undo",
                      G_TYPE_FROM_CLASS(klass),
@@ -578,6 +609,7 @@ static void _refresh_theme(Emu8086AppStyleScheme *scheme,
     hl = emu8086_app_style_scheme_get_color_by_index(scheme, 7);
     code->priv->hl = hl;
     emu8086_app_code_change_color(code);
+    emu8086_app_code_buffer_change_theme(code->priv->buffer);
     // exit(1);
 }
 
@@ -600,12 +632,13 @@ static void emu8086_app_code_init(Emu8086AppCode *code)
                                     code);
 
     gtk_widget_insert_action_group(GTK_WIDGET(code), "code", G_ACTION_GROUP(ca));
-    gtk_text_view_set_border_window_size(code,
+    gtk_text_view_set_border_window_size(GTK_TEXT_VIEW(code),
                                          GTK_TEXT_WINDOW_LEFT,
                                          20);
-    gtk_style_context_add_provider(gtk_widget_get_style_context(code), priv->provider, G_MAXUINT);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(code)), priv->provider, G_MAXUINT);
 
     g_settings_bind(priv->settings, "ai", code, "auto_indent", G_SETTINGS_BIND_GET);
+    g_settings_bind(priv->settings, "highlight", code, "highlight_line", G_SETTINGS_BIND_GET);
     g_signal_connect(GTK_TEXT_VIEW(code), "paste-clipboard", G_CALLBACK(_refreshLines), NULL);
 
     priv->break_points_len = 0;
@@ -617,7 +650,7 @@ static void emu8086_app_code_init(Emu8086AppCode *code)
     Emu8086AppCodeGutter *gutter;
     gutter = emu8086_app_code_gutter_new(code, GTK_TEXT_WINDOW_LEFT);
 
-   // setCode(buffer, code);
+    // setCode(buffer, code);
     priv->buffer = buffer;
     priv->gutter = gutter;
 
@@ -648,14 +681,14 @@ void select_line(GtkWidget *co, gint line)
                                                  FALSE);
         priv->line = line;
 
-        gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+        gtk_text_buffer_apply_tag_by_name(GTK_TEXT_BUFFER(buffer), "step", &start, &iter);
     }
     else if (GTK_IS_TEXT_MARK(priv->mark))
     {
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, priv->line);
         start = iter;
         gtk_text_iter_forward_to_line_end(&iter);
-        gtk_text_buffer_remove_tag_by_name(buffer, "step", &start, &iter);
+        gtk_text_buffer_remove_tag_by_name(GTK_TEXT_BUFFER(buffer), "step", &start, &iter);
         gtk_text_buffer_get_iter_at_line(GTK_TEXT_BUFFER(buffer), &iter, line);
 
         start = iter;
@@ -663,13 +696,11 @@ void select_line(GtkWidget *co, gint line)
 
         priv->line = line;
 
-        gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
+        gtk_text_buffer_apply_tag_by_name(GTK_TEXT_BUFFER(buffer), "step", &start, &iter);
     }
 
     gtk_text_buffer_place_cursor(GTK_TEXT_BUFFER(buffer), &iter);
 
-    //     // gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(code), mark);
-    //     // gtk_text_buffer_apply_tag_by_name(buffer, "step", &start, &iter);
     emu8086_app_code_scroll_to_view(code);
     //
 }
@@ -699,13 +730,52 @@ void reset_code(GtkWidget *co)
 
 void emu8086_app_code_scroll_to_view(Emu8086AppCode *code)
 {
-    GtkTextIter mstart, mend;
+    GtkTextView *view;
+    GtkTextIter mstart;
     GtkTextMark *cursor;
-    Emu8086AppCodeBuffer *buffer;
+    GtkTextBuffer *buffer;
+    GdkRectangle visible, location;
+    g_return_if_fail(EMU8086_IS_APP_CODE(code));
     PRIV_CODE;
-    buffer = priv->buffer;
+    view = GTK_TEXT_VIEW(code);
+    buffer = GTK_TEXT_BUFFER(priv->buffer);
     cursor = gtk_text_buffer_get_insert(buffer);
-    gtk_text_view_scroll_mark_onscreen(code, cursor);
+    gtk_text_view_scroll_mark_onscreen(view, cursor);
+
+    gtk_text_buffer_get_iter_at_mark(buffer, &mstart, cursor);
+    gtk_text_view_get_visible_rect(view, &visible);
+
+    gtk_text_view_get_iter_location(view, &mstart, &location);
+    if (location.y < visible.y || visible.y + visible.height < location.y)
+    {
+        gtk_text_view_scroll_to_mark(view,
+                                     cursor,
+                                     0.0,
+                                     TRUE,
+                                     0.5, 0.5);
+    }
+}
+
+void emu8086_app_code_scroll_to_mark(Emu8086AppCode *code, GtkTextMark *mark)
+{
+    GtkTextView *view;
+    GtkTextIter mstart, mend;
+    g_return_if_fail(EMU8086_IS_APP_CODE(code));
+     PRIV_CODE;   view = GTK_TEXT_VIEW(code);
+  GdkRectangle visible, location;
+  gtk_text_view_scroll_mark_onscreen(view, mark);
+     gtk_text_buffer_get_iter_at_mark(GTK_TEXT_BUFFER(priv->buffer), &mstart, mark);
+    gtk_text_view_get_visible_rect(view, &visible);
+
+    gtk_text_view_get_iter_location(view, &mstart, &location);
+    if (location.y < visible.y || visible.y + visible.height < location.y)
+    {
+        gtk_text_view_scroll_to_mark(view,
+                                     mark,
+                                     0.0,
+                                     TRUE,
+                                     0.5, 0.5);
+    }
 }
 
 static void user_function(GtkTextBuffer *textbuffer,
@@ -744,23 +814,21 @@ void editFontSize(Emu8086AppCode *code, gint size)
     // monospace 14 -> 41 ecapsonom
     g_strreverse(tempsize);
 
-    // Remove all the letters in the  string 
+    // Remove all the letters in the  string
     // 41 ecapsonom -> 41
     g_strcanon(tempsize, "1234567890", '\0');
 
     // 41 -> 14
     g_strreverse(tempsize);
 
-    
     gchar tempfont[strlen(font)];
 
     strcpy(tempfont, font);
     // Copy only the font letters
     tempfont[strlen(font) - strlen(tempsize)] = '\0';
 
-
     sscanf(tempsize, "%d", &priv->fontsize);
-    
+
     gchar new[strlen(tempsize) + 2];
     priv->fontsize += size;
     sprintf(new, "%d", priv->fontsize);
@@ -770,21 +838,20 @@ void editFontSize(Emu8086AppCode *code, gint size)
     g_settings_set_string(priv->settings, "font", tmp);
     PangoFontDescription *desc;
     desc = pango_font_description_from_string(tmp);
-    gtk_css_provider_load_from_data(priv->provider, (emu8086_pango_font_description_to_css(desc, code->color)), -1, NULL);
-    
+    gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(priv->provider), (emu8086_pango_font_description_to_css(desc, code->color)), -1, NULL);
 
     pango_font_description_free(desc);
     g_free(tempsize);
     g_free(font);
-    
+
     return;
 }
 
-Emu8086AppCode *create_new()
+Emu8086AppCode *create_new(Emu8086AppCodeType type)
 {
     Emu8086AppCode *code;
     GtkStyleProvider *provider;
-    code = emu8086_app_code_new();
+    code = emu8086_app_code_new(type);
     GdkRGBA _color;
     _color.alpha = 1.0;
     _color.blue = 0.20;
@@ -794,27 +861,25 @@ Emu8086AppCode *create_new()
     provider = priv->provider;
     //
     GdkRGBA color;
-    // lines = gtk_label_new("1");
+
     color.red = 0.22;
     color.green = 0.22;
     color.blue = 0.22;
     color.alpha = 1;
-    gtk_widget_override_background_color(code, GTK_STATE_NORMAL, &color);
+    gtk_widget_override_background_color(GTK_WIDGET(code), GTK_STATE_NORMAL, &color);
 
     priv->line = 0;
 
-    //  g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), code);
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 
-    // g_settings_bind(priv->settings, "theme", code, "color", G_SETTINGS_BIND_GET);
-    return EMU8086_APP_CODE(code);
+    return code;
 
     //gtk_widget_show(lines);
 }
 
-Emu8086AppCode *emu8086_app_code_new(void)
+static Emu8086AppCode *emu8086_app_code_new(Emu8086AppCodeType type)
 {
-    return g_object_new(EMU8086_APP_CODE_TYPE, NULL);
+    return g_object_new(EMU8086_APP_CODE_TYPE, "code_type", type, NULL);
 }
 
 void get_break_points(Emu8086AppCode *code, gint *bps, gint *len)
@@ -829,4 +894,11 @@ void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show)
 {
     g_return_if_fail(EMU8086_IS_APP_CODE(code));
     code->priv->show_line_numbers = show;
+}
+
+Emu8086AppCodeBuffer *emu8086_app_code_get_mbuffer(Emu8086AppCode *code)
+{
+    g_return_val_if_fail(EMU8086_IS_APP_CODE(code), NULL);
+
+    return EMU8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)));
 }

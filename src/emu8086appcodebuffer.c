@@ -20,11 +20,9 @@
 #include <emu8086stylescheme.h>
 #include <emu8086appuredomanager.h>
 
-
 typedef enum
 {
     PROP_0,
-
     PROP_BUFFER_THEME,
     PROP_CAN_UNDO,
     PROP_CAN_REDO,
@@ -249,7 +247,8 @@ struct _Emu8086AppCodeBufferPrivate
     GList *search_contexts;
     gint max_undo_levels;
     gboolean can_undo;
-    gboolean can_redo;Emu8086AppURdoManager *manager;
+    gboolean can_redo;
+    Emu8086AppURdoManager *manager;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
@@ -258,22 +257,26 @@ static void emu8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
 {
 
     GtkTextTagTable *tag;
+    GtkTextBuffer *buf;
+
     //  gtk_text_buffer
     buffer->priv = emu8086_app_code_buffer_get_instance_private(buffer);
     PRIV_CODE_BUFFER;
+   
+    buf = GTK_TEXT_BUFFER(buffer);
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->scheme = emu8086_app_style_scheme_get_default();
-    priv->manager = emu8086_app_urdo_manager_new(buffer, 100);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
-gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "find-text", "background", "#ffffff", "foreground", "#5e91f2", NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "keyword", NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "reg", "weight", PANGO_WEIGHT_BOLD, NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "string", NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "label_def", NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "num", NULL);
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "special", "weight", PANGO_WEIGHT_BOLD, NULL);
+    priv->manager = emu8086_app_urdo_manager_new(buf, 100);
+    gtk_text_buffer_create_tag(buf, "step", "background", "#B7B73B", "foreground", "#FF0000", NULL);
+    gtk_text_buffer_create_tag(buf, "find-text", "background", "#ffffff", "foreground", "#5e91f2", NULL);
+    gtk_text_buffer_create_tag(buf, "keyword", NULL);
+    gtk_text_buffer_create_tag(buf, "reg", "weight", PANGO_WEIGHT_BOLD, NULL);
+    gtk_text_buffer_create_tag(buf, "string", NULL);
+    gtk_text_buffer_create_tag(buf, "label_def", NULL);
+    gtk_text_buffer_create_tag(buf, "num", NULL);
+    gtk_text_buffer_create_tag(buf, "special", "weight", PANGO_WEIGHT_BOLD, NULL);
 
-    gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "comment", "style", PANGO_STYLE_ITALIC, NULL);
+    gtk_text_buffer_create_tag(buf, "comment", "style", PANGO_STYLE_ITALIC, NULL);
     g_settings_bind(priv->settings, "theme", buffer, "theme", G_SETTINGS_BIND_GET);
     priv->lc = 0;
     priv->line = 0;
@@ -282,17 +285,17 @@ gtk_text_buffer_create_tag(GTK_TEXT_BUFFER(buffer), "find-text", "background", "
 
 static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
 {
-
+    GtkTextBuffer *buf;
+    buf = GTK_TEXT_BUFFER(buffer);
     PRIV_CODE_BUFFER;
     gint i = 0, t = 0;
-    // i = line;
-    priv->lc = gtk_text_buffer_get_line_count(buffer);
-    //  gtk_text_buffer_get_iter_at_mark(GTK_TEXT_BUFFER(buffer), m, &iter);
+    priv->lc = gtk_text_buffer_get_line_count(buf);
+
     while (i < (line + 1))
     {
         t = 0;
         //
-        _highlight(buffer, i);
+        _highlight(buf, i);
         i++;
         // g_free(line);
     }
@@ -301,56 +304,57 @@ static void highlight(Emu8086AppCodeBuffer *buffer, gint line)
 gboolean hl(gpointer user_data)
 {
     Emu8086AppCodeBuffer *buffer;
-    buffer = EMU8086_APP_CODE_BUFFER(user_data);
+    GtkTextBuffer *buf;
+    buf = GTK_TEXT_BUFFER(user_data);
+    buffer = EMU8086_APP_CODE_BUFFER(buf);
     GtkTextMark *mark;
     GtkTextIter iter2;
     PRIV_CODE_BUFFER;
 
-    mark = gtk_text_buffer_get_mark(buffer, "insert");
-    gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
+    mark = gtk_text_buffer_get_mark(buf, "insert");
+    gtk_text_buffer_get_iter_at_mark(buf, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
-    _highlight(buffer, i);
+    _highlight(buf, i);
     priv->timeout = 0;
     return G_SOURCE_REMOVE;
 }
 
 void queue_highlight(Emu8086AppCodeBuffer *buffer)
 {
-
-    //  buffer = EMU8086_APP_CODE_BUFFER(user_data);
+    GtkTextBuffer *buf;
+    buf = GTK_TEXT_BUFFER(buffer);
     PRIV_CODE_BUFFER;
-    priv->lc = gtk_text_buffer_get_line_count(buffer);
+    priv->lc = gtk_text_buffer_get_line_count(buf);
     if (priv->timeout != 0)
     {
         g_source_remove(priv->timeout);
+        
     }
-    priv->timeout = gdk_threads_add_timeout_full(G_PRIORITY_LOW,
-                                                 250,
-                                                 hl,
-                                                 buffer,
-                                                 NULL);
+    hl((gpointer)(buffer));
+
 }
 
-static void emu8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
-                                                      GtkTextIter *iter,
-                                                      const gchar *text,
-                                                      gint len)
+static void emu8086_app_code_buffer_insert_text_real(GtkTextBuffer *buf,
+                                                     GtkTextIter *iter,
+                                                     const gchar *text,
+                                                     gint len)
 {
     gint start_offset;
     // return;
+    Emu8086AppCodeBuffer *buffer;
+    buffer = EMU8086_APP_CODE_BUFFER(buf);
     g_return_if_fail(EMU8086_IS_APP_CODE_BUFFER(buffer));
 
     g_return_if_fail(iter != NULL);
     g_return_if_fail(text != NULL);
-    g_return_if_fail(gtk_text_iter_get_buffer(iter) == buffer);
+    g_return_if_fail(gtk_text_iter_get_buffer(iter) == buf);
 
-    GTK_TEXT_BUFFER_CLASS(emu8086_app_code_buffer_parent_class)->insert_text(buffer, iter, text, len);
-    buffer = EMU8086_APP_CODE_BUFFER(buffer);
+    GTK_TEXT_BUFFER_CLASS(emu8086_app_code_buffer_parent_class)->insert_text(buf, iter, text, len);
     PRIV_CODE_BUFFER;
     GtkTextMark *mark;
     GtkTextIter iter2;
-    mark = gtk_text_buffer_get_mark(buffer, "insert");
-    gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
+    mark = gtk_text_buffer_get_mark(buf, "insert");
+    gtk_text_buffer_get_iter_at_mark(buf, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
     start_offset = i - (priv->lc);
 
@@ -366,28 +370,30 @@ static void emu8086_app_code_buffer_insert_text_real(GtkTextBuffer *buffer,
     }
 }
 
-static emu8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
-                                             GtkTextIter *start,
-                                             GtkTextIter *end)
+static void emu8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
+                                                 GtkTextIter *start,
+                                                 GtkTextIter *end)
 {
+    Emu8086AppCodeBuffer *buf;
+    Emu8086AppCodeBufferPrivate *priv;
     gint start_offset;
-    g_return_if_fail(EMU8086_IS_APP_CODE_BUFFER(buffer));
+    buf = EMU8086_APP_CODE_BUFFER(buffer);
+    g_return_if_fail(EMU8086_IS_APP_CODE_BUFFER(buf));
     g_return_if_fail(start != NULL);
     g_return_if_fail(end != NULL);
     g_return_if_fail(gtk_text_iter_get_buffer(start) == buffer);
     g_return_if_fail(gtk_text_iter_get_buffer(end) == buffer);
-    //
-    PRIV_CODE_BUFFER;
+    priv = buf->priv;
     GtkTextMark *mark;
     GtkTextIter iter2;
     GTK_TEXT_BUFFER_CLASS(emu8086_app_code_buffer_parent_class)->delete_range(buffer, start, end);
     mark = gtk_text_buffer_get_mark(buffer, "insert");
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
-    queue_highlight(buffer);
+    queue_highlight(buf);
 }
 
-static void changeTheme(Emu8086AppCodeBuffer *buffer)
+void emu8086_app_code_buffer_change_theme(Emu8086AppCodeBuffer *buffer)
 {
     // TODO
     PRIV_CODE_BUFFER;
@@ -407,9 +413,9 @@ static void changeTheme(Emu8086AppCodeBuffer *buffer)
 
 static void
 emu8086_app_code_buffer_set_property(GObject *object,
-                                      guint property_id,
-                                      const GValue *value,
-                                      GParamSpec *pspec)
+                                     guint property_id,
+                                     const GValue *value,
+                                     GParamSpec *pspec)
 {
     Emu8086AppCodeBuffer *self = EMU8086_APP_CODE_BUFFER(object);
 
@@ -418,9 +424,9 @@ emu8086_app_code_buffer_set_property(GObject *object,
     {
 
     case PROP_BUFFER_THEME:
-        v = g_value_get_string(value);
-        self->theme = g_strdup(v);
-        changeTheme(self);
+       
+       // self->theme = v;
+        emu8086_app_code_buffer_change_theme(self);
         // g_string_free(v, FALSE);
         break;
 
@@ -444,9 +450,9 @@ emu8086_app_code_buffer_set_property(GObject *object,
 }
 static void
 emu8086_app_code_buffer_get_property(GObject *object,
-                                      guint property_id,
-                                      GValue *value,
-                                      GParamSpec *pspec)
+                                     guint property_id,
+                                     GValue *value,
+                                     GParamSpec *pspec)
 {
     Emu8086AppCodeBuffer *self = EMU8086_APP_CODE_BUFFER(object);
     switch ((Emu8086AppCodeBufferProperty)property_id)
@@ -467,8 +473,6 @@ emu8086_app_code_buffer_get_property(GObject *object,
         break;
     }
 }
-
-
 
 static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
 {
@@ -493,17 +497,7 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
     g_object_class_install_property(object_class, PROP_CAN_REDO,
                                     g_param_spec_boolean("can-redo", "CanRedo", "If we can redo", FALSE,
                                                          G_PARAM_READWRITE));
-    // buffer_signals[UNDO] =
-    //     g_signal_new("undo",
-    //                  G_OBJECT_CLASS_TYPE(object_class),
-    //                  G_SIGNAL_RUN_LAST,
-    //                  G_STRUCT_OFFSET(Emu8086AppCodeBufferClass, undo),
-    //                  NULL, NULL,
-    //                  g_cclosure_marshal_VOID__VOID,
-    //                  G_TYPE_NONE, 0);
-    // g_signal_set_va_marshaller(buffer_signals[UNDO],
-    //                            G_TYPE_FROM_CLASS(klass),
-    //                            g_cclosure_marshal_VOID__VOIDv);
+
 }
 
 Emu8086AppCodeBuffer *emu8086_app_code_buffer_new(GtkTextTagTable *table)
@@ -584,36 +578,35 @@ void emu8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer)
         {
             iter2 = iter;
             gtk_text_iter_backward_chars(&iter2, replaced_spaces);
-            gtk_text_buffer_delete(buffer, &iter2, &iter);
-            gtk_text_buffer_get_iter_at_line(buffer, &iter, i);
+            gtk_text_buffer_delete(_buffer, &iter2, &iter);
+            gtk_text_buffer_get_iter_at_line(_buffer, &iter, i);
         }
 
         iter3 = iter;
         gtk_text_iter_forward_to_line_end(&iter3);
-        gchar *line = gtk_text_buffer_get_text(buffer, &iter, &iter3, FALSE);
+        gchar *line = gtk_text_buffer_get_text(_buffer, &iter, &iter3, FALSE);
         if (check_for_indent(line))
             gtk_text_buffer_insert(_buffer, &iter, "\t", 1);
 
         g_free(line);
-
-
     }
     gtk_text_buffer_end_user_action(_buffer);
 }
 
-gboolean emu8086_app_code_buffer_get_can_undo(Emu8086AppCodeBuffer *buffer){
-return buffer->priv->can_undo;
+gboolean emu8086_app_code_buffer_get_can_undo(Emu8086AppCodeBuffer *buffer)
+{
+    return buffer->priv->can_undo;
 }
-gboolean emu8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer){
-return buffer->priv->can_redo;
-}
-
-
-void emu8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer){
-   emu8086_app_urdo_manager_undo_impl(buffer->priv->manager);
-}
-void emu8086_app_code_buffer_redo(Emu8086AppCodeBuffer *buffer){
-       emu8086_app_urdo_manager_redo_impl(buffer->priv->manager);
-
+gboolean emu8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer)
+{
+    return buffer->priv->can_redo;
 }
 
+void emu8086_app_code_buffer_undo(Emu8086AppCodeBuffer *buffer)
+{
+    emu8086_app_urdo_manager_undo_impl(buffer->priv->manager);
+}
+void emu8086_app_code_buffer_redo(Emu8086AppCodeBuffer *buffer)
+{
+    emu8086_app_urdo_manager_redo_impl(buffer->priv->manager);
+}

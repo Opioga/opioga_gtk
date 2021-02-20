@@ -56,7 +56,7 @@ Emu8086AppCodeBuffer *
 emu8086_app_code_buffer_new(GtkTextTagTable *table);
 void refreshLines(Emu8086AppCodeBuffer *buffer);
 void emu8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer);
-
+void emu8086_app_code_buffer_change_theme(Emu8086AppCodeBuffer *buffer);
 gboolean emu8086_app_code_buffer_get_can_redo(Emu8086AppCodeBuffer *buffer);
 gboolean emu8086_app_code_buffer_get_can_undo(Emu8086AppCodeBuffer *buffer);
 

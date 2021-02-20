@@ -5,7 +5,8 @@ nobase_dist_icons_DATA = \
     22x22/apps/emu8086.png \
     24x24/apps/emu8086.png \
     32x32/apps/emu8086.png \
-    48x48/apps/emu8086.png
+    48x48/apps/emu8086.png \
+	scalable/apps/subroutine.svg
 
 gtk_update_icon_cache = gtk-update-icon-cache -f -t $(iconsdir)
 

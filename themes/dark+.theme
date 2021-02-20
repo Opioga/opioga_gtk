@@ -7,11 +7,11 @@ num=#B5CEA8
 special=#C586C0
 comment=#6A9955
 highlight=rgba(100,100,100,0.5)
-background=rgba(56,56,56,1)
+background=rgba(45,45,45,1)
 cursor=#ffffff
 selection=#ffffff
 selectionbg=#001b33
 text=#fcfcfc
-linecolor=#ffffff
+linecolor=#858585
 [Description]
 value=Dark+ From VsCode

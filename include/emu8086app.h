@@ -23,7 +23,7 @@
 #include <gtk/gtk.h>
 
 #define EMU8086_APP_TYPE (emu8086_app_get_type())
-#define _PRIV Emu8086AppPrivate *priv = emu8086_app_get_instance_private(app)
+#define _PRIV Emu8086AppPrivate *priv = app->priv
 
 G_DECLARE_FINAL_TYPE(Emu8086App, emu8086_app, EMU8086, APP, GtkApplication)
 Emu8086App *emu8086_app_new(void);

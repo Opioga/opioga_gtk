@@ -175,55 +175,55 @@ static gchar *emu8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, gb
     gchar **col;
     switch (index)
     {
-    case 0:
+    case COLOR_KEYWORD:
         /* code */
         col = &scheme->priv->color_keyword;
         break;
-    case 1:
+    case COLOR_REG:
         /* code */
         col = &scheme->priv->color_reg;
         break;
-    case 2:
+    case COLOR_STRING:
         /* code */
         col = &scheme->priv->color_string;
         break;
-    case 3:
+    case COLOR_LABEL_DEF:
         /* code */
         col = &scheme->priv->color_label_def;
         break;
-    case 4:
+    case COLOR_NUM:
         /* code */
         col = &scheme->priv->color_num;
         break;
-    case 5:
+    case COLOR_SPECIAL:
         /* code */
         col = &scheme->priv->color_special;
         break;
-    case 6:
+    case COLOR_COMMENT:
         /* code */
         col = &scheme->priv->color_comment;
         break;
-    case 8:
+    case COLOR_BACKGROUND:
         /* code */
         col = &scheme->priv->color_background;
         break;
-    case 9:
+    case COLOR_CURSOR:
         /* code */
         col = &scheme->priv->color_cursor;
         break;
-    case 10:
+    case COLOR_SELECTION:
         /* code */
         col = &scheme->priv->color_selection;
         break;
-    case 11:
+    case COLOR_SELECTIONBG:
         /* code */
         col = &scheme->priv->color_selectionbg;
         break;
-    case 12:
+    case  COLOR_TEXT:
         /* code */
         col = &scheme->priv->color_text;
         break;
-    case 13:
+    case COLOR_LINECOLOR:
         /* code */
         col = &scheme->priv->color_linecolor;
         break;

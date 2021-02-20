@@ -15,7 +15,7 @@
 
 #include <emu8086apppluginsengine.h>
 #include <emu8086appmain.h>
-
+#define EMU_DEBUG
 struct _Emu8086PluginsEnginePrivate
 {
 	GSettings *plugin_settings;

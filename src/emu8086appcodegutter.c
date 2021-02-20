@@ -116,7 +116,7 @@ static void set_code(Emu8086AppCodeGutter *gutter, Emu8086AppCode *code)
     PRIV_CODE_GUTTER;
 
     priv->code = code;
-    priv->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(code));
+    priv->buffer = emu8086_app_code_get_mbuffer(code);
 }
 
 static void emu8086_app_code_gutter_set_property(GObject *object,
@@ -269,7 +269,7 @@ static void measure_text(Emu8086AppCodeGutter *gutter, const gchar *markup, gint
         pango_layout_set_markup(layout, markup, -1);
     }
 
-    pango_layout_get_pixel_size(layout, width, height);
+    pango_layout_get_pixel_size(layout, width, &height);
     priv->height = height;
 
     g_object_unref(layout);
@@ -282,7 +282,7 @@ void recalculate_size(Emu8086AppCodeGutter *gutter)
     gint num_lines;
     gint num_digits = 0;
     buffer = priv->buffer;
-    num_lines = gtk_text_buffer_get_line_count(buffer);
+    num_lines = gtk_text_buffer_get_line_count(GTK_TEXT_BUFFER(buffer));
     // priv->num_lines = num_lines;
     num_digits = count_num_digits(num_lines);
 
@@ -297,10 +297,10 @@ void recalculate_size(Emu8086AppCodeGutter *gutter)
         g_snprintf(markup, sizeof markup, "<span>%d</span>", num_lines);
 
         measure_text(gutter, markup, &size);
-        priv->size = size;
-        gtk_text_view_set_border_window_size(priv->code,
+    priv->size = size;
+        gtk_text_view_set_border_window_size(GTK_TEXT_VIEW(priv->code),
                                              GTK_TEXT_WINDOW_LEFT,
-                                             size + 10);
+                                             size + 8);
     }
 }
 
@@ -330,11 +330,11 @@ get_last_visible_line_number(Emu8086AppCodeGutter *gutter)
 {
     PRIV_CODE_GUTTER;
 
-    Emu8086AppCode *view;
+    GtkTextView*view;
     GdkRectangle visible_rect;
     GtkTextIter iter;
 
-    view = priv->code;
+    view = GTK_TEXT_VIEW(priv->code);
 
     gtk_text_view_get_visible_rect(view, &visible_rect);
 
@@ -378,11 +378,13 @@ get_lines_info(Emu8086AppCode *text_view,
     LinesInfo *info;
     GtkTextIter iter;
     gint last_line_num = -1;
+  GtkTextView*view;
+   view = GTK_TEXT_VIEW(text_view);
 
     info = lines_info_new();
 
     /* Get iter at first y */
-    gtk_text_view_get_line_at_y(text_view, &iter, first_y_buffer_coord, NULL);
+    gtk_text_view_get_line_at_y(view, &iter, first_y_buffer_coord, NULL);
 
     info->start = iter;
 
@@ -395,7 +397,7 @@ get_lines_info(Emu8086AppCode *text_view,
         gint height;
         gint line_num;
 
-        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+        gtk_text_view_get_line_yrange(view, &iter, &y, &height);
 
         g_array_append_val(info->buffer_coords, y);
         g_array_append_val(info->line_heights, height);
@@ -423,7 +425,7 @@ get_lines_info(Emu8086AppCode *text_view,
         gint height;
         gint line_num;
 
-        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+        gtk_text_view_get_line_yrange(view, &iter, &y, &height);
 
         line_num = gtk_text_iter_get_line(&iter);
 
@@ -450,7 +452,7 @@ get_lines_info(Emu8086AppCode *text_view,
         g_array_append_val(info->buffer_coords, y);
         g_array_append_val(info->line_numbers, n);
 
-        gtk_text_view_get_line_yrange(text_view, &iter, &y, &height);
+        gtk_text_view_get_line_yrange(view, &iter, &y, &height);
         g_array_append_val(info->line_heights, height);
 
         info->total_height += height;
@@ -481,7 +483,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
     gint i;
 
     // color.red
-    buffer = priv->buffer;
+    buffer = GTK_TEXT_BUFFER(priv->buffer);
 
     gtk_text_buffer_get_iter_at_mark(buffer,
                                      &insert_iter,
@@ -529,7 +531,7 @@ draw_cells(Emu8086AppCodeGutter *gutter,
         gint ypad = 0;
 
         background_area.width = priv->size + 10;
-        gtk_text_view_set_border_window_size(priv->code,
+        gtk_text_view_set_border_window_size(GTK_TEXT_VIEW(priv->code),
                                              GTK_TEXT_WINDOW_LEFT,
                                              background_area.width + 5);
         // g_print("%s %d", "lion", priv->size);
@@ -588,7 +590,7 @@ lines_info_free(LinesInfo *info)
 void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
 {
     PRIV_CODE_GUTTER;
-    Emu8086AppCode *view = priv->code;
+    GtkTextView *view;
     GtkTextIter start;
     GdkRectangle clip;
     LinesInfo *info;
@@ -597,8 +599,8 @@ void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
     gint first_y_buffer_coord;
     gint last_y_buffer_coord;
     gint width;
-
-    if (!get_clip_rectangle(gutter, view, cr, &clip))
+view = GTK_TEXT_VIEW(priv->code);
+    if (!get_clip_rectangle(gutter, EMU8086_APP_CODE(view), cr, &clip))
     {
         return;
     }
@@ -621,7 +623,7 @@ void draw(Emu8086AppCodeGutter *gutter, cairo_t *cr)
                                           NULL,
                                           &last_y_buffer_coord);
 
-    info = get_lines_info(view,
+    info = get_lines_info(EMU8086_APP_CODE(view),
                           first_y_buffer_coord,
    
                           last_y_buffer_coord);

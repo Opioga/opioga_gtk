@@ -14,8 +14,8 @@
  * App class
  */
 
-
 #include <emu8086searchbar.h>
+#include <emu8086appcode.h>
 
 enum
 {
@@ -81,7 +81,6 @@ static void emu8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
     priv->button_next = gtk_button_new_from_icon_name("go-next", GTK_ICON_SIZE_BUTTON);
     gtk_button_set_label(priv->button_next, "Next");
 
-
     gtk_box_set_spacing(GTK_BOX(priv->button_box), 6);
 
     gtk_container_add(GTK_CONTAINER(priv->button_box), priv->button_next);
@@ -122,9 +121,9 @@ static void emu8086_app_search_bar_init(Emu8086AppSearchBar *search_bar)
 }
 
 static void emu8086_app_search_bar_set_property(GObject *object,
-                                                 guint property_id,
-                                                 const GValue *value,
-                                                 GParamSpec *pspec)
+                                                guint property_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec)
 {
     Emu8086AppSearchBar *self = EMU8086_APP_SEARCH_BAR(object);
     switch (property_id)
@@ -154,9 +153,9 @@ static void emu8086_app_search_bar_set_property(GObject *object,
     }
 }
 static void emu8086_app_search_bar_get_property(GObject *object,
-                                                 guint property_id,
-                                                 const GValue *value,
-                                                 GParamSpec *pspec)
+                                                guint property_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec)
 {
     Emu8086AppSearchBar *self = EMU8086_APP_SEARCH_BAR(object);
     switch (property_id)
@@ -222,10 +221,9 @@ static gboolean find_text(Emu8086AppSearchBar *search_bar, const gchar *text, Gt
     buffer = priv->buffer;
     gboolean found;
     g_return_val_if_fail(GTK_IS_TEXT_BUFFER(buffer), FALSE);
-    
-    GtkTextSearchFlags flag = !priv->case_sensitive ? (GTK_TEXT_SEARCH_TEXT_ONLY |GTK_TEXT_SEARCH_CASE_INSENSITIVE) 
-                            :GTK_TEXT_SEARCH_TEXT_ONLY  ;
 
+    GtkTextSearchFlags flag = !priv->case_sensitive ? (GTK_TEXT_SEARCH_TEXT_ONLY | GTK_TEXT_SEARCH_CASE_INSENSITIVE)
+                                                    : GTK_TEXT_SEARCH_TEXT_ONLY;
 
     found = gtk_text_iter_forward_search(iter, text, flag, &mstart, &mend, NULL);
     if (found)
@@ -276,7 +274,7 @@ static void find_all(Emu8086AppSearchBar *search_bar, const gchar *text)
         last_pos = gtk_text_buffer_get_mark(buffer, "last_pos");
         if (is_first)
         {
-            gtk_text_view_scroll_mark_onscreen(priv->text_view, last_pos);
+            emu8086_app_code_scroll_to_mark(EMU8086_APP_CODE(priv->text_view), last_pos);
             is_first = FALSE;
         }
         if (last_pos == NULL)
@@ -317,7 +315,7 @@ static void find_once(Emu8086AppSearchBar *search_bar, const gchar *text, gboole
         last_pos = gtk_text_buffer_get_mark(buffer, "last_pos");
         if (last_pos == NULL)
             return;
-        gtk_text_view_scroll_mark_onscreen(priv->text_view, last_pos);
+        emu8086_app_code_scroll_to_mark(EMU8086_APP_CODE(priv->text_view), last_pos);
     };
     if (backward)
     {
@@ -329,10 +327,9 @@ static void find_once(Emu8086AppSearchBar *search_bar, const gchar *text, gboole
             last_pos = gtk_text_buffer_get_mark(buffer, "last_pos");
             if (last_pos == NULL)
                 return;
-            gtk_text_view_scroll_mark_onscreen(priv->text_view, last_pos);
+            emu8086_app_code_scroll_to_mark(EMU8086_APP_CODE(priv->text_view), last_pos);
         };
     }
-
 }
 
 static void clear_selections(Emu8086AppSearchBar *search_bar)
@@ -414,8 +411,7 @@ static void go_to_line(Emu8086AppSearchBar *search_bar, gchar *text)
     gtk_text_buffer_get_iter_at_line(priv->buffer, &iter, line - 1);
     gtk_text_iter_forward_to_line_end(&iter);
     gtk_text_buffer_place_cursor(priv->buffer, &iter);
-    gtk_text_view_scroll_mark_onscreen(priv->text_view,
-                                       gtk_text_buffer_get_insert(priv->buffer));
+    emu8086_app_code_scroll_to_view(EMU8086_APP_CODE(priv->text_view));
 }
 
 static void line_text_inserted(GtkEntryBuffer *buffer,

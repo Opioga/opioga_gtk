@@ -56,4 +56,6 @@ static void emu8086_app_about_window_class_init(Emu8086AboutWindowClass *class)
 static void emu8086_app_about_window_init(Emu8086AboutWindow *win)
 {
     gtk_widget_init_template(GTK_WIDGET(win));
+
+    
 }

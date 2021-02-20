@@ -28,6 +28,12 @@ G_BEGIN_DECLS
 #define EMU8086_APP_CODE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), EMU8086_APP_CODE_TYPE, Emu8086AppCodeClass))
 #define PRIV_CODE Emu8086AppCodePrivate *priv = code->priv
 
+enum _Emu8086AppCodeType_ {
+    CODE_VIEW,
+    MEM_VIEW
+};
+
+typedef enum _Emu8086AppCodeType_ Emu8086AppCodeType;
 typedef struct _Emu8086AppCodeClass Emu8086AppCodeClass;
 typedef struct _Emu8086AppCodePrivate Emu8086AppCodePrivate;
 
@@ -52,7 +58,7 @@ struct _Emu8086AppCodeClass
 
 // G_DECLARE_FINAL_TYPE(Emu8086AppCode, emu8086_app_code, EMU8086, APP_CODE, GtkTextView)
 GType emu8086_app_code_get_type(void) G_GNUC_CONST;
-Emu8086AppCode *emu8086_app_code_new(void);
+
 gboolean check_for_break_points(Emu8086AppCode *code, gint line_num,
                                 gboolean toggle);
 void select_line(GtkWidget *code, gint line);
@@ -60,9 +66,12 @@ void reset_code(GtkWidget *co);
 void editFontSize(Emu8086AppCode *code, gint size);
 void set_win(Emu8086AppCode *code, GtkWidget *win);
 void get_break_points(Emu8086AppCode *code, gint *bps, gint *len);
-Emu8086AppCode *create_new();
+Emu8086AppCode *create_new(Emu8086AppCodeType type);
+void emu8086_app_code_scroll_to_view(Emu8086AppCode *code);
+void emu8086_app_code_scroll_to_mark(Emu8086AppCode *code, GtkTextMark *mark);
 void emu8086_app_code_undo(Emu8086AppCode *code);
 void emu8086_app_code_redo(Emu8086AppCode *code);
 void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show);
+Emu8086AppCodeBuffer *emu8086_app_code_get_mbuffer(Emu8086AppCode *code);
 G_END_DECLS
 #endif // MACRO
