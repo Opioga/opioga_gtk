@@ -679,10 +679,10 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     g_signal_connect(priv->runner, "error_occured", G_CALLBACK(emu8086_app_window_show_errors), win);
     g_signal_connect(priv->runner, "exec_ins", G_CALLBACK(emu8086_app_window_update_wids), win);
 
-    Emu8086AppPluginBox *box;
-    box = emu8086_app_plugin_box_new(GTK_APPLICATION_WINDOW(win), priv->runner);
+ 
     g_object_bind_property(win, "search-show", priv->revealer_search, "reveal-child", G_BINDING_DEFAULT);
-
+   Emu8086AppPluginBox *box;
+    box = emu8086_app_plugin_box_new(GTK_APPLICATION_WINDOW(win), priv->runner);
     gtk_container_add(GTK_CONTAINER(priv->stack), GTK_WIDGET(box));
     gtk_widget_set_size_request(priv->left_pane, 250, -1);
      gtk_widget_show_all(priv->hpaned);
@@ -690,6 +690,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
      gtk_widget_hide(priv->left_pane);
 
     g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
+
     g_object_unref(builder); priv->bottom_notebook_visible = FALSE;
 };
 

@@ -50,19 +50,19 @@ on_extension_added(PeasExtensionSet *extensions,
                    Emu8086AppPluginBox *window);
 
 static void emu8086_app_plugin_box_set_property(GObject *object,
-                                                 guint property_id,
-                                                 const GValue *value,
-                                                 GParamSpec *pspec);
+                                                guint property_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec);
 static void
 emu8086_app_plugin_box_get_property(GObject *object,
-                                     guint property_id,
-                                     GValue *value,
-                                     GParamSpec *pspec);
+                                    guint property_id,
+                                    GValue *value,
+                                    GParamSpec *pspec);
 
 static void emu8086_app_plugin_box_set_property(GObject *object,
-                                                 guint property_id,
-                                                 const GValue *value,
-                                                 GParamSpec *pspec)
+                                                guint property_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec)
 {
     Emu8086AppPluginBox *self = EMU8086_APP_PLUGIN_BOX(object);
     // g_print("l %d\n", *value);
@@ -97,9 +97,9 @@ static void emu8086_app_plugin_box_set_property(GObject *object,
 
 static void
 emu8086_app_plugin_box_get_property(GObject *object,
-                                     guint property_id,
-                                     GValue *value,
-                                     GParamSpec *pspec)
+                                    guint property_id,
+                                    GValue *value,
+                                    GParamSpec *pspec)
 {
     Emu8086AppPluginBox *self = EMU8086_APP_PLUGIN_BOX(object);
 
@@ -128,7 +128,7 @@ Emu8086AppPluginBox *emu8086_app_plugin_box_new(GtkApplicationWindow *win, Emu80
     return g_object_new(EMU8086_APP_PLUGIN_BOX_TYPE,
                         "window", win,
                         "runner", runner,
-"row-spacing", 30,
+                        "row-spacing", 30,
                         NULL);
 };
 
@@ -167,7 +167,10 @@ static void emu8086_app_plugin_box_init(Emu8086AppPluginBox *box)
     priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
                                               PEAS_TYPE_ACTIVATABLE, "object", box, NULL);
 
-    peas_extension_set_call(priv->extensions, "activate", box);
+    peas_extension_set_foreach(priv->extensions,
+                               (PeasExtensionSetForeachFunc)on_extension_added,
+                               box);
+
     g_signal_connect(priv->extensions,
                      "extension-added",
                      G_CALLBACK(on_extension_added),

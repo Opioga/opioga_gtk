@@ -39,7 +39,6 @@
         </key>
 
 
-
         <key name="frequency" type="i">
             <default>1</default>
             <summary>Update frequency</summary>
@@ -49,6 +48,13 @@
             <default>'dark+'</default>
             <summary>Theme</summary>
             <description>The editor theme </description>
+        </key>
+
+
+        <key name="active-plugins" type="as">
+            <default>[]</default>
+            <summary>Active plugins</summary>
+            <description>List of active plugins.</description>
         </key>
     </schema>
 

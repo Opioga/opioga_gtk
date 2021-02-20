@@ -78,6 +78,12 @@ emu8086_plugins_engine_init(Emu8086PluginsEngine *engine)
 
 	g_free(plugins_path);
 #endif
+
+	g_settings_bind (engine->priv->plugin_settings,
+	                 "active-plugins",
+	                 engine,
+	                 "loaded-plugins",
+	                 G_SETTINGS_BIND_DEFAULT);
 }
 
 static void
