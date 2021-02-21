@@ -31,7 +31,6 @@ typedef enum
 enum
 {
 
-
     NEWLINE,
 
     N_SIGNALS
@@ -209,13 +208,11 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             gint length = strlen(buf);
             if (length > 0 && !isString)
             {
-  
 
                 if (length > 2)
                     gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
                 Emu8086AppCodeBuffer *b = EMU8086_APP_CODE_BUFFER(buffer);
-              
-              
+
                 gchar *key = buf;
 
                 if (g_hash_table_contains(b->priv->keywords_hash_table, key))
@@ -387,7 +384,11 @@ static void emu8086_app_code_buffer_insert_text_real(GtkTextBuffer *buf,
     gtk_text_buffer_get_iter_at_mark(buf, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
     start_offset = i - (priv->lc);
+    if ((i + 1) > priv->lc)
+    {
 
+        g_signal_emit(buffer, buffer_signals[NEWLINE], 0);
+    }
     if (start_offset > 0 || start_offset < -1)
     {
         // g_print("lion\n");
@@ -421,6 +422,11 @@ static void emu8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
     gtk_text_buffer_get_iter_at_mark(buffer, &iter2, mark);
     gint i = gtk_text_iter_get_line(&iter2);
     queue_highlight(buf);
+
+  
+    g_signal_emit(buffer, buffer_signals[NEWLINE], 0);
+
+    // g_signal_emit(buffer, buffer_signals[NEWLINE], 0);
 }
 
 void emu8086_app_code_buffer_change_theme(Emu8086AppCodeBuffer *buffer)
@@ -503,7 +509,10 @@ emu8086_app_code_buffer_get_property(GObject *object,
         break;
     }
 }
-
+static void emu8086_app_code_buffer_new_line(Emu8086AppCodeBuffer *buffer)
+{
+    g_print("new line");
+}
 static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
 {
 
@@ -516,6 +525,7 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
     object_class->set_property = emu8086_app_code_buffer_set_property;
     object_class->get_property = emu8086_app_code_buffer_get_property;
     object_class->dispose = emu8086_app_code_buffer_dispose;
+    //  klass->new_line = emu8086_app_code_buffer_new_line;
     g_object_class_install_property(object_class, PROP_BUFFER_THEME,
                                     g_param_spec_string("theme", "Theme", "Editor Theme", "dark+",
                                                         G_PARAM_READWRITE));
@@ -528,11 +538,18 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
                                     g_param_spec_boolean("can-redo", "CanRedo", "If we can redo", FALSE,
                                                          G_PARAM_READWRITE));
 
-// buffer_signals[NEWLINE] =
-		// g_signal_new(
-        //     "new_line",
-        // ) ;
-
+    buffer_signals[NEWLINE] =
+        g_signal_new(
+            "new-line",
+            G_TYPE_FROM_CLASS(klass),
+            G_SIGNAL_RUN_LAST,
+            G_STRUCT_OFFSET(Emu8086AppCodeBufferClass, new_line),
+            NULL, NULL,
+            g_cclosure_marshal_VOID__VOID,
+            G_TYPE_NONE, 0);
+    g_signal_set_va_marshaller(buffer_signals[NEWLINE],
+                               G_TYPE_FROM_CLASS(klass),
+                               g_cclosure_marshal_VOID__VOIDv);
 }
 
 Emu8086AppCodeBuffer *emu8086_app_code_buffer_new(GtkTextTagTable *table)
