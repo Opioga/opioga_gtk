@@ -38,7 +38,6 @@
 /depcomp
 /egs/Makefile.in
 /egs/plugins/Makefile.in
-/fonts/Makefile.in
 /gtk-doc.make
 /include/Makefile.in
 /install-sh
@@ -61,6 +60,8 @@
 /plugins/hexcalculator/hexcalculator/Makefile.in
 /plugins/lcdhitachi/Makefile.in
 /plugins/lcdhitachi/lcdhitachi/Makefile.in
+/plugins/outlineview/Makefile.in
+/plugins/outlineview/outlineview/Makefile.in
 /py-compile
 /so_locations
 /src/Makefile.in
