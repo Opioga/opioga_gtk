@@ -74,5 +74,17 @@ Emu8086AppCode *emu8086_app_window_get_code(Emu8086AppWindow *win);
 GtkWidget *emu8086_app_window_get_stack(Emu8086AppWindow *win);
 gboolean emu8086_app_window_open_egs(Emu8086AppWindow *win);
 void emu8086_app_window_set_bottom_pane(Emu8086AppWindow *win, gboolean open);
+void emu8086_app_window_show_all_errors(Emu8086AppWindow *win);
+gboolean emu8086_app_window_apply_css_to_widget(Emu8086AppWindow *win, GtkWidget *widget);
+
+
+void emu8086_app_window_load_error(Emu8086AppWindow *win, gchar *message, gchar *source,
+gpointer object, GdkPixbuf  *icon, Emu8086AppErrorType type);
+
+void emu8086_app_window_load_error_icon_name(Emu8086AppWindow *win, gchar *message, gchar *source,
+gpointer object, gchar  *icon, Emu8086AppErrorType type);
+
+Emu8086ErrorInfo *emu8086_app_window_load_error_from_fname(Emu8086AppWindow *win, gchar *message, Emu8086AppErrorType type,
+                                                           gpointer object, gboolean show_image);
 G_END_DECLS
 #endif /* __EXAMPLEAPPWIN_H */

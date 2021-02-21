@@ -170,7 +170,7 @@ Emu8086AppStyleScheme *emu8086_app_style_scheme_get_default()
     return scheme;
 }
 
-static gchar *emu8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, gboolean ret, gint index, gchar *val)
+static const gchar *emu8086_app_style_scheme_get_col(Emu8086AppStyleScheme *scheme, gboolean ret, gint index, gchar *val)
 {
     gchar **col;
     switch (index)
@@ -356,7 +356,7 @@ static void emu8086_app_style_scheme_load(Emu8086AppStyleScheme *scheme)
     //   priv
 }
 
-gchar *emu8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index)
+const gchar *emu8086_app_style_scheme_get_color_by_index(Emu8086AppStyleScheme *scheme, const gint index)
 {
 
     return emu8086_app_style_scheme_get_col(scheme, TRUE, index, NULL);

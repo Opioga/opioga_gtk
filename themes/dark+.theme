@@ -10,7 +10,7 @@ highlight=rgba(100,100,100,0.5)
 background=rgba(45,45,45,1)
 cursor=#ffffff
 selection=#ffffff
-selectionbg=#001b33
+selectionbg=#3782dd
 text=#fcfcfc
 linecolor=#858585
 [Description]

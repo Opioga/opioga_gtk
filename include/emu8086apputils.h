@@ -139,7 +139,7 @@ gchar *keywords[] = {
     "wait",
     "xchg",
     "xlat",
-    "xor"};
+    "xor",NULL};
 gchar *reg1[] = {
     "AL",
     "CL",
@@ -184,13 +184,14 @@ gboolean getkeyword(gchar *keyword)
         p++;
     }
     p = keyword;
-    while (i < 118)
+    while (keywords[i])
     {
         if (strcmp(p, keywords[i]) == 0)
         {
             ret = TRUE;
             break;
         }
+
         i++;
     }
     return ret;
@@ -309,4 +310,16 @@ gboolean getnum_(gchar *keyword)
     return ret;
 }
 
+
+void capitalize (gchar *keyword){
+        gchar  *p;
+    
+    
+    p = keyword;
+    while (*p)
+    {
+        *p = g_ascii_toupper(*p);
+        p++;
+    }
+}
 #endif

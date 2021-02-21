@@ -73,5 +73,6 @@ void emu8086_app_code_undo(Emu8086AppCode *code);
 void emu8086_app_code_redo(Emu8086AppCode *code);
 void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show);
 Emu8086AppCodeBuffer *emu8086_app_code_get_mbuffer(Emu8086AppCode *code);
+gboolean emu8086_app_code_mgo_to_line(Emu8086AppCode *code, gint line);
 G_END_DECLS
 #endif // MACRO

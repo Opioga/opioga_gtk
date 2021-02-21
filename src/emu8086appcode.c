@@ -761,10 +761,11 @@ void emu8086_app_code_scroll_to_mark(Emu8086AppCode *code, GtkTextMark *mark)
     GtkTextView *view;
     GtkTextIter mstart, mend;
     g_return_if_fail(EMU8086_IS_APP_CODE(code));
-     PRIV_CODE;   view = GTK_TEXT_VIEW(code);
-  GdkRectangle visible, location;
-  gtk_text_view_scroll_mark_onscreen(view, mark);
-     gtk_text_buffer_get_iter_at_mark(GTK_TEXT_BUFFER(priv->buffer), &mstart, mark);
+    PRIV_CODE;
+    view = GTK_TEXT_VIEW(code);
+    GdkRectangle visible, location;
+    gtk_text_view_scroll_mark_onscreen(view, mark);
+    gtk_text_buffer_get_iter_at_mark(GTK_TEXT_BUFFER(priv->buffer), &mstart, mark);
     gtk_text_view_get_visible_rect(view, &visible);
 
     gtk_text_view_get_iter_location(view, &mstart, &location);
@@ -896,11 +897,27 @@ void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show)
     code->priv->show_line_numbers = show;
 }
 
-
-
 Emu8086AppCodeBuffer *emu8086_app_code_get_mbuffer(Emu8086AppCode *code)
 {
     g_return_val_if_fail(EMU8086_IS_APP_CODE(code), NULL);
 
     return EMU8086_APP_CODE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(code)));
 }
+
+gboolean emu8086_app_code_mgo_to_line(Emu8086AppCode *code, gint line)
+{
+    g_return_val_if_fail(EMU8086_IS_APP_CODE(code), FALSE);
+    g_return_val_if_fail(EMU8086_IS_APP_CODE_BUFFER(code->priv->buffer), FALSE);
+    g_return_val_if_fail(line > 0, FALSE);
+    GtkTextIter iter;
+    GtkTextBuffer *buffer;
+    GtkTextView *tv;
+    tv = GTK_TEXT_VIEW(code);
+    buffer = GTK_TEXT_BUFFER(code->priv->buffer);
+    gtk_text_buffer_get_iter_at_line(buffer, &iter, line - 1);
+        gtk_text_iter_forward_to_line_end(&iter);
+    gtk_text_buffer_place_cursor(buffer, &iter);
+     emu8086_app_code_scroll_to_view(code);
+
+
+};

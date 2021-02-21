@@ -49,6 +49,7 @@ struct _Emu8086AppCodeBufferClass
     /* Signals */
     void (*undo)(Emu8086AppCodeBuffer *buffer);
     void (*redo)(Emu8086AppCodeBuffer *buffer);
+    void (*new_line)(Emu8086AppCodeBuffer *buffer);
     gpointer padding[20];
 };
 GType emu8086_app_code_buffer_get_type(void) G_GNUC_CONST;

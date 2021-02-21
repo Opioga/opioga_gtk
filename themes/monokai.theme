@@ -9,8 +9,8 @@ comment=#88846f
 highlight=rgba(100,100,100,0.5)
 background=rgba(39,40,34,1)
 cursor=#ffffff
-selection=#ffffff
-selectionbg=#575b6180
+selection=#F8F8F2
+selectionbg=#575b61
 text=#F8F8F2
 linecolor=#fcfcfc
 [Description]

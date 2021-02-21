@@ -45,7 +45,7 @@ emu8086aboutwin.c
 emu8086_SOURCES = \
 resources.c \
 pango_css.c \
-emu8086apperrtextview.c \
+emu8086apperrtreeview.c \
 emu8086apptopgutter.c \
 $(emu8086app_c_files) \
 main.c 
@@ -59,6 +59,7 @@ INST_H_FILES =			\
     $(top_srcdir)/include/emu8086apprunner.h \
     $(top_srcdir)/include/emu8086apppluginbox.h \
     $(top_srcdir)/include/emu8086appmemorywin.h \
+    $(top_srcdir)/include/emu8086apperrtreeview.h \
     $(top_srcdir)/include/emu8086appwin.h \
     $(top_srcdir)/include/emu8086stylescheme.h \
     $(top_srcdir)/include/emu8086apppluginbox.h \

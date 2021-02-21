@@ -334,7 +334,7 @@ void check_end(char *p)
     if (*p && *p != ';')
     {
         char buf[45];
-        sprintf(buf, "Error: extra characters at end of line %d\n", line_number);
+        sprintf(buf, "Error: extra characters at end of line %d", line_number);
         message(buf, ERR, line_number);
         errors++;
     }
@@ -921,7 +921,7 @@ char *match_expression_level6(char *p, int *value)
                 if ((!strcmp(expr_name, "WORD") == 0))
                 {
                     char m[25 + MAX_SIZE];
-                    sprintf(m, "Undefined label '%s' on line %d\n", expr_name, line_number);
+                    sprintf(m, "Undefined label '%s' on line %d", expr_name, line_number);
                     message(m, ERR, line_number);
                 }
             }
@@ -1308,7 +1308,7 @@ char *decode;
                         return NULL;
                     if (qualifier == 0)
                     {
-                        //printf("%d\n", instruction_value);
+                        //printf("%d", instruction_value);
 
                         c = instruction_value - (address + 2);
                         if (undefined == 0 && (c < -128 || c > 127) && memcmp(decode, "xeb", 3) == 0)
@@ -1499,7 +1499,7 @@ char *decode;
                             if (assembler_step == 1 && (c < -128 || c > 127))
 
                             {
-                                // printf("c = %d l = %d a = %d v = %d\n", c, line_number, address, instruction_value);
+                                // printf("c = %d l = %d a = %d v = %d", c, line_number, address, instruction_value);
                                 message("short jump too long ", ERR, line_number);
                             }
                             break;
@@ -1554,7 +1554,7 @@ char *decode;
     {
         if (undefined)
         {
-            printf("Error: undefined label '%s' at line %d\n", undefined_name, line_number);
+            printf("Error: undefined label '%s' at line %d", undefined_name, line_number);
         }
     }
     return p;
@@ -1587,7 +1587,7 @@ void process_instr()
                 else
                 {
 
-                    printf("Error: unterminated string at line %d\n", line_number);
+                    printf("Error: unterminated string at line %d", line_number);
                 }
             }
             else
@@ -1595,7 +1595,7 @@ void process_instr()
                 p2 = match_expression(p, &instruction_value);
                 if (p2 == NULL)
                 {
-                    printf("Error: bad expression at line %d\n", line_number);
+                    printf("Error: bad expression at line %d", line_number);
                     break;
                 }
 
@@ -1612,7 +1612,7 @@ void process_instr()
                     if (*p != '(')
                     {
                         char m[100];
-                        sprintf(m, "Bad expression  '%s' on line %d\n", ip, line_number);
+                        sprintf(m, "Bad expression  '%s' on line %d", ip, line_number);
                         message(m, ERR, line_number);
                         break;
                     }
@@ -1627,7 +1627,7 @@ void process_instr()
                         if (!*p || *p != '\'')
                         {
                             char m[100];
-                            sprintf(m, "Extra Characters in char literal '%s %s' on line %d\n", part, ip, line_number);
+                            sprintf(m, "Extra Characters in char literal '%s %s' on line %d", part, ip, line_number);
                             message(m, ERR, line_number);
                             break;
                         }
@@ -1659,7 +1659,7 @@ void process_instr()
                         if (!*p || *p != '"')
                         {
                             char m[100];
-                            sprintf(m, "Unterminated String '%s %s' on line %d\n", part, ip, line_number);
+                            sprintf(m, "Unterminated String '%s %s' on line %d", part, ip, line_number);
                             message(m, ERR, line_number);
                             break;
                         }
@@ -1702,7 +1702,7 @@ void process_instr()
                     else
                     {
                         char m[100];
-                        sprintf(m, "Bad expression  '%s' on line %d\n", p, line_number);
+                        sprintf(m, "Bad expression  '%s' on line %d", p, line_number);
                         message(m, ERR, line_number);
                         break;
                     }
@@ -1713,7 +1713,7 @@ void process_instr()
                     else
                     {
                         char m[100];
-                        sprintf(m, "Bad expression  '%s %s' on line %d\n", part, ip, line_number);
+                        sprintf(m, "Bad expression  '%s %s' on line %d", part, ip, line_number);
                         message(m, ERR, line_number);
                         break;
                     }
@@ -1739,7 +1739,7 @@ void process_instr()
             p2 = match_expression(p, &instruction_value);
             if (p2 == NULL)
             {
-                printf("Error: bad expression at line %d\n", line_number);
+                printf("Error: bad expression at line %d", line_number);
                 break;
             }
             // emit_byte(-1);
@@ -1789,7 +1789,7 @@ void process_instr()
         {
             char m[MAX_SIZE + 31];
 
-            sprintf(m, "Undefined instruction '%s %s' on line %d\n", part, p, line_number);
+            sprintf(m, "Undefined instruction '%s %s' on line %d", part, p, line_number);
             message(m, ERR, line_number);
 
             break;

@@ -29,7 +29,7 @@
 #include <emu8086searchbar.h>
 #include <emu8086appcode.h>
 #include <emu8086appsidepane.h>
-#include <emu8086apperrtextview.h>
+#include <emu8086apperrtreeview.h>
 
 #include <emu8086appcodebuffer.h>
 #include <emu8086apprunner.h>
@@ -67,7 +67,7 @@ struct _Emu8086AppWindowPrivate
     GtkWidget *messages; //GtkWidget *left_box;
     gchar *fname;
     GtkWidget *revealer;
-    GtkWidget *window_m;
+    GtkStyleProvider *provider;
     GtkWidget *scrolled;
     GtkWidget *gears;
     Emu8086App *app;
@@ -85,10 +85,10 @@ struct _Emu8086AppWindowPrivate
     Emu8086AppSearchBar *search_bar;
     gboolean search_show;
     GtkWidget *err_messages;
-    Emu8086AppErrTextView *err_text_view;
+    Emu8086AppErrTreeView *err_tree_view;
     GtkWidget *toggle_btn;
     GtkWidget *left_pane;
-    GtkTextBuffer *err_buffer;
+
     GtkWidget *bottom_notebook;
     gint vpanedl_size;
     gboolean errs_cleared;
@@ -450,14 +450,21 @@ void emu8086_app_window_bottom_notebook_add_item(Emu8086AppWindow *win, GtkWidge
                                   tab_label,
                                   menu_label);
 }
-
+static void
+apply_css(GtkWidget *widget, GtkStyleProvider *provider)
+{
+    gtk_style_context_add_provider(gtk_widget_get_style_context(widget), provider, G_MAXUINT);
+    if (GTK_IS_CONTAINER(widget))
+        gtk_container_forall(GTK_CONTAINER(widget), (GtkCallback)apply_css, provider);
+}
 static void emu8086_app_window_clear_err_msgs(Emu8086AppWindow *win)
 {
     PRIV;
     if (priv->errs_cleared)
         return;
-    gtk_text_buffer_set_text(priv->err_buffer, "Nothing Doing\n Errors: 0", -1);
+    // emu8086_app_code_buffer_change_theme
     gtk_button_set_label(GTK_BUTTON(priv->toggle_btn), "No Errors");
+    emu8086_app_err_tree_view_free_error(priv->err_tree_view, win->state.file_name);
     gtk_widget_show(priv->toggle_btn);
     gtk_widget_hide(priv->toggle_btn2);
     priv->errs_cleared = TRUE;
@@ -512,7 +519,7 @@ static void populate_bottom_bar(Emu8086AppWindow *win)
     icon = gtk_image_new_from_file(path);
     icon2 = gtk_image_new_from_file(path2);
     icon3 = gtk_image_new_from_file(path3);
-    priv->runner = emu8086_app_code_runner_new(NULL, FALSE);
+    priv->runner = emu8086_app_code_runner_new(NULL, FALSE, win);
     priv->mem_view = emu8086_app_memory_window_open(GTK_WINDOW(win), priv->runner);
     priv->toggle_btn = gtk_button_new();
     priv->toggle_btn2 = gtk_button_new();
@@ -563,16 +570,13 @@ static void load_vpaned(Emu8086AppWindow *win)
 
     priv->err_messages = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
 
-    priv->err_buffer = gtk_text_buffer_new(NULL);
-    priv->err_text_view = emu8086_app_err_text_view_new(); //
-    emu8086_app_err_set_win(priv->err_text_view, win);
-    gtk_text_view_set_buffer(GTK_TEXT_VIEW(priv->err_text_view), priv->err_buffer);
+    priv->err_tree_view = emu8086_app_err_tree_view_new(win); //
 
     sv = gtk_scrolled_window_new(NULL, NULL);
 
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sv), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
-    gtk_container_add(GTK_CONTAINER(sv), GTK_WIDGET(priv->err_text_view));
+    gtk_container_add(GTK_CONTAINER(sv), GTK_WIDGET(priv->err_tree_view));
     gtk_container_add(GTK_CONTAINER(priv->err_messages), sv);
 
     gtk_widget_set_vexpand(sv, TRUE);
@@ -635,6 +639,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     GAction *action, *action2, *action3;
 
     priv->scheme = emu8086_app_style_scheme_get_default();
+    priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
     g_settings_bind(priv->settings, "ul", win, "ul", G_SETTINGS_BIND_GET);
     g_settings_bind(priv->settings, "lf", win, "lf", G_SETTINGS_BIND_GET);
     action = (GAction *)g_property_action_new("check-updates", win, "updates");
@@ -689,7 +694,6 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     gtk_widget_hide(priv->bottom_notebook);
     gtk_widget_hide(priv->left_pane);
 
-    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
     box = emu8086_app_plugin_box_new(GTK_APPLICATION_WINDOW(win), priv->runner);
     populate_win(win);
     populate_tools(win);
@@ -697,6 +701,14 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     gtk_container_add(GTK_CONTAINER(priv->stack), GTK_WIDGET(box));
     g_object_unref(builder);
     priv->bottom_notebook_visible = FALSE;
+    gtk_style_context_add_provider(gtk_widget_get_style_context(priv->left_pane), priv->provider, G_MAXUINT);
+    // gtk_style_context_add_provider(gtk_widget_get_style_context(priv->err_tree_view), priv->provider, G_MAXUINT);
+    // apply_css(priv->left_pane, priv->provider);
+    apply_css(GTK_WIDGET(priv->err_tree_view), priv->provider);
+    g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
+
+    // emu8086_app_window_load_error_from_fname(win, "INVALID", EMU8086_APP_ERROR_TYPE_FATAL, win);    emu8086_app_window_load_error_from_fname(win, "INVALID", EMU8086_APP_ERROR_TYPE_FATAL, win);
+    // emu8086_app_window_load_error_from_fname(win, "INVALID", EMU8086_APP_ERROR_TYPE_FATAL, win);
 };
 
 void emu8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title)
@@ -1038,12 +1050,25 @@ static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWi
 {
     PRIV;
     gchar *a;
+    gchar *text_color;
+    gchar *sel_bg_color;
+    gchar *sel_fg_color;
+    gchar *css;
     GdkRGBA color;
 
     a = emu8086_app_style_scheme_get_color_by_index(priv->scheme, 8);
+    sel_bg_color = emu8086_app_style_scheme_get_color_by_index(priv->scheme, COLOR_SELECTIONBG);
+    sel_fg_color = emu8086_app_style_scheme_get_color_by_index(priv->scheme, COLOR_SELECTION);
     gdk_rgba_parse(&color, a);
     gtk_widget_override_background_color(GTK_WIDGET(priv->code), GTK_STATE_NORMAL, &color);
-    gtk_widget_override_background_color(GTK_WIDGET(priv->err_text_view), GTK_STATE_NORMAL, &color);
+    text_color = emu8086_app_style_scheme_get_color_by_index(priv->scheme, COLOR_TEXT);
+    css = g_strconcat("* {color:", text_color, ";background-color:", a,
+                      ";}\n treeview:selected { background-color:", sel_bg_color,
+                      ";color:", sel_fg_color,
+                      ";}\n", NULL);
+
+    gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(priv->provider), css, -1, NULL);
+    g_free(css); // gtk_widget_override_background_color(GTK_WIDGET(priv->err_tree_view), GTK_STATE_NORMAL, &color);
 }
 
 static void
@@ -1808,7 +1833,7 @@ static void emu8086_app_window_show_errors(Emu8086AppCodeRunner *runner, gint er
     gtk_button_set_label(GTK_BUTTON(priv->toggle_btn2), buf);
     gtk_widget_hide(priv->toggle_btn);
     gtk_widget_show(priv->toggle_btn2);
-    gtk_text_buffer_set_text(priv->err_buffer, emu8086_app_code_runner_get_errors(runner), -1);
+
     priv->errs_cleared = FALSE;
     //     gtk_label_set_text(GTK_LABEL(priv->messages), priv->runner->priv->em);
 
@@ -1843,7 +1868,6 @@ void emu8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     gsize len;
     fname = g_file_get_path(file);
     win->state.Open = TRUE;
-
 
     // priv->fname = fname;
     base = g_file_get_basename(file);
@@ -2083,4 +2107,61 @@ GtkWidget *emu8086_app_window_get_bottom_bar(Emu8086AppWindow *win)
 Emu8086AppCode *emu8086_app_window_get_code(Emu8086AppWindow *win)
 {
     return win->priv->code;
+}
+
+void emu8086_app_window_load_error(Emu8086AppWindow *win, gchar *message, gchar *source,
+                                   gpointer object, GdkPixbuf *icon, Emu8086AppErrorType type)
+{
+    g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
+    PRIV;
+    emu8086_app_err_tree_view_new_error_full2(priv->err_tree_view, message, source, object, icon, type);
+    // emu8086_app_err_tree_view_refresh(priv->err_tree_view);
+};
+
+void emu8086_app_window_load_error_icon_name(Emu8086AppWindow *win, gchar *message, gchar *source,
+                                             gpointer object, gchar *icon, Emu8086AppErrorType type)
+{
+    g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
+    PRIV;
+
+    emu8086_app_err_tree_view_new_error_full1(priv->err_tree_view, message, source, object, icon, type);
+};
+
+Emu8086ErrorInfo *emu8086_app_window_load_error_from_fname(Emu8086AppWindow *win, gchar *message, Emu8086AppErrorType type,
+                                                           gpointer object, gboolean show_image)
+{
+    g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
+    PRIV;
+    Emu8086ErrorInfo *new_err;
+
+    if (show_image)
+        new_err = emu8086_app_err_tree_view_new_error_full1(priv->err_tree_view, message, win->state.file_name, priv->code, "emu8086", type);
+
+    else
+        new_err = emu8086_app_err_tree_view_new_error_full1(priv->err_tree_view, message, win->state.file_name, priv->code, NULL, type);
+    return new_err;
+};
+
+void emu8086_app_window_show_all_errors(Emu8086AppWindow *win)
+{
+    g_return_if_fail(EMU8086_IS_APP_WINDOW(win));
+    PRIV;
+    // emu8086_app_err_tree_view_new_error_full2(priv->err_tree_view, message, source, object, icon, type);
+    emu8086_app_err_tree_view_refresh(priv->err_tree_view);
+}
+
+/**
+ * emu8086_app_window_apply_css_to_widget:
+ * @win: a #Emu8086AppWindow
+ *
+ * apply editor css styles to the @widget.
+ *
+ * Returns: (transfer none): if css was applied #gboolean.
+ */
+gboolean emu8086_app_window_apply_css_to_widget(Emu8086AppWindow *win, GtkWidget *widget)
+{
+    g_return_val_if_fail(EMU8086_IS_APP_WINDOW(win), FALSE);
+    apply_css(widget, win->priv->provider);
+    g_print("lol\n");
+    return TRUE;
 }

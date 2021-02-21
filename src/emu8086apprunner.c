@@ -17,6 +17,8 @@
 #include <assembler.h>
 #include <emu8086.h>
 #include <emu8086apprunner.h>
+#include <emu8086apperrtreeview.h>
+#include <emu8086appwin.h>
 
 extern struct instruction *_instruction_list;
 extern struct instruction *_current_instruction, *_first_instruction;
@@ -74,6 +76,11 @@ static void emu8086_app_code_runner_set_property(GObject *object,
     case PROP_U_F:
         self->priv->update_frequency = g_value_get_int(value);
         break;
+    case PROP_MWINDOW:
+        self->priv->win = g_value_get_object(value);
+        self->priv->code = emu8086_app_window_get_code(self->priv->win);
+        break;
+
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -105,11 +112,12 @@ emu8086_app_code_runner_get_property(GObject *object,
     }
 }
 
-Emu8086AppCodeRunner *emu8086_app_code_runner_new(gchar *fname, gboolean can_run)
+Emu8086AppCodeRunner *emu8086_app_code_runner_new(gchar *fname, gboolean can_run, Emu8086AppWindow *win)
 {
     return g_object_new(EMU8086_APP_CODE_RUNNER_TYPE,
                         "filename", fname,
                         "can_run", can_run,
+                        "window", win,
                         NULL);
 };
 
@@ -171,6 +179,15 @@ static void emu8086_app_code_runner_class_init(Emu8086AppCodeRunnerClass *klass)
                                                          FALSE,
                                                          G_PARAM_READWRITE));
 
+    g_object_class_install_property(object_class,
+                                    PROP_MWINDOW,
+                                    g_param_spec_object("window",
+                                                        "Window",
+                                                        "The Runner's window",
+
+                                                        EMU8086_APP_WINDOW_TYPE,
+                                                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
     signals[EXEC_STOPPED] = g_signal_new("exec_stopped", G_TYPE_FROM_CLASS(klass),
                                          G_SIGNAL_RUN_FIRST,
                                          G_STRUCT_OFFSET(Emu8086AppCodeRunnerClass, exec_stopped),
@@ -187,7 +204,7 @@ static void emu8086_app_code_runner_class_init(Emu8086AppCodeRunnerClass *klass)
                                            G_STRUCT_OFFSET(Emu8086AppCodeRunnerClass, error_occurred),
                                            NULL, NULL, NULL,
                                            G_TYPE_NONE,
-                                           1,G_TYPE_INT);
+                                           1, G_TYPE_INT);
 
     signals[INTERRUPT] = g_signal_new("interrupt", G_TYPE_FROM_CLASS(klass),
                                       G_SIGNAL_RUN_FIRST,
@@ -213,25 +230,40 @@ static void load_errs(Emu8086AppCodeRunner *runner)
 {
     PRIV_CODE_RUNNER;
     struct emu8086 *aCPU = priv->aCPU;
+
     if (aCPU == NULL)
         return;
-    GString *s;
+    // GString *s;
     struct errors_list *e = first_err;
+    gint errs = 0;
 
     if (e == NULL)
         return;
     gchar buf[15];
     sprintf(buf, "Errors: %d\n", errors);
-    s = g_string_new(buf);
-
-    while (e != NULL)
+    // s = g_string_new(buf);
+    emu8086_app_window_load_error_from_fname(priv->win, NULL,
+                                             EMU8086_APP_ERROR_TYPE_FATAL, priv->code, TRUE);
+    //        emu8086_app_window_load_error_from_fname(priv->win,"The Errors",
+    // EMU8086_APP_ERROR_TYPE_FATAL, priv->code);
+    while (errs < errors)
     {
-        g_string_append(s, e->message);
-        g_string_append(s, "\n");
+        errs++;
+
+        if (e)
+        {
+
+            Emu8086ErrorInfo *new_err;
+
+            new_err = emu8086_app_window_load_error_from_fname(priv->win, e->message,
+                                                               EMU8086_APP_ERROR_TYPE_FATAL, priv->code, TRUE);
+            new_err->line = e->line;
+        }
         e = e->next;
     }
+    emu8086_app_window_show_all_errors(priv->win);
 
-    priv->em = g_string_free(s, FALSE);
+  
 }
 
 static void emu_free(Emu8086AppCodeRunner *runner)
@@ -428,11 +460,8 @@ int emu_run(Emu8086AppCodeRunner *runner)
         if (list_err != NULL)
         {
 
-            if (priv->em != NULL)
-                g_free(priv->em);
-            priv->em = NULL;
             load_errs(runner);
-            g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
         }
         // emu8086_app_window_flash(priv->win, first_err->message);
         g_debug(list_err->message);
@@ -474,6 +503,7 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         if (aCPU == NULL)
             exit(1);
     }
+    if(errors) return 0;
     errors = 0;
     assembler_step = 0;
     do_assembly(priv->aCPU, fname);
@@ -483,11 +513,8 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         if (list_err != NULL)
         {
 
-            if (priv->em != NULL)
-                g_free(priv->em);
-            priv->em = NULL;
             load_errs(runner);
-            g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
         }
         return 0;
     }
@@ -500,11 +527,8 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         if (list_err != NULL)
         {
 
-            if (priv->em != NULL)
-                g_free(priv->em);
-            priv->em = NULL;
             load_errs(runner);
-            g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
         }
         // emu8086_app_window_flash(priv->win, first_err->message);
         set_app_state(runner, STOPPED);
@@ -520,11 +544,8 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         if (list_err != NULL)
         {
 
-            if (priv->em != NULL)
-                g_free(priv->em);
-            priv->em = NULL;
             load_errs(runner);
-            g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+            g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
         }
         // emu8086_app_window_flash(priv->win, first_err->message);
         set_app_state(runner, STOPPED);
@@ -582,7 +603,7 @@ void step_clicked_app(Emu8086AppCodeRunner *runner)
                     g_free(priv->em);
                 priv->em = NULL;
                 load_errs(runner);
-                g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+                g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
             }
             // emu8086_app_window_flash(priv->win, first_err->message);
             g_debug(list_err->message);
@@ -635,7 +656,7 @@ void step_over_clicked_app(Emu8086AppCodeRunner *runner, Emu8086AppCode *code)
             g_free(priv->em);
         priv->em = NULL;
         priv->em = g_strdup("Error occured during assembly");
-        g_signal_emit(runner, signals[ERROR_OCCURRED], 0,errors);
+        g_signal_emit(runner, signals[ERROR_OCCURRED], 0, errors);
         return;
     }
 
@@ -685,8 +706,8 @@ struct emu8086 *getCPU(Emu8086AppCodeRunner *runner)
     return runner->priv->aCPU;
 }
 
-
-gchar *emu8086_app_code_runner_get_errors(Emu8086AppCodeRunner *runner){
-     PRIV_CODE_RUNNER;
-     return priv->em;
+gchar *emu8086_app_code_runner_get_errors(Emu8086AppCodeRunner *runner)
+{
+    PRIV_CODE_RUNNER;
+    return priv->em;
 }

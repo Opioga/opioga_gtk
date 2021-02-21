@@ -191,7 +191,7 @@ void find_instruction(struct emu8086 *aCPU)
 
         return;
     }
-    // // printf("oo %d %d\n", off, b);
+    // // printf("oo %d %d", off, b);
 
     if (_INSTRUCTIONS->cache != NULL)
     {
@@ -423,10 +423,10 @@ unsigned short get_ops_reg_8_addr(struct emu8086 *aCPU, unsigned char opn, int *
             *dest = STACK_SEGMENT + BP + DI;
             break;
         case 4:
-            // // printf("33jjjj\n");
+            // // printf("33jjjj");
             // special
             *dest = DATA_SEGMENT + SI;
-            // // printf("33jjjj\n, %d\n", **dest);
+            // // printf("33jjjj\n, %d", **dest);
 
             break;
         case 5:
@@ -472,7 +472,7 @@ void setFlags(struct emu8086 *aCPU, int value)
 O  D  I  T  S Z  A  P  C
 11 10 9  8  7 6  4  2  0
     */
-    // printf("%d, %d\n",value, is_16);
+    // printf("%d, %d",value, is_16);
 
     if (is_16 == 0)
     {
@@ -797,7 +797,7 @@ void add_addr16_s8(struct emu8086 *aCPU, int *handled)
         else if (opn < 0xf0)
         {
             int v = *op3 & 0xffff;
-            // printf("%d \n",v);
+            // printf("%d ",v);
 
             value = v - value;
         }
@@ -2758,7 +2758,7 @@ void sub_addr16_s8(struct emu8086 *aCPU, int *handled)
     *op1 = value2 & 0xff;
     *(op1 + 1) = (value2 & 0xffff) >> 8;
     IP++;
-    // printf("value2: %d\n",value2);
+    // printf("value2: %d",value2);
 
     setFlags(aCPU, value2);
     *handled = 1;
@@ -4082,7 +4082,7 @@ void call_addr(struct emu8086 *aCPU, int *handled)
         char buf[256];
         sprintf(buf, errors_str[MAX_CALL], _INSTRUCTIONS->line_number);
         massage(buf, ERR);
-        // massage("MAX CALL EXCEEDED\n", ERR);
+        // massage("MAX CALL EXCEEDED", ERR);
         *handled = 1;
         IP = aCPU->end_address;
         aCPU->skip_next = 1;
@@ -4254,7 +4254,7 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
         {
             value = (*op2 & 0xff) - (*op3 >> 8);
         }
-        // // printf("p5: %d\n", *oop2);
+        // // printf("p5: %d", *oop2);
 
         high_reg = 0;
         setFlags(aCPU, value);
@@ -4912,13 +4912,13 @@ void lea(struct emu8086 *aCPU, int *handled)
 
             break;
         case 4:
-            // // printf("33jjjj\n");
+            // // printf("33jjjj");
             // special
             *dest = SI;
             if (*dest >= (0x10 * DS))
                 *dest = *dest - (0x10 * DS);
 
-            // // printf("33jjjj\n, %d\n", **dest);
+            // // printf("33jjjj\n, %d", **dest);
 
             break;
         case 5:
@@ -5476,7 +5476,7 @@ void rol_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
     op2 = op1 = NULL;
     is_16 = 1;
     high_reg = 0;
-    // // printf("here %x \n", 3);
+    // // printf("here %x ", 3);
 
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
@@ -5518,7 +5518,7 @@ void rol_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
             CLEAR_FLAG(0);
         value <<= shift;
         value |= cf;
-        // // printf("%x \n", value);
+        // // printf("%x ", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -5597,7 +5597,7 @@ void rcl_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
     op2 = op1 = NULL;
     is_16 = 1;
     high_reg = 0;
-    // // printf("here %x \n", 3);
+    // // printf("here %x ", 3);
 
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
@@ -5637,7 +5637,7 @@ void rcl_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
             CLEAR_FLAG(0);
         value <<= shift;
         value |= cf;
-        // // printf("%x \n", value);
+        // // printf("%x ", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -5731,7 +5731,7 @@ void shl_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
         else
             CLEAR_FLAG(0);
         value <<= shift;
-        // // printf("%x, \n", value);
+        // // printf("%x, ", value);
         *op1 = value & 0xffff;
     }
 
@@ -5753,7 +5753,7 @@ void shl_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
         else
             CLEAR_FLAG(0);
         value <<= shift;
-        // printf("%x \n", value);
+        // printf("%x ", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -5828,7 +5828,7 @@ void sal_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
     op2 = op1 = NULL;
     is_16 = 1;
     high_reg = 0;
-    // printf("here %x \n", 3);
+    // printf("here %x ", 3);
 
     b = get_ops_reg_8(aCPU, (opn & 0xc7), &op2, &op1);
     if (b)
@@ -5868,7 +5868,7 @@ void sal_16(struct emu8086 *aCPU, int *handled, unsigned short cl)
             CLEAR_FLAG(0);
         value <<= shift;
         value |= cf;
-        // printf("%x \n", value);
+        // printf("%x ", value);
         *op3++ = value & 0xff;
         *op3 = value >> 8;
     }
@@ -6927,7 +6927,7 @@ void dump_memory(struct emu8086 *aCPU)
     while (start < end)
     {
         if (aCPU->mDataMem[start] > 0)
-            // printf("%05x: %02x\n", start, aCPU->mDataMem[start]);
+            // printf("%05x: %02x", start, aCPU->mDataMem[start]);
             start++;
     }
 }
@@ -6939,7 +6939,7 @@ void dump_stack(struct emu8086 *aCPU)
     while (start < end)
     {
         if (aCPU->mDataMem[start] > 0)
-            // printf("%05x: %02x\n", start, aCPU->mDataMem[start]);
+            // printf("%05x: %02x", start, aCPU->mDataMem[start]);
             start++;
     }
 }
@@ -6976,7 +6976,7 @@ void dump_registers(struct emu8086 *aCPU)
     for (unsigned short i = 0; i < 22; i++)
     {
         /* code */
-        // printf("%s: %04x\n", r[i], aCPU->mSFR[i]);
+        // printf("%s: %04x", r[i], aCPU->mSFR[i]);
     }
 }
 #endif

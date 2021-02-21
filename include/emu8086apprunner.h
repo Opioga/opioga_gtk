@@ -19,7 +19,6 @@
 #include <gtk/gtk.h>
 #include "emu8086apptypes.h"
 
-
 G_BEGIN_DECLS
 struct emu8086;
 #define EMU8086_APP_CODE_RUNNER_TYPE (emu8086_app_code_runner_get_type())
@@ -41,7 +40,8 @@ struct _Emu8086AppCodeRunnerPrivate
     gchar *em;
     gint f;
     Emu8086AppCode *code;
-  
+    Emu8086AppWindow *win;
+
     gint m_ins;
     gint update_frequency;
 };
@@ -70,7 +70,8 @@ typedef enum
     PROP_RUNNER_CODE,
     PROP_RUNNER_CAN_RUN,
     PROP_ACPU,
-    PROP_U_F
+    PROP_U_F,
+    PROP_MWINDOW
 
 } Emu8086AppCodeRunnerProperty;
 
@@ -86,7 +87,11 @@ typedef enum
 GType emu8086_app_code_runner_get_type(void) G_GNUC_CONST;
 gboolean emu8086_app_code_runner_get_can_run(Emu8086AppCodeRunner *runner);
 gchar *emu8086_app_code_runner_get_fname(Emu8086AppCodeRunner *runner);
-Emu8086AppCodeRunner *emu8086_app_code_runner_new(gchar *fname, gboolean can_run);
+
+Emu8086AppCodeRunner *emu8086_app_code_runner_new(gchar *fname, gboolean can_run,
+                                                  Emu8086AppWindow *win);
+
+                                                  
 void set_fname(Emu8086AppCodeRunner *runner, gchar *fname);
 void run_clicked_app(Emu8086AppCodeRunner *runner);
 void step_clicked_app(Emu8086AppCodeRunner *runner);

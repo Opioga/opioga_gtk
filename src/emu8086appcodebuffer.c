@@ -31,8 +31,8 @@ typedef enum
 enum
 {
 
-    UNDO,
-    REDO,
+
+    NEWLINE,
 
     N_SIGNALS
 };
@@ -50,6 +50,26 @@ static gboolean ends_line(GtkTextIter *iter)
 {
     return gtk_text_iter_ends_line(iter);
 }
+struct _Emu8086AppCodeBufferPrivate
+{
+
+    gint lc;
+    gint line;
+    GtkTextTagTable *table;
+    GSettings *settings;
+    Emu8086AppCode *code;
+    gint timeout;
+    Emu8086AppStyleScheme *scheme;
+    GtkTextMark *tmp_insert_mark;
+    GtkTextMark *tmp_selection_bound_mark;
+    GList *search_contexts;
+    gint max_undo_levels;
+    gboolean can_undo;
+    gboolean can_redo;
+    Emu8086AppURdoManager *manager;
+    GHashTable *keywords_hash_table;
+    GHashTable *register_hash_table;
+};
 
 static void _highlight(GtkTextBuffer *buffer, gint i)
 {
@@ -189,20 +209,39 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
             gint length = strlen(buf);
             if (length > 0 && !isString)
             {
-                // g_print(buf);
+  
+
                 if (length > 2)
                     gtk_text_buffer_remove_tag_by_name(buffer, "reg", &iter, &iter2);
+                Emu8086AppCodeBuffer *b = EMU8086_APP_CODE_BUFFER(buffer);
+              
+              
+                gchar *key = buf;
 
-                if (getnum_(buf))
+                if (g_hash_table_contains(b->priv->keywords_hash_table, key))
+                {
+                    gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &iter, &iter2);
+                }
+
+                else if (getnum_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "num", &iter, &iter2);
                 else if (getsp_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "special", &iter, &iter2);
                 else if (getlab_(buf))
                     gtk_text_buffer_apply_tag_by_name(buffer, "label_def", &iter, &iter2);
                 else if (getkeyword(buf))
+                {
+
+                    g_hash_table_insert(b->priv->keywords_hash_table, key, TRUE);
                     gtk_text_buffer_apply_tag_by_name(buffer, "keyword", &iter, &iter2);
+                }
                 else if (getreg(buf))
+                {
+
+                    //    g_hash_table_insert(priv->register_hash_table, key, TRUE);
+
                     gtk_text_buffer_apply_tag_by_name(buffer, "reg", &iter, &iter2);
+                }
 
                 else if (getstr_(buf))
 
@@ -232,26 +271,18 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
     }
 }
 
-struct _Emu8086AppCodeBufferPrivate
-{
-
-    gint lc;
-    gint line;
-    GtkTextTagTable *table;
-    GSettings *settings;
-    Emu8086AppCode *code;
-    gint timeout;
-    Emu8086AppStyleScheme *scheme;
-    GtkTextMark *tmp_insert_mark;
-    GtkTextMark *tmp_selection_bound_mark;
-    GList *search_contexts;
-    gint max_undo_levels;
-    gboolean can_undo;
-    gboolean can_redo;
-    Emu8086AppURdoManager *manager;
-};
-
 G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
+
+static void emu8086_app_code_buffer_dispose(GObject *object)
+{
+    Emu8086AppCodeBuffer *buffer;
+    buffer = EMU8086_APP_CODE_BUFFER(object);
+    PRIV_CODE_BUFFER;
+    g_free(priv->register_hash_table);
+    g_free(priv->keywords_hash_table);
+    g_print("lol\n");
+    G_OBJECT_CLASS(emu8086_app_code_buffer_parent_class)->dispose(object);
+}
 
 static void emu8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
 {
@@ -262,7 +293,8 @@ static void emu8086_app_code_buffer_init(Emu8086AppCodeBuffer *buffer)
     //  gtk_text_buffer
     buffer->priv = emu8086_app_code_buffer_get_instance_private(buffer);
     PRIV_CODE_BUFFER;
-   
+    priv->keywords_hash_table = g_hash_table_new(g_str_hash, NULL);
+    priv->register_hash_table = g_hash_table_new(g_str_hash, NULL);
     buf = GTK_TEXT_BUFFER(buffer);
     priv->settings = g_settings_new("com.krc.emu8086app");
     priv->scheme = emu8086_app_style_scheme_get_default();
@@ -328,10 +360,8 @@ void queue_highlight(Emu8086AppCodeBuffer *buffer)
     if (priv->timeout != 0)
     {
         g_source_remove(priv->timeout);
-        
     }
     hl((gpointer)(buffer));
-
 }
 
 static void emu8086_app_code_buffer_insert_text_real(GtkTextBuffer *buf,
@@ -424,8 +454,8 @@ emu8086_app_code_buffer_set_property(GObject *object,
     {
 
     case PROP_BUFFER_THEME:
-       
-       // self->theme = v;
+
+        // self->theme = v;
         emu8086_app_code_buffer_change_theme(self);
         // g_string_free(v, FALSE);
         break;
@@ -485,7 +515,7 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
     text_buffer_class->delete_range = emu8086_app_code_buffer_delete_range;
     object_class->set_property = emu8086_app_code_buffer_set_property;
     object_class->get_property = emu8086_app_code_buffer_get_property;
-
+    object_class->dispose = emu8086_app_code_buffer_dispose;
     g_object_class_install_property(object_class, PROP_BUFFER_THEME,
                                     g_param_spec_string("theme", "Theme", "Editor Theme", "dark+",
                                                         G_PARAM_READWRITE));
@@ -497,6 +527,11 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
     g_object_class_install_property(object_class, PROP_CAN_REDO,
                                     g_param_spec_boolean("can-redo", "CanRedo", "If we can redo", FALSE,
                                                          G_PARAM_READWRITE));
+
+// buffer_signals[NEWLINE] =
+		// g_signal_new(
+        //     "new_line",
+        // ) ;
 
 }
 
