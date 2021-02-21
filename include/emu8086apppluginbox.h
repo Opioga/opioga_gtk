@@ -63,5 +63,8 @@ typedef struct _Emu8086AppCodeRunner Emu8086AppCodeRunner;
 Emu8086AppPluginBox *emu8086_app_plugin_box_new(GtkApplicationWindow *win,
                                                  Emu8086AppCodeRunner *runner);
 
+void emu8086_app_plugin_box_start_plugins(Emu8086AppPluginBox *box);
+Emu8086AppWindow * emu8086_app_plugin_box_get_mwindow(Emu8086AppPluginBox *box);
+void emu8086_app_plugin_box_set_window(Emu8086AppPluginBox *box, Emu8086AppWindow *win);
 G_END_DECLS
 #endif

@@ -162,24 +162,7 @@ static void emu8086_app_plugin_box_class_init(Emu8086AppPluginBoxClass *klass)
 static void emu8086_app_plugin_box_init(Emu8086AppPluginBox *box)
 {
     box->priv = emu8086_app_plugin_box_get_instance_private(box);
-    PRIV_BOX;
-
-    priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
-                                              PEAS_TYPE_ACTIVATABLE, "object", box, NULL);
-
-    peas_extension_set_foreach(priv->extensions,
-                               (PeasExtensionSetForeachFunc)on_extension_added,
-                               box);
-
-    g_signal_connect(priv->extensions,
-                     "extension-added",
-                     G_CALLBACK(on_extension_added),
-                     box);
-
-    g_signal_connect(priv->extensions,
-                     "extension-removed",
-                     G_CALLBACK(on_extension_removed),
-                     box);
+   
 }
 
 static void
@@ -205,3 +188,36 @@ on_extension_added(PeasExtensionSet *extensions,
     // peas_
     // peas_extension_set_call_valist
 }
+
+void emu8086_app_plugin_box_start_plugins(Emu8086AppPluginBox *box)
+{
+     PRIV_BOX;
+
+    priv->extensions = peas_extension_set_new(PEAS_ENGINE(emu8086_plugins_engine_get_default()),
+                                              PEAS_TYPE_ACTIVATABLE, "object", box, NULL);
+
+
+
+
+    peas_extension_set_foreach(priv->extensions,
+                               (PeasExtensionSetForeachFunc)on_extension_added,
+                               box);
+
+    g_signal_connect(priv->extensions,
+                     "extension-added",
+                     G_CALLBACK(on_extension_added),
+                     box);
+
+    g_signal_connect(priv->extensions,
+                     "extension-removed",
+                     G_CALLBACK(on_extension_removed),
+                     box);
+}
+
+Emu8086AppWindow * emu8086_app_plugin_box_get_mwindow(Emu8086AppPluginBox *box){
+    return EMU8086_APP_WINDOW(box->priv->win);
+}
+
+void emu8086_app_plugin_box_set_window(Emu8086AppPluginBox *box, Emu8086AppWindow *win){
+   box->priv->win= GTK_APPLICATION_WINDOW(win);
+};

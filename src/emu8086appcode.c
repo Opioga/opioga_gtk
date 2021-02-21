@@ -896,6 +896,8 @@ void emu8086_app_code_set_show_lines(Emu8086AppCode *code, gboolean show)
     code->priv->show_line_numbers = show;
 }
 
+
+
 Emu8086AppCodeBuffer *emu8086_app_code_get_mbuffer(Emu8086AppCode *code)
 {
     g_return_val_if_fail(EMU8086_IS_APP_CODE(code), NULL);

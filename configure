@@ -13767,7 +13767,7 @@ endif
 
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile fonts/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile egs/plugins/Makefile mime/Makefile plugins/Makefile plugins/lcdhitachi/Makefile plugins/lcdhitachi/lcdhitachi/Makefile plugins/hexcalculator/Makefile plugins/hexcalculator/hexcalculator/Makefile themes/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile include/Makefile pixmaps/Makefile pixbufs/Makefile egs/Makefile egs/plugins/Makefile mime/Makefile plugins/Makefile plugins/lcdhitachi/Makefile plugins/lcdhitachi/lcdhitachi/Makefile plugins/hexcalculator/Makefile plugins/hexcalculator/hexcalculator/Makefile plugins/outlineview/Makefile plugins/outlineview/outlineview/Makefile themes/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14790,7 +14790,6 @@ do
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "fonts/Makefile") CONFIG_FILES="$CONFIG_FILES fonts/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "pixmaps/Makefile") CONFIG_FILES="$CONFIG_FILES pixmaps/Makefile" ;;
     "pixbufs/Makefile") CONFIG_FILES="$CONFIG_FILES pixbufs/Makefile" ;;
@@ -14802,6 +14801,8 @@ do
     "plugins/lcdhitachi/lcdhitachi/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/lcdhitachi/lcdhitachi/Makefile" ;;
     "plugins/hexcalculator/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/hexcalculator/Makefile" ;;
     "plugins/hexcalculator/hexcalculator/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/hexcalculator/hexcalculator/Makefile" ;;
+    "plugins/outlineview/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/outlineview/Makefile" ;;
+    "plugins/outlineview/outlineview/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/outlineview/outlineview/Makefile" ;;
     "themes/Makefile") CONFIG_FILES="$CONFIG_FILES themes/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

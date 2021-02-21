@@ -27,7 +27,7 @@
 
 ;   begin
 	
-	
+main:	
 	push cs
 	push cs
 	pop ds	

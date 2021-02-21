@@ -115,6 +115,8 @@ static void add_recent(gchar *uri);
 static void emu8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title);
 static void emu8086_win_change_theme(Emu8086AppStyleScheme *scheme, Emu8086AppWindow *win);
 static void emu8086_window_set_search(Emu8086AppWindow *win, gboolean b);
+static void populate_win(Emu8086AppWindow *win);
+static void populate_tools(Emu8086AppWindow *win);
 static void unset_open(Emu8086AppWindow *win);
 static void
 copy_activated(GSimpleAction *action,
@@ -596,10 +598,10 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     GMenuModel *menu;
     gtk_widget_init_template(GTK_WIDGET(win));
     win->priv = emu8086_app_window_get_instance_private(win);
-    
+
     PRIV;
     priv->errs_cleared = FALSE;
-   
+
     priv->stack = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
     priv->scrolled = gtk_scrolled_window_new(NULL, NULL);
     priv->vpaned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
@@ -615,7 +617,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     emu8086_app_window_clear_err_msgs(win);
 
     gtk_container_add(GTK_CONTAINER(priv->editor_box), priv->hpaned);
-       gtk_paned_pack1(GTK_PANED(priv->hpaned),
+    gtk_paned_pack1(GTK_PANED(priv->hpaned),
                     priv->left_pane,
                     FALSE,
                     TRUE);
@@ -679,19 +681,22 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     g_signal_connect(priv->runner, "error_occured", G_CALLBACK(emu8086_app_window_show_errors), win);
     g_signal_connect(priv->runner, "exec_ins", G_CALLBACK(emu8086_app_window_update_wids), win);
 
- 
     g_object_bind_property(win, "search-show", priv->revealer_search, "reveal-child", G_BINDING_DEFAULT);
-   Emu8086AppPluginBox *box;
-    box = emu8086_app_plugin_box_new(GTK_APPLICATION_WINDOW(win), priv->runner);
-    gtk_container_add(GTK_CONTAINER(priv->stack), GTK_WIDGET(box));
+    Emu8086AppPluginBox *box;
+
     gtk_widget_set_size_request(priv->left_pane, 250, -1);
-     gtk_widget_show_all(priv->hpaned);
-     gtk_widget_hide(priv->bottom_notebook);
-     gtk_widget_hide(priv->left_pane);
+    gtk_widget_show_all(priv->hpaned);
+    gtk_widget_hide(priv->bottom_notebook);
+    gtk_widget_hide(priv->left_pane);
 
     g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(emu8086_win_change_theme), win);
-
-    g_object_unref(builder); priv->bottom_notebook_visible = FALSE;
+    box = emu8086_app_plugin_box_new(GTK_APPLICATION_WINDOW(win), priv->runner);
+    populate_win(win);
+    populate_tools(win);
+    emu8086_app_plugin_box_start_plugins(box);
+    gtk_container_add(GTK_CONTAINER(priv->stack), GTK_WIDGET(box));
+    g_object_unref(builder);
+    priv->bottom_notebook_visible = FALSE;
 };
 
 void emu8086_app_window_quick_message(GtkWindow *parent, gchar *message, gchar *title)
@@ -1726,8 +1731,6 @@ static void load_license(Emu8086AppWindow *win)
 void emu8086_app_window_up(Emu8086AppWindow *win)
 {
     PRIV;
-    populate_win(win);
-    populate_tools(win);
 
     win->state.Open = FALSE;
     load_license(win);
@@ -1840,8 +1843,7 @@ void emu8086_app_window_open(Emu8086AppWindow *win, GFile *file)
     gsize len;
     fname = g_file_get_path(file);
     win->state.Open = TRUE;
-    populate_win(win);
-    populate_tools(win);
+
 
     // priv->fname = fname;
     base = g_file_get_basename(file);

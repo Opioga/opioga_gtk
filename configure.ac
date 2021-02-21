@@ -42,7 +42,6 @@ GLIB_GSETTINGS
 AC_OUTPUT([
 Makefile
 src/Makefile
-fonts/Makefile
 include/Makefile
 pixmaps/Makefile
 pixbufs/Makefile
@@ -54,5 +53,7 @@ plugins/lcdhitachi/Makefile
 plugins/lcdhitachi/lcdhitachi/Makefile
 plugins/hexcalculator/Makefile
 plugins/hexcalculator/hexcalculator/Makefile
+plugins/outlineview/Makefile
+plugins/outlineview/outlineview/Makefile
 themes/Makefile
 ])
