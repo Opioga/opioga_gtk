@@ -4850,6 +4850,17 @@ void cld(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
+
+// cli
+
+void cli(struct emu8086 *aCPU, int *handled)
+{
+    // (((~FLAGS & 0xffff) | (1 << f)) ^ FLAGS))
+    CLEAR_FLAG(9);
+    IP++;
+    *handled = 1;
+}
+
 // std
 
 void std(struct emu8086 *aCPU, int *handled)
@@ -4859,6 +4870,16 @@ void std(struct emu8086 *aCPU, int *handled)
     IP++;
     *handled = 1;
 }
+
+// sti
+void sti(struct emu8086 *aCPU, int *handled)
+{
+    // (((~FLAGS & 0xffff) | (1 << f)) ^ FLAGS))
+    SET_FLAG(9);
+    IP++;
+    *handled = 1;
+}
+
 
 // lea
 void lea(struct emu8086 *aCPU, int *handled)
@@ -6915,7 +6936,7 @@ void unimp(struct emu8086 *aCPU, int *handled)
     IP = _INSTRUCTIONS->end_address + 1;
     char buf[256];
     sprintf(buf, errors_str[UNIMPLEMENTED], _INSTRUCTIONS->line_number);
-    massage(buf, ERR);
+    message(buf, ERR, _INSTRUCTIONS->line_number);
     *handled = 1;
 }
 // end ops
@@ -7179,9 +7200,14 @@ void op_setptrs(struct emu8086 *aCPU)
     aCPU->op[STC] = &stc;
     // CLD
     aCPU->op[CLD] = &cld;
+    // CLI
+    aCPU->op[CLI] = &cli;
 
-    // STC
+    // STD 
     aCPU->op[STD] = &std;
+
+   // STI Unfortunate arrangement
+    aCPU->op[STI] = &sti;
 
     // LEA
     aCPU->op[LEA_R16_D16] = &lea;
