@@ -438,7 +438,7 @@ int emu_run(Emu8086AppCodeRunner *runner)
     }
     errors = 0;
 
-    if (priv->state == STEP_OVER)
+    if (priv->state == STEP_OVER || priv->state == PLAYING )
     {
 
         //priv->len;

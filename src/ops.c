@@ -67,18 +67,18 @@ void pop_from_stack(struct emu8086 *aCPU, unsigned short *value)
     SP++;
     *value |= *(STACK_SEGMENT + SP);
 }
+
+
+
 void compare_set_flags(struct emu8086 *aCPU, unsigned short v1, unsigned short v2)
 {
     int value = v1 - v2;
-    if (value < 0)
-    {
-        FLAGS |= 129;
-    }
-    else if (value == 0)
-    {
-        FLAGS |= 64;
-    }
+    setOverflowFlag(aCPU, value, (int)v1);
 }
+
+
+
+
 void find_instruction16(struct emu8086 *aCPU)
 {
 
@@ -89,20 +89,11 @@ void find_instruction16(struct emu8086 *aCPU)
     off |= *(CODE_SEGMENT_IP) << 8;
     IP++;
 
-    // off = off < 0 ? 0 - off : off;
-
-    // char is_back = off >> 7;
     _current_instruction = _INSTRUCTIONS;
     struct instruction *prev = _current_instruction->prev;
     struct instruction *next = _current_instruction->next;
-
-    // if (_current_instruction->starting_address == *(CODE_SEGMENT + IP))
-    // {
-
-    //     IP = *(CODE_SEGMENT_IP);
-    //     return;
-    // }
-    if (off >= 0)
+ 
+     if (off >= 0)
         prev = NULL;
     else
         next = NULL;
@@ -473,42 +464,64 @@ O  D  I  T  S Z  A  P  C
 11 10 9  8  7 6  4  2  0
     */
     // printf("%d, %d",value, is_16);
+    if (value == 0)
+        SET_FLAG(6);
 
-    if (is_16 == 0)
+    else
+        CLEAR_FLAG(6);
+    if (!is_16)
     {
-        if (value > 255)
-            FLAGS |= ((1 << 11) | (1 << 4));
+        if (value > 255 || value < 0)
+            SET_FLAG(0);
+
+        else
+            CLEAR_FLAG(0);
+        if (IS_SET(value, 7))
+        {
+            SET_FLAG(7);
+        }
+        else
+            CLEAR_FLAG(7);
+
+        return;
+    }
+
+    if (value > 0xffff || value < 0)
+        SET_FLAG(0);
+
+    else
+        CLEAR_FLAG(0);
+    if (IS_SET(value, 15))
+        SET_FLAG(7);
+    else
+        CLEAR_FLAG(7);
+}
+
+void setOverflowFlag(struct emu8086 *aCPU, int value, int previous)
+{
+    /*
+O  D  I  T  S Z  A  P  C
+11 10 9  8  7 6  4  2  0
+    */
+     if (is_16)
+    {
+        if (IS_SET(value, 16) & (IS_SET(previous, 14)))
+            SET_FLAG(11);
+        else if (IS_SET(value, 15) & !(IS_SET(previous, 14)))
+            SET_FLAG(11);
         else
         {
             CLEAR_FLAG(11);
-            CLEAR_FLAG(4);
         }
+        return;
     }
-    if (value > 0xffff)
-        FLAGS |= ((1 << 11) | (1));
+    if (IS_SET(value, 8) & (IS_SET(previous, 6)))
+        SET_FLAG(11);
+    else if (IS_SET(value, 7) & !(IS_SET(previous, 6)) & value > 0)
+        SET_FLAG(11);
     else
     {
         CLEAR_FLAG(11);
-        CLEAR_FLAG(1);
-    }
-    if (value == 0)
-        FLAGS |= (1 << 6);
-
-    else
-    {
-        CLEAR_FLAG(6);
-    }
-    if (value < 0)
-    {
-        FLAGS |= ((1 << 11) | (1 << 7) | 1);
-        // FLAGS |= 1;
-    }
-
-    else
-    {
-        CLEAR_FLAG(11);
-        CLEAR_FLAG(7);
-        CLEAR_FLAG(0);
     }
 }
 // add
@@ -527,9 +540,12 @@ void add_addr16_reg16(struct emu8086 *aCPU, int *handled)
     if (b)
     {
         int value = *op3;
+        int prev = 0;
+        prev = *op2;
         value += *op2;
         *op2 = (value & 0xffff);
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
         IP += 1;
         *handled = 1;
         return;
@@ -538,9 +554,12 @@ void add_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
     int value = *(op1);
     value |= (*(op1 + 1) << 8);
+    int prev = 0;
     //  IP++;
+    prev = value;
     value += *(op2);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
     *(op1) = (value & 0xffff) & 0xff;
     *(op1 + 1) = (value & 0xffff) >> 8;
     *handled = 1;
@@ -558,14 +577,14 @@ void add_reg16_addr16(struct emu8086 *aCPU, int *handled)
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
         // IP++;
-
+        int prev = 0;
         int value = *(op1);
         value |= (*(op1 + 1) << 8);
-
+        prev = *op2;
         value = *op2 + (value);
         *op2 = value & 0xffff;
         setFlags(aCPU, value);
-
+        setOverflowFlag(aCPU, value, prev);
         *handled = 1;
         IP++;
     }
@@ -585,9 +604,12 @@ void add_reg8_addr8(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
+        int prev = 0;
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+        prev = value;
         value += *(op1);
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
         *op2 = high_reg ? (*op2 & 0xff) | ((value & 0xff) << 8) : ((*op2 & 0xff00) | (value & 0xff));
         high_reg = 0;
         *handled = 1;
@@ -609,29 +631,35 @@ void add_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8(aCPU, opn, &op3, &op2))
     {
-        int value;
+        int value = 0, prev = 0;
         if (high_reg == 0)
         {
+            prev = (*op2 & 0xff);
+
             value = (*op2 & 0xff) + (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else if (high_reg == 1)
         {
+            prev = (*op2 >> 8);
             value = (*op2 >> 8) + (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else if (high_reg == 2)
         {
+            prev = (*op2 & 0xff);
             value = (*op2 & 0xff) + (*op3 >> 8);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else
         {
+            prev = (*op2 >> 8);
             value = (*op2 >> 8) + (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         IP += 1;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
         *handled = 1;
         return;
     }
@@ -639,10 +667,12 @@ void add_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
     int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
     IP++;
-    value += *(op1);
+    int prev = *op1;
+    value += prev;
 
     *(op1) = value & 0xff;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
 
     *handled = 1;
     return;
@@ -652,8 +682,13 @@ void add_al_i8(struct emu8086 *aCPU, int *handled)
 {
     IP++;
     int value = (AX & 0xff) + *(CODE_SEGMENT_IP);
+    int prev = 0;
+    is_16 = 0;
+    prev = AX & 0xff;
     AX = (AX & 0xff00) | (value & 0xff);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
+
     *handled = 1;
     IP++;
 }
@@ -665,10 +700,14 @@ void add_ax_i16(struct emu8086 *aCPU, int *handled)
     int value = *(CODE_SEGMENT_IP);
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
+    int prev = 0;
+    prev = AX;
     value += AX;
     AX = (value & 0xffff);
 
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
+
     *handled = 1;
     IP += 1;
 }
@@ -683,6 +722,7 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
     is_16 = 0;
 
     int value, *op4;
+    int prev = 0;
 
     unsigned char reg = (opn & 0b00111000) >> 3;
     if (get_ops_reg_8(aCPU, opn, &op3, &op4))
@@ -693,20 +733,37 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
         value = *(CODE_SEGMENT_IP);
         high_reg = high_reg == 1;
         if (opn < 0xc8)
-            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+        {
+            prev = (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+            value += prev;
+            setOverflowFlag(aCPU, value, prev);
+        }
         else if (opn < 0xd0)
             value |= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
         else if (opn < 0xd8)
         {
-            value += (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+            prev = (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+
             value += (FLAGS & 1);
+            value += prev;
+            setOverflowFlag(aCPU, value, prev);
         }
         else if (opn < 0xe0)
-            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value - (FLAGS & 1);
+        {
+            prev = (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+            value = prev - value - (FLAGS & 1);
+
+            //    value += prev;
+            setOverflowFlag(aCPU, value, prev);
+        }
         else if (opn < 0xe8)
             value &= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
         else if (opn < 0xf0)
-            value = (high_reg ? (*op4 >> 8) : (*op4 & 0xff)) - value;
+        {
+            prev = (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
+            value = prev - value;
+            setOverflowFlag(aCPU, value, prev);
+        }
         else if (opn < 0xf8)
             value ^= (high_reg ? (*op4 >> 8) : (*op4 & 0xff));
         else
@@ -753,18 +810,20 @@ void add_addr8_i8(struct emu8086 *aCPU, int *handled)
         // offset = INSTRUCTIONS->value;
     }
 
-    else if (get_ops_reg_8_addr(aCPU, opn, &op4, &op1))
-    {
-        IP++;
-        value = *(CODE_SEGMENT + IP);
-    }
+    else
+        get_ops_reg_8_addr(aCPU, opn, &op4, &op1);
+
     IP++;
     value = *(CODE_SEGMENT + IP);
-    value = value + *op1;
+    prev = *op1;
+    value = value + prev;
     *op1 = value & 0xff;
     // *(op1 + 1) = value >> 8;
     IP++;
+
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
+
     *handled = 1;
 }
 
@@ -777,12 +836,17 @@ void add_addr16_s8(struct emu8086 *aCPU, int *handled)
     opn = *(CODE_SEGMENT + IP);
     unsigned char *op1 = NULL;
     short *op2, value = 0, *op3;
+    int prev = 0;
     if (get_ops_reg_8(aCPU, opn, &op2, &op3))
     {
         IP++;
         value = *(CODE_SEGMENT_IP);
         if (opn < 0xc8)
+        {
             value += *op3;
+            prev = *op3;
+            setOverflowFlag(aCPU, (int)value, prev);
+        }
         else if (opn < 0xd0)
             value |= *op3;
         else if (opn < 0xd8)
@@ -791,7 +855,12 @@ void add_addr16_s8(struct emu8086 *aCPU, int *handled)
             value += (FLAGS & 1);
         }
         else if (opn < 0xe0)
+        {
             value = *op3 - value - (FLAGS & 1);
+
+            prev = *op3;
+            setOverflowFlag(aCPU, (int)value, prev);
+        }
         else if (opn < 0xe8)
             value &= *op3;
         else if (opn < 0xf0)
@@ -800,6 +869,7 @@ void add_addr16_s8(struct emu8086 *aCPU, int *handled)
             // printf("%d ",v);
 
             value = v - value;
+            setOverflowFlag(aCPU,(int) value, v);
         }
         else if (opn < 0xf8)
             value ^= *op3;
@@ -853,6 +923,8 @@ void add_addr16_s8(struct emu8086 *aCPU, int *handled)
     value = *(CODE_SEGMENT + IP);
     value += value2;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
+
     *op1++ = value & 255;
     *op1 = (value >> 8) & 255;
     IP++;
@@ -867,7 +939,8 @@ void add_addr16_d16(struct emu8086 *aCPU, int *handled)
     unsigned char opn;
     opn = *(CODE_SEGMENT + IP);
     unsigned char *op1 = NULL;
-    unsigned short *op2, value = 0, *op3;
+    unsigned short *op2, *op3;
+    int value = 0;
     if (get_ops_reg_8(aCPU, opn, &op2, &op3))
     {
 
@@ -876,20 +949,30 @@ void add_addr16_d16(struct emu8086 *aCPU, int *handled)
         IP++;
         value |= *(CODE_SEGMENT_IP) << 8;
         if (opn < 0xc8)
+        {
             value += *op3;
+            setOverflowFlag(aCPU, value, (int)*op3);
+        }
         else if (opn < 0xd0)
             value |= *op3;
         else if (opn < 0xd8)
         {
             value += *op3;
             value += (FLAGS & 1);
+            setOverflowFlag(aCPU, value, (int)*op3);
         }
         else if (opn < 0xe0)
+        {
             value = *op3 - value - (FLAGS & 1);
+            setOverflowFlag(aCPU, value, (int)*op3);
+        }
         else if (opn < 0xe8)
             value &= *op3;
         else if (opn < 0xf0)
+        {
             value = *op3 - value;
+            setOverflowFlag(aCPU, value, (int)*op3);
+        }
         else if (opn < 0xf8)
             value ^= *op3;
         else
@@ -948,6 +1031,8 @@ void add_addr16_d16(struct emu8086 *aCPU, int *handled)
     *op1 = (value >> 8) & 255;
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
+
     *handled = 1;
 }
 
@@ -1282,6 +1367,8 @@ void adc_addr16_reg16(struct emu8086 *aCPU, int *handled)
     {
         int value = *op3;
         value += *op2 + (FLAGS & 1);
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = (value & 0xffff);
 
         setFlags(aCPU, value);
@@ -1293,7 +1380,9 @@ void adc_addr16_reg16(struct emu8086 *aCPU, int *handled)
     b = get_ops_reg_8_addr(aCPU, opn, &op2, &op1);
 
     int value = *(op1);
+    int prev = 0;
     value |= (*(op1 + 1) << 8);
+    prev = value;
     //  IP++;
     value += *(op2) + (FLAGS & 1);
 
@@ -1303,6 +1392,7 @@ void adc_addr16_reg16(struct emu8086 *aCPU, int *handled)
     IP++;
 
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
 
     return;
 }
@@ -1322,6 +1412,8 @@ void adc_reg16_addr16(struct emu8086 *aCPU, int *handled)
         value |= (*(op1 + 1) << 8);
 
         value = *op2 + (value) + (FLAGS & 1);
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = value & 0xffff;
         setFlags(aCPU, value);
 
@@ -1346,6 +1438,8 @@ void adc_reg8_addr8(struct emu8086 *aCPU, int *handled)
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+        int prev = 0;
+        prev = value;
         value += *(op1) + (FLAGS & 1);
 
         *op2 = high_reg ? (*op2 & 0xff) | ((value & 0xff) << 8) : ((*op2 & 0xff00) | (value & 0xff));
@@ -1353,6 +1447,7 @@ void adc_reg8_addr8(struct emu8086 *aCPU, int *handled)
         *handled = 1;
         IP++;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         return;
     }
@@ -1371,30 +1466,38 @@ void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8(aCPU, opn, &op3, &op2))
     {
-        int value;
+        int value, prev;
         if (high_reg == 0)
         {
             value = (*op2 & 0xff) + (*op3 & 0xff) + (FLAGS & 1);
+            prev = *op2 & 0xff;
+            // setOverflowFlag(aCPU, value, prev);
+
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else if (high_reg == 3)
         {
             value = (*op2 >> 8) + (*op3 & 0xff) + (FLAGS & 1);
+            prev = *op2 >> 8;
+
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else if (high_reg == 1)
         {
             value = (*op2 & 0xff) + (*op3 >> 8) + (FLAGS & 1);
+            prev = *op2 & 255;
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else
         {
             value = (*op2 >> 8) + (*op3 >> 8) + (FLAGS & 1);
+            prev = *op2 >> 8;
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         IP += 1;
         *handled = 1;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, (int)*op2);
 
         return;
     }
@@ -1403,6 +1506,7 @@ void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
     int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
     IP++;
     value += *(op1) + (FLAGS & 1);
+    setOverflowFlag(aCPU, value, (int)*op1);
 
     *(op1) = value & 0xff;
 
@@ -1415,9 +1519,12 @@ void adc_addr8_reg8(struct emu8086 *aCPU, int *handled)
 void adc_al_i8(struct emu8086 *aCPU, int *handled)
 {
     IP++;
-    int value = (AX & 0xff) + *(CODE_SEGMENT_IP) + (FLAGS & 1);
+    int value, prev = (AX & 0xff);
+    is_16 = 0;
+    value = prev + *(CODE_SEGMENT_IP) + (FLAGS & 1);
     AX = (AX & 0xff00) | (value & 0xff);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
 
     *handled = 1;
     IP++;
@@ -1426,10 +1533,13 @@ void adc_al_i8(struct emu8086 *aCPU, int *handled)
 void adc_ax_i16(struct emu8086 *aCPU, int *handled)
 {
     IP++;
+    is_16 = 1;
     int value = *(CODE_SEGMENT_IP);
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
     value += AX + (FLAGS & 1);
+    setOverflowFlag(aCPU, value, (int)AX);
+
     AX = (value & 0xffff);
 
     setFlags(aCPU, value);
@@ -1470,6 +1580,8 @@ void adc_addr8_i8(struct emu8086 *aCPU, int *handled)
     }
 
     value = value + *op1 + (FLAGS & 1);
+    setOverflowFlag(aCPU, value, (int)*op1);
+
     *op1 = value & 0xff;
     // *(op1 + 1) = value >> 8;
     IP++;
@@ -1513,6 +1625,7 @@ void adc_addr16_s8(struct emu8086 *aCPU, int *handled)
     *op1 = (value >> 8) & 255;
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -1553,6 +1666,7 @@ void adc_addr16_d16(struct emu8086 *aCPU, int *handled)
     *op1 = (value >> 8) & 255;
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -1573,6 +1687,8 @@ void sbb_addr16_reg16(struct emu8086 *aCPU, int *handled)
     {
         int value = *op3;
         value = *op2 - value - (FLAGS & 1);
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = (value & 0xffff);
 
         setFlags(aCPU, value);
@@ -1583,9 +1699,11 @@ void sbb_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
+        int prev = 0;
 
         int value = *(op1);
         value |= (*(op1 + 1) << 8);
+        prev = value;
         //  IP++;
         value -= *(op2) - (FLAGS & 1);
 
@@ -1595,6 +1713,7 @@ void sbb_addr16_reg16(struct emu8086 *aCPU, int *handled)
         IP++;
 
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         return;
     }
@@ -1619,6 +1738,8 @@ void sbb_reg16_addr16(struct emu8086 *aCPU, int *handled)
         value |= (*(op1 + 1) << 8);
 
         value = *op2 - (value) - (FLAGS & 1);
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = value & 0xffff;
         setFlags(aCPU, value);
 
@@ -1645,6 +1766,8 @@ void sbb_reg8_addr8(struct emu8086 *aCPU, int *handled)
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+        int prev = 0;
+        prev = value;
         value -= *(op1) - (FLAGS & 1);
 
         *op2 = high_reg ? (*op2 & 0xff) | ((value & 0xff) << 8) : ((*op2 & 0xff00) | (value & 0xff));
@@ -1653,6 +1776,7 @@ void sbb_reg8_addr8(struct emu8086 *aCPU, int *handled)
         IP++;
 
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         return;
     }
@@ -1674,29 +1798,34 @@ void sbb_addr8_reg8(struct emu8086 *aCPU, int *handled)
     b = get_ops_reg_8(aCPU, opn, &op3, &op2);
     if (b)
     {
-        int value;
+        int value, prev;
         if (high_reg == 0)
         {
-            value = (*op2 & 0xff) - (*op3 & 0xff) - (FLAGS & 1);
+            prev = *op2 & 255;
+            value = (prev) - (*op3 & 0xff) - (FLAGS & 1);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else if (high_reg == 3)
         {
-            value = (*op2 >> 8) - (*op3 >> 8) - (FLAGS & 1);
+            prev = *op2 >> 8;
+            value = (prev) - (*op3 >> 8) - (FLAGS & 1);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else if (high_reg == 1)
         {
+            prev = *op2 >> 8;
             value = (*op2 >> 8) - (*op3 & 0xff) - (FLAGS & 1);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else
         {
+            prev = *op2 & 255;
             value = (*op2 & 0xff) - (*op3 >> 8) - (FLAGS & 1);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         high_reg = 0;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         IP += 1;
         *handled = 1;
@@ -1707,8 +1836,10 @@ void sbb_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
     {
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+
         //  IP++;
         value = *(op1)-value - (FLAGS & 1);
+        setOverflowFlag(aCPU, value, (int)*op1);
 
         *(op1) = value & 0xff;
 
@@ -1727,7 +1858,10 @@ void sbb_addr8_reg8(struct emu8086 *aCPU, int *handled)
 void sbb_al_i8(struct emu8086 *aCPU, int *handled)
 {
     IP++;
+    is_16 = 0;
     int value = (AX & 0xff) - *(CODE_SEGMENT_IP) - (FLAGS & 1);
+    setOverflowFlag(aCPU, value, (int)(AX & 255));
+
     AX = (AX & 0xff00) | (value & 0xff);
     setFlags(aCPU, value);
 
@@ -1737,11 +1871,14 @@ void sbb_al_i8(struct emu8086 *aCPU, int *handled)
 
 void sbb_ax_i16(struct emu8086 *aCPU, int *handled)
 {
+    is_16 = 1;
     IP++;
     int value = *(CODE_SEGMENT_IP);
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
     value = AX - value - (FLAGS & 1);
+    setOverflowFlag(aCPU, value, (int)AX);
+
     AX = (value & 0xffff);
 
     setFlags(aCPU, value);
@@ -1787,6 +1924,7 @@ void sbb_addr8_i8(struct emu8086 *aCPU, int *handled)
     //  *(op1 + 1) = (value & 0xffff) >> 8;
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -1824,6 +1962,8 @@ void sbb_addr16_s8(struct emu8086 *aCPU, int *handled)
     *(op1 + 1) = (value & 0xffff) >> 8;
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
+
     *handled = 1;
 }
 
@@ -1862,6 +2002,7 @@ void sbb_addr16_d16(struct emu8086 *aCPU, int *handled)
     *op1 = value & 0xff;
     *(op1 + 1) = (value & 0xffff) >> 8;
     IP++;
+    setOverflowFlag(aCPU, value, value2);
 
     setFlags(aCPU, value);
 
@@ -2076,7 +2217,7 @@ void jg_8(struct emu8086 *aCPU, int *handled)
     unsigned short ZF = GET_FLAG(6);
 
     unsigned short OF = GET_FLAG(11);
-
+    // printf("Z= %d O=%d S=%d \n", ZF, OF, SF);
     if ((SF == OF) && !ZF)
     {
         jmp_8(aCPU, handled);
@@ -2126,7 +2267,12 @@ void loop_a8(struct emu8086 *aCPU, int *handled)
         IP++;
         return;
     }
-    if (aCPU->instruction_cache_loop == NULL)
+    if(_INSTRUCTIONS->cache){
+                IP = _INSTRUCTIONS->cache->starting_address;
+            _INSTRUCTIONS = _INSTRUCTIONS->cache;
+
+    }
+   else if (aCPU->instruction_cache_loop == NULL)
     {
         find_instruction(aCPU);
         aCPU->instruction_cache_loop = _INSTRUCTIONS;
@@ -2503,6 +2649,8 @@ void sub_addr16_reg16(struct emu8086 *aCPU, int *handled)
     {
         int value = *op3;
         value = *op2 - value;
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = (value & 0xffff);
 
         setFlags(aCPU, value);
@@ -2513,9 +2661,11 @@ void sub_addr16_reg16(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
-
+        int prev = 0;
         int value = *(op1);
+
         value |= (*(op1 + 1) << 8);
+        prev = value;
         //  IP++;
         value -= *(op2);
 
@@ -2523,6 +2673,7 @@ void sub_addr16_reg16(struct emu8086 *aCPU, int *handled)
         *(op1 + 1) = (value & 0xffff) >> 8;
         *handled = 1;
         IP++;
+        setOverflowFlag(aCPU, value, prev);
 
         setFlags(aCPU, value);
 
@@ -2549,6 +2700,8 @@ void sub_reg16_addr16(struct emu8086 *aCPU, int *handled)
         value |= (*(op1 + 1) << 8);
 
         value = *op2 - (value);
+        setOverflowFlag(aCPU, value, (int)*op2);
+
         *op2 = value & 0xffff;
         setFlags(aCPU, value);
 
@@ -2574,7 +2727,9 @@ void sub_reg8_addr8(struct emu8086 *aCPU, int *handled)
 
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
+        int prev;
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+        prev = value;
         value -= *(op1);
 
         *op2 = high_reg ? (*op2 & 0xff) | ((value & 0xff) << 8) : ((*op2 & 0xff00) | (value & 0xff));
@@ -2583,6 +2738,7 @@ void sub_reg8_addr8(struct emu8086 *aCPU, int *handled)
         IP++;
 
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         return;
     }
@@ -2604,29 +2760,36 @@ void sub_addr8_reg8(struct emu8086 *aCPU, int *handled)
     b = get_ops_reg_8(aCPU, opn, &op3, &op2);
     if (b)
     {
-        int value;
+        int value, prev;
         if (high_reg == 0)
         {
-            value = (*op2 & 0xff) - (*op3 & 0xff);
+            prev = *op2 & 255;
+            value = (prev) - (*op3 & 0xff);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         else if (high_reg == 3)
         {
+            prev = *op2 >> 8;
             value = (*op2 >> 8) - (*op3 >> 8);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else if (high_reg == 1)
         {
+            prev = *op2 >> 8;
+
             value = (*op2 >> 8) - (*op3 & 0xff);
             *op2 = (*op2 & 0xff) | ((value & 0xff) << 8);
         }
         else
         {
+            prev = *op2 & 255;
+
             value = (*op2 & 0xff) - (*op3 >> 8);
             *op2 = (*op2 & 0xff00) | (value & 0xff);
         }
         high_reg = 0;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         IP += 1;
         *handled = 1;
@@ -2639,6 +2802,7 @@ void sub_addr8_reg8(struct emu8086 *aCPU, int *handled)
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
         //  IP++;
         value = *(op1)-value;
+        setOverflowFlag(aCPU, value, (int)*op1);
 
         *(op1) = value & 0xff;
 
@@ -2657,7 +2821,10 @@ void sub_addr8_reg8(struct emu8086 *aCPU, int *handled)
 void sub_al_i8(struct emu8086 *aCPU, int *handled)
 {
     IP++;
+    is_16 = 0;
     int value = (AX & 0xff) - *(CODE_SEGMENT_IP);
+    setOverflowFlag(aCPU, value, (int)AX & 255);
+
     AX = (AX & 0xff00) | (value & 0xff);
     setFlags(aCPU, value);
 
@@ -2669,11 +2836,14 @@ void sub_ax_i16(struct emu8086 *aCPU, int *handled)
 {
     IP++;
     is_16 = 1;
-
+    int prev = 0;
     int value = *(CODE_SEGMENT_IP);
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
     value = AX - value;
+    prev = AX;
+    setOverflowFlag(aCPU, value, prev);
+
     AX = (value & 0xffff);
 
     setFlags(aCPU, value);
@@ -2715,6 +2885,8 @@ void sub_addr8_i8(struct emu8086 *aCPU, int *handled)
     value2 = *op1;
     //  value2 |= *(op1 + 1) << 8;
     value = value - value2;
+    setOverflowFlag(aCPU, value, (int)*op1);
+
     *op1 = value & 0xff;
     //  *(op1 + 1) = (value & 0xffff) >> 8;
     IP++;
@@ -2761,6 +2933,8 @@ void sub_addr16_s8(struct emu8086 *aCPU, int *handled)
     // printf("value2: %d",value2);
 
     setFlags(aCPU, value2);
+    setOverflowFlag(aCPU, value, value2);
+
     *handled = 1;
 }
 
@@ -2801,6 +2975,7 @@ void sub_addr16_d16(struct emu8086 *aCPU, int *handled)
     IP++;
     is_16 = 1;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -4139,7 +4314,7 @@ void cmp_addr16_reg16(struct emu8086 *aCPU, int *handled)
         int value = *op3;
         value = *op2 - value;
         // *op2 = (value & 0xffff);
-
+        setOverflowFlag(aCPU, value, (int)*op2);
         setFlags(aCPU, value);
 
         IP += 1;
@@ -4150,15 +4325,17 @@ void cmp_addr16_reg16(struct emu8086 *aCPU, int *handled)
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
     {
 
-        int value = *(op1);
+        int value = *(op1), prev = 0;
         value |= (*(op1 + 1) << 8);
         //  IP++;
+        prev = value;
         value -= *(op2);
 
         *handled = 1;
         IP++;
 
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         return;
     }
@@ -4183,6 +4360,7 @@ void cmp_reg16_addr16(struct emu8086 *aCPU, int *handled)
         value |= (*(op1 + 1) << 8);
 
         value = *op2 - (value);
+        setOverflowFlag(aCPU, value, (int)*op2);
 
         setFlags(aCPU, value);
 
@@ -4207,13 +4385,16 @@ void cmp_reg8_addr8(struct emu8086 *aCPU, int *handled)
     if (get_ops_reg_8_addr(aCPU, opn, &op2, &op1))
 
     {
+        int prev = 0;
         int value = high_reg ? ((*op2 & 0xff00) >> 8) : (*op2 & 0xff);
+        prev = value;
         value = value - *(op1);
 
         //  *op2 = high_reg ? (*op2 & 0xff) | ((value & 0xff) << 8) : ((*op2 & 0xff00) | (value & 0xff));
         high_reg = 0;
         *handled = 1;
         IP++;
+        setOverflowFlag(aCPU, value, prev);
 
         setFlags(aCPU, value);
 
@@ -4237,27 +4418,32 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
     b = get_ops_reg_8(aCPU, opn, &op3, &op2);
     if (b)
     {
-        int value;
+        int value, prev = 0;
         if (high_reg == 0)
         {
+            prev = *op2 & 255;
             value = (*op2 & 0xff) - (*op3 & 0xff);
         }
         else if (high_reg == 3)
         {
+            prev = *op2 >> 8;
             value = (*op2 >> 8) - (*op3 >> 8);
         }
         else if (high_reg == 1)
         {
+            prev = *op2 >> 8;
             value = (*op2 >> 8) - (*op3 & 0xff);
         }
         else
         {
+            prev = *op2 & 255;
             value = (*op2 & 0xff) - (*op3 >> 8);
         }
         // // printf("p5: %d", *oop2);
 
         high_reg = 0;
         setFlags(aCPU, value);
+        setOverflowFlag(aCPU, value, prev);
 
         IP += 1;
         *handled = 1;
@@ -4273,6 +4459,7 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
         *handled = 1;
         IP++;
+        setOverflowFlag(aCPU, value, (int)*op1);
 
         setFlags(aCPU, value);
 
@@ -4285,10 +4472,14 @@ void cmp_addr8_reg8(struct emu8086 *aCPU, int *handled)
 
 void cmp_al_i8(struct emu8086 *aCPU, int *handled)
 {
+    int prev = 0;
     IP++;
-    int value = (AX & 0xff) - *(CODE_SEGMENT_IP);
+    is_16 = 0;
+    prev = AX & 255;
+    int value = (prev) - *(CODE_SEGMENT_IP);
     // AX = (AX & 0xff00) | (value & 0xff);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, prev);
 
     *handled = 1;
     IP++;
@@ -4297,12 +4488,14 @@ void cmp_al_i8(struct emu8086 *aCPU, int *handled)
 void cmp_ax_i16(struct emu8086 *aCPU, int *handled)
 {
     IP++;
+    is_16 = 1;
     int value = *(CODE_SEGMENT_IP);
     IP++;
     value |= *(CODE_SEGMENT_IP) << 8;
     value = AX - value;
-    AX = (value & 0xffff);
+    // AX = (value & 0xffff);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, (int)AX);
 
     *handled = 1;
     IP += 1;
@@ -4345,6 +4538,7 @@ void cmp_addr8_i8(struct emu8086 *aCPU, int *handled)
     IP++;
 
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -4376,6 +4570,7 @@ void cmp_addr16_s8(struct emu8086 *aCPU, int *handled)
     IP++;
     value = value2 - *(CODE_SEGMENT_IP);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     IP++;
 
@@ -4414,6 +4609,7 @@ void cmp_addr16_d16(struct emu8086 *aCPU, int *handled)
 
     IP++;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, value2);
 
     *handled = 1;
 }
@@ -4631,6 +4827,8 @@ void cmpsb(struct emu8086 *aCPU, int *handled)
 
     int value = *(DATA_SEGMENT + SI) - *(EXTRA_SEGMENT + DI);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, (int)*(DATA_SEGMENT + SI));
+
     unsigned short incr = DF ? -1 : 1;
     DI += incr;
     SI += incr;
@@ -4656,6 +4854,7 @@ void cmpsw(struct emu8086 *aCPU, int *handled)
     SI += incr;
     int value = v1 - v2;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, (int)v1);
 
     IP++;
     *handled = 1;
@@ -4731,6 +4930,8 @@ void scasb(struct emu8086 *aCPU, int *handled)
 
     int value = (AX & 0xff) - *(EXTRA_SEGMENT + DI);
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, (int)(AX & 255));
+
     unsigned short incr = DF ? -1 : 1;
     DI += incr;
 
@@ -4753,6 +4954,7 @@ void scasw(struct emu8086 *aCPU, int *handled)
 
     int value = AX - v2;
     setFlags(aCPU, value);
+    setOverflowFlag(aCPU, value, (int)(AX));
 
     IP++;
     *handled = 1;
@@ -4850,7 +5052,6 @@ void cld(struct emu8086 *aCPU, int *handled)
     *handled = 1;
 }
 
-
 // cli
 
 void cli(struct emu8086 *aCPU, int *handled)
@@ -4879,7 +5080,6 @@ void sti(struct emu8086 *aCPU, int *handled)
     IP++;
     *handled = 1;
 }
-
 
 // lea
 void lea(struct emu8086 *aCPU, int *handled)
@@ -7203,10 +7403,10 @@ void op_setptrs(struct emu8086 *aCPU)
     // CLI
     aCPU->op[CLI] = &cli;
 
-    // STD 
+    // STD
     aCPU->op[STD] = &std;
 
-   // STI Unfortunate arrangement
+    // STI Unfortunate arrangement
     aCPU->op[STI] = &sti;
 
     // LEA
