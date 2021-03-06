@@ -115,23 +115,18 @@ static void emu8086_app_top_gutter_set_property(GObject *object,
                                                 GParamSpec *pspec)
 {
     Emu8086AppTopGutter *self = EMU8086_APP_TOP_GUTTER(object);
-    // g_print("l %d\n", *value);
-
+ 
     switch ((Emu8086AppTopGutterProperty)property_id)
     {
     case PROP_GUTTER_THEME:
-        // *v = (gboolean *)value;
-
+ 
         self->theme = g_value_get_string(value);
-        // g_print("filename: %s\n", self->filename);
-        break;
+         break;
 
     case PROP_GUTTER_FONT:
-        // *v = (gboolean *)value;
-
+ 
         self->font = g_value_get_string(value);
-        // emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
+       
         break;
 
     case PROP_GUTTER_TOP:
@@ -242,15 +237,5 @@ static void set_top(Emu8086AppTopGutter *gutter, GtkTextView *top)
 
 void top_draw(Emu8086AppTopGutter *gutter, cairo_t *cr)
 {
-    PRIV_TOP_GUTTER;
-//      GdkRectangle clip;
-//         if (!get_clip_rectangle(gutter, priv->view, cr, &clip))
-//     {
-//         return;
-//     }
-//     g_print("%d\n", clip.height);
-//     cairo_save(cr);
-// // cairo_image_surface_create_from_
-//     // cairo_rectangle(cr)
-//     // // GtkTextView *text_view;
+    PRIV_TOP_GUTTER; 
 }

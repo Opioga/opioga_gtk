@@ -92,16 +92,7 @@ static void for_each(gpointer key,
                      gpointer value,
                      gpointer user_data);
 
-static void _refresh_theme(Emu8086AppStyleScheme *scheme,
-                           gpointer user_data)
-
-{
-    // Emu8086AppErrTreeView *tree_view = EMU8086_APP_ERR_TREE_VIEW(user_data);
-    // gchar *css = g_strconcat("#err-tree-view {color:", tree_view->priv->text_color, ";}", NULL);
-    // gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(tree_view->priv->provider), css, -1, NULL);
-    // g_print("%s \n", css);
-}
-
+ 
 static void emu8086_app_err_tree_view_class_init(Emu8086AppErrTreeViewClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -168,13 +159,8 @@ static void emu8086_app_err_tree_view_init(Emu8086AppErrTreeView *tree_view)
 
     gtk_widget_set_vexpand(GTK_WIDGET(tree_view), TRUE);
     gtk_widget_set_name(tree_view, "err-tree-view");
-    // scheme
-    // priv->scheme = emu8086_app_style_scheme_get_default();
-    // priv->text_color = emu8086_app_style_scheme_get_color_by_index(priv->scheme, COLOR_TEXT);
-    // priv->provider = GTK_STYLE_PROVIDER(gtk_css_provider_new());
-    // gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(tree_view)), priv->provider, G_MAXUINT);
 
-    // g_signal_connect(priv->scheme, "theme_changed", G_CALLBACK(_refresh_theme), tree_view);
+
 }
 
 static void emu8086_app_err_tree_view_get_property(GObject *object,

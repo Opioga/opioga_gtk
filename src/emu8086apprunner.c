@@ -262,8 +262,6 @@ static void load_errs(Emu8086AppCodeRunner *runner)
         e = e->next;
     }
     emu8086_app_window_show_all_errors(priv->win);
-
-  
 }
 
 static void emu_free(Emu8086AppCodeRunner *runner)
@@ -309,7 +307,6 @@ static void emu_free(Emu8086AppCodeRunner *runner)
             i++;
         }
     }
-    // g_print("herennn \n\n ");
     if ((errors > 0) && (first_err != NULL))
     {
         struct errors_list *e = first_err, *n;
@@ -325,7 +322,6 @@ static void emu_free(Emu8086AppCodeRunner *runner)
             {
                 e = n;
                 n = n->next;
-                // free(e->message);
 
                 free(e);
                 // i++;
@@ -340,14 +336,12 @@ static void emu_free(Emu8086AppCodeRunner *runner)
     aCPU->instructions_list = NULL;
     list_err = NULL;
 
-    //  free(aCPU->mSFR);
-    free(aCPU->mDataMem);
+     free(aCPU->mDataMem);
 
     free(aCPU);
     set_app_state(runner, STOPPED);
     priv->aCPU = NULL;
-    // g_free(priv->fname);
-    // priv->fname = NULL;
+
 }
 
 void set_app_state(Emu8086AppCodeRunner *runner, gint state)
@@ -438,7 +432,7 @@ int emu_run(Emu8086AppCodeRunner *runner)
     }
     errors = 0;
 
-    if (priv->state == STEP_OVER || priv->state == PLAYING )
+    if (priv->state == STEP_OVER || priv->state == PLAYING)
     {
 
         //priv->len;
@@ -503,7 +497,8 @@ static int emu_init(Emu8086AppCodeRunner *runner)
         if (aCPU == NULL)
             exit(1);
     }
-    if(errors) return 0;
+    if (errors)
+        return 0;
     errors = 0;
     assembler_step = 0;
     do_assembly(priv->aCPU, fname);

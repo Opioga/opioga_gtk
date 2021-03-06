@@ -65,28 +65,19 @@ static void emu8086_app_plugin_box_set_property(GObject *object,
                                                 GParamSpec *pspec)
 {
     Emu8086AppPluginBox *self = EMU8086_APP_PLUGIN_BOX(object);
-    // g_print("l %d\n", *value);
-
+ 
     switch ((Emu8086AppPluginBoxProperty)property_id)
     {
 
     case PROP_WIN:
 
         self->priv->win = EMU8086_APP_WINDOW(g_value_get_object(value));
-        // emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
         break;
     case PROP_MY_RUNNER:
 
         self->priv->runner = EMU8086_APP_CODE_RUNNER(g_value_get_object(value));
-        // emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
         break;
     case PROP_VBOX:
-
-        // self->priv->v_box = EMU8086_APP_CODE_RUNNER(g_value_get_object(value));
-        // emu8086_win_change_theme(self);
-        // g_print("filename: %s\n", self->filename);
         break;
     default:
         /* We don't have any other property... */

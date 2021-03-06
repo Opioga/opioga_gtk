@@ -562,15 +562,14 @@ draw_cells(Emu8086AppCodeGutter *gutter,
 
         pango_layout_get_pixel_size(priv->cached_layout, &width, &height);
 
-        x = cell_area.x; // + (cell_area.width - width)*0
-        y = cell_area.y; // + (cell_area->height - height) * 0;
+        x = cell_area.x; 
+        y = cell_area.y;
         GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(view));
 
         gtk_render_layout(context, cr, x, y, priv->cached_layout);
         cairo_restore(cr);
 
-        // gtk_text_iter_forward_line(&start);
-        i++;
+         i++;
     }
 }
 
@@ -639,5 +638,4 @@ view = GTK_TEXT_VIEW(priv->code);
     lines_info_free(info);
 
 
-    // // GtkTextView *text_view;
-}
+ }

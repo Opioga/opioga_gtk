@@ -1322,7 +1322,6 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf)
 
     gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
 
-    // (user_edited_a_new_document)
     gtk_file_chooser_set_current_name(chooser,
                                       win->state.file_name);
 
@@ -1335,7 +1334,6 @@ gboolean save_new(Emu8086AppWindow *win, gchar *file_name, char *buf)
         gchar *uri;
         uri = gtk_file_chooser_get_uri(chooser);
         add_recent(uri);
-        //  save_to_file(filename);
         strcpy(buf, filename);
         g_free(filename);
         g_free(uri);
@@ -1363,7 +1361,6 @@ gboolean emu8086_app_window_save_doc(Emu8086AppWindow *win)
         PRIV;
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         char buf2[50];
-        // GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(priv->code));
         GtkTextIter start_iter, end_iter;
         gtk_text_buffer_get_start_iter(buffer, &start_iter);
         gtk_text_buffer_get_end_iter(buffer, &end_iter);

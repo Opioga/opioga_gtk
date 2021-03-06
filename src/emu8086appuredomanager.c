@@ -301,14 +301,12 @@ update_can_undo_can_redo (Emu8086AppURdoManager *manager)
 	if (manager->priv->can_undo != can_undo)
 	{
 		manager->priv->can_undo = can_undo;
-		// emu8086_app_urdo_manager_can_undo_changed (EMU8086_APP_URDO_MANAGER (manager));
-	}
+ 	}
 
 	if (manager->priv->can_redo != can_redo)
 	{
 		manager->priv->can_redo = can_redo;
-		// emu8086_app_urdo_manager_can_redo_changed (EMU8086_APP_URDO_MANAGER (manager));
-	}
+ 	}
 }
 static void
 restore_modified_state (Emu8086AppURdoManager *manager,

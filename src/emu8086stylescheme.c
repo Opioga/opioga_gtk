@@ -219,7 +219,7 @@ static const gchar *emu8086_app_style_scheme_get_col(Emu8086AppStyleScheme *sche
         /* code */
         col = &scheme->priv->color_selectionbg;
         break;
-    case  COLOR_TEXT:
+    case COLOR_TEXT:
         /* code */
         col = &scheme->priv->color_text;
         break;

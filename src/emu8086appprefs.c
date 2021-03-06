@@ -398,7 +398,6 @@ emu8086_app_prefs_init(Emu8086AppPrefs *prefs)
   priv->install_scheme_file_schooser = NULL;
   populate_schemes(prefs);
 
-  // g_signal_connect(GTK_WIDGET("destroy",))
 }
 
 static void

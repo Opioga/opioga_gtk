@@ -426,8 +426,7 @@ static void emu8086_app_code_buffer_delete_range(GtkTextBuffer *buffer,
   
     g_signal_emit(buffer, buffer_signals[NEWLINE], 0);
 
-    // g_signal_emit(buffer, buffer_signals[NEWLINE], 0);
-}
+ }
 
 void emu8086_app_code_buffer_change_theme(Emu8086AppCodeBuffer *buffer)
 {
@@ -461,23 +460,19 @@ emu8086_app_code_buffer_set_property(GObject *object,
 
     case PROP_BUFFER_THEME:
 
-        // self->theme = v;
-        emu8086_app_code_buffer_change_theme(self);
-        // g_string_free(v, FALSE);
-        break;
+         emu8086_app_code_buffer_change_theme(self);
+         break;
 
     case PROP_CAN_UNDO:
 
         self->priv->can_undo = g_value_get_boolean(value);
 
-        // g_string_free(v, FALSE);
-        break;
+         break;
     case PROP_CAN_REDO:
 
         self->priv->can_redo = g_value_get_boolean(value);
 
-        // g_string_free(v, FALSE);
-        break;
+         break;
     default:
         /* We don't have any other property... */
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -525,8 +520,7 @@ static void emu8086_app_code_buffer_class_init(Emu8086AppCodeBufferClass *klass)
     object_class->set_property = emu8086_app_code_buffer_set_property;
     object_class->get_property = emu8086_app_code_buffer_get_property;
     object_class->dispose = emu8086_app_code_buffer_dispose;
-    //  klass->new_line = emu8086_app_code_buffer_new_line;
-    g_object_class_install_property(object_class, PROP_BUFFER_THEME,
+     g_object_class_install_property(object_class, PROP_BUFFER_THEME,
                                     g_param_spec_string("theme", "Theme", "Editor Theme", "dark+",
                                                         G_PARAM_READWRITE));
 
@@ -585,8 +579,7 @@ gboolean check_for_indent(gchar *line)
         }
         p++;
     }
-    //  g_print("%s\n", line);
-    return TRUE;
+     return TRUE;
 }
 
 void emu8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer)
@@ -611,8 +604,7 @@ void emu8086_app_code_buffer_indent(Emu8086AppCodeBuffer *buffer)
         }
         if (gtk_text_iter_get_char(&iter) == '\t')
         {
-            // g_print("lines: %d\n", i);
-            continue;
+             continue;
         }
 
         while (gtk_text_iter_get_char(&iter) == ' ')

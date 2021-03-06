@@ -860,7 +860,6 @@ Emu8086AppCode *create_new(Emu8086AppCodeType type)
     _color.green = 0.20;
     PRIV_CODE;
     provider = priv->provider;
-    //
     GdkRGBA color;
 
     color.red = 0.22;
@@ -874,8 +873,6 @@ Emu8086AppCode *create_new(Emu8086AppCodeType type)
     g_settings_bind(priv->settings, "font", code, "font", G_SETTINGS_BIND_GET);
 
     return code;
-
-    //gtk_widget_show(lines);
 }
 
 static Emu8086AppCode *emu8086_app_code_new(Emu8086AppCodeType type)
@@ -915,9 +912,7 @@ gboolean emu8086_app_code_mgo_to_line(Emu8086AppCode *code, gint line)
     tv = GTK_TEXT_VIEW(code);
     buffer = GTK_TEXT_BUFFER(code->priv->buffer);
     gtk_text_buffer_get_iter_at_line(buffer, &iter, line - 1);
-        gtk_text_iter_forward_to_line_end(&iter);
+    gtk_text_iter_forward_to_line_end(&iter);
     gtk_text_buffer_place_cursor(buffer, &iter);
-     emu8086_app_code_scroll_to_view(code);
-
-
+    emu8086_app_code_scroll_to_view(code);
 };

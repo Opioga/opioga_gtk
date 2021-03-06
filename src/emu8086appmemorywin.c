@@ -138,10 +138,9 @@ static GtkWidget *emu8086_app_memory_window_create_combo_box(GtkWidget *header_b
                                "ns",
                                "No Segment");
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(combo_box), "ns");
-    //  label = gtk_label_new("Memory View");
 
     gtk_container_add(GTK_CONTAINER(vbox), combo_box);
-    //gtk_container_add(GTK_CONTAINER(vbox), label);
+
     gtk_header_bar_set_custom_title(GTK_HEADER_BAR(header_bar), vbox);
     return combo_box;
 }
@@ -289,7 +288,8 @@ static void emu8086_app_memory_window_adjust_changed(GtkAdjustment *adj, Emu8086
  * Gets the box of the @win.
  *
  * Returns: (transfer none): the bottom #GtkWidget.
+ * 
  */
-GtkWidget * emu8086_app_memory_window_get_box(Emu8086AppMemoryWindow *win){
+GtkWidget *emu8086_app_memory_window_get_box(Emu8086AppMemoryWindow *win){
     return win->priv->box;
 }

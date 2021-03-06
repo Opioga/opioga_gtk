@@ -215,7 +215,6 @@ void emu8086_app_side_pane_update_view(Emu8086AppSidePane *pane, unsigned short 
         gchar buf[20];
 
         milli(label, ren, value);
-        //     // sprintf(buf, "%s: %04x", r, value);
       
     }
 }
