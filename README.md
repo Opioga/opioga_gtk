@@ -1,6 +1,6 @@
-# gtkemu8086
+# opioga_gtk
 
-## An 8086 emulator (in progress)
+## An 8086 emulator for linux (in progress)
 
 > The product is still in development and is a hobby project
 
@@ -23,13 +23,6 @@ One of the things I fell in love with while studying computer engineering ( in a
 
 The assembler code is modified from [here](https://github.com/nanochess/tinyasm)
 
-## About
-
-Allison Kosy is a developer who primarily writes react and react native applications but is involved in embedded systems and penetration testing in his free time
-
-- Twitter [@kosisoali](https://twitter.com/kosisoali)
-- Instagram [@allisonkosy](https://instagram.com/allisonkosy)
-- Telegram [@allisonkosy](https://t.me/allisonkosy)
 
 **Copyright 2020 KRC**
 
