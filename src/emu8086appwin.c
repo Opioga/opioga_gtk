@@ -14,12 +14,9 @@
  * Window class
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#else
-#define PACKAGE "/usr/local/lib"
-#define DATADIR "/usr/local/share"
-#endif
+#define PACKAGE "emu8086"
+#define DATADIR "../share"
+
 
 #include <emu8086appwin.h>
 #include <emu8086app.h>
@@ -297,7 +294,7 @@ void emu8086_app_window_open_drag_data(Emu8086AppWindow *win, GtkSelectionData *
     GtkTextBuffer *buffer;
     GFile *file;
     file = g_file_new_for_uri(uri);
-    filename = uri + strlen("file//") + 1;
+    filename = uri + strlen("file//") + 2;
     gint len = g_strv_length(uri_list);
 
     while (i < len)
@@ -334,6 +331,7 @@ void emu8086_app_window_open_drag_data(Emu8086AppWindow *win, GtkSelectionData *
     gtk_window_set_title(GTK_WINDOW(win), win->state.file_name);
 
     strcpy(win->state.file_path, filename);
+    g_print("%s\n", win->state.file_path);
 
     //g_file_get_contents(filename, )
     if (g_file_load_contents(file, NULL, &contents, &length, NULL, NULL))
@@ -512,9 +510,9 @@ static void populate_bottom_bar(Emu8086AppWindow *win)
     GtkWidget *icon3;
     GtkWidget *btn_widget;
     gchar *path, *path2, *path3;
-    path = g_build_filename(DATADIR, PACKAGE, "pics/good.svg", NULL);
-    path3 = g_build_filename(DATADIR, PACKAGE, "pics/errors.svg", NULL);
-    path2 = g_build_filename(DATADIR, PACKAGE, "pics/memory.svg", NULL);
+    path = g_build_filename("../share", "emu8086", "pics/good.png", NULL);
+    path3 = g_build_filename("../share", "emu8086", "pics/errors.png", NULL);
+    path2 = g_build_filename("../share", "emu8086", "pics/memory.png", NULL);
 
     icon = gtk_image_new_from_file(path);
     icon2 = gtk_image_new_from_file(path2);
@@ -580,7 +578,7 @@ static void load_vpaned(Emu8086AppWindow *win)
     gtk_container_add(GTK_CONTAINER(priv->err_messages), sv);
 
     gtk_widget_set_vexpand(sv, TRUE);
-    emu8086_app_window_bottom_notebook_add_item(win, priv->err_messages, "Errors", NULL, "gtk-close");
+    emu8086_app_window_bottom_notebook_add_item(win, priv->err_messages, "Errors", NULL, "application-exit");
     gtk_widget_set_size_request(priv->err_messages, -1, 200);
     //    gtk_paned_pack1 (GTK_PANED(priv->vpaned), frame1, TRUE,
     // 		 TRUE); gtk_widget_show_all(priv->vpaned);
@@ -658,6 +656,7 @@ static void emu8086_app_window_init(Emu8086AppWindow *win)
     builder = gtk_builder_new_from_resource("/com/krc/emu8086app/ui/gears.ui");
     menu = G_MENU_MODEL(gtk_builder_get_object(builder, "menu"));
     gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(priv->gears), menu);
+    gtk_widget_hide(priv->gears);
 
     gtk_drag_dest_set(GTK_WIDGET(win),
                       GTK_DEST_DEFAULT_MOTION |
@@ -976,7 +975,7 @@ void emu8086_app_window_arr_sum_activate_cb(Emu8086AppWindow *win)
     gsize len;
     gchar *path;
 #ifdef __WIN32
-    path = "egs/ArraySum.asm";
+    path = "../share/emu8086/egs/ArraySum.asm";
 #endif
 
 #ifdef __linux__
@@ -1013,8 +1012,8 @@ void emu8086_app_window_rev_str_activate_cb(Emu8086AppWindow *win)
     gchar *con;
     gsize len;
     gchar *path;
-#ifdef __WIN32
-    path = "egs/RevStr.asm";
+#ifdef _WIN32
+    path = "../share/emu8086/egs/RevStr.asm";
 #endif
 
 #ifdef __linux__
@@ -1273,33 +1272,35 @@ void emu8086_app_window_upd(Emu8086AppWindow *win)
 void emu8086_app_window_write_to_file(gchar *filename, gchar *buffer, char *buff)
 {
 
-    FILE *f;
+    GError* err = NULL;
+    g_file_set_contents(filename, buffer, -1, &err);
+    if (err != NULL) {
+        sprintf(buff, "Unable to save %s\n", err->message);
+        g_print("%s", buff);
+        // yes don't warn the user about file save failures. 
+
+        return 0;
+    }
+
+    g_free(buffer);
     GFile *file;
     file = g_file_new_for_path(filename);
-    // f = g_file_open_readwrite(f, );
-    char buf[256];
-    //g_fi
-
-    f = fopen(filename, "w");
-    if (f == NULL)
-    {
-        sprintf(buf, "Unable to save %s\n", filename);
-        g_print("%s", buf);
-        // g_free(filename);
-
-        return;
-    }
-    if (fputs(buffer, f))
-        // g_print(filename);
-        fclose(f);
-    //free(f);name(file)
     if (file != NULL)
     {
-        gchar *base = g_file_get_basename(file);
+        gchar* base = g_file_get_basename(file);
         sprintf(buff, "%s", base);
+        g_free(base);
     }
     else
         sprintf(buff, "%s", "Failed to save");
+    //  look man I'm revoking your credentails we are blocking you from the reposirory
+    // yes your ssh keys, infact toss your system in the bin for such useless
+    // handling of the file saving mechanism. We appreciate the highlighting engine but Kosy
+    // this is attrocious
+    return;
+    // Nice very dumb way to write to a file Kosy
+ 
+
     return;
 }
 
@@ -1365,6 +1366,7 @@ gboolean emu8086_app_window_save_doc(Emu8086AppWindow *win)
         gtk_text_buffer_get_start_iter(buffer, &start_iter);
         gtk_text_buffer_get_end_iter(buffer, &end_iter);
         gchar *con = gtk_text_buffer_get_text(buffer, &start_iter, &end_iter, FALSE);
+ 
         if (win->state.file_path_set)
         {
             emu8086_app_window_write_to_file(win->state.file_path, con, win->state.file_name);
@@ -1575,13 +1577,13 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_menu_tool_button_set_arrow_tooltip_text(recents,
                                                 ("Open a recently used file"));
 
-    gtk_widget_show(GTK_WIDGET(recents));
+    // gtk_widget_show(GTK_WIDGET(recents));
     play = gtk_tool_button_new(NULL, NULL);
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(play), ("Run"));
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(play), "media-playback-start");
     gtk_tool_button_set_use_underline(GTK_TOOL_BUTTON(play), TRUE);
     gtk_tool_item_set_is_important(play, TRUE);
-    gtk_widget_show(GTK_WIDGET(play));
+  //  gtk_widget_show(GTK_WIDGET(play));
 
     sep = gtk_separator_tool_item_new();
     gtk_tool_item_set_is_important(sep, TRUE);
@@ -1616,7 +1618,7 @@ void populate_tools(Emu8086AppWindow *win)
     gtk_widget_show(GTK_WIDGET(save));
 
     step_over = gtk_tool_button_new(NULL, NULL);
-    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(step_over), "forward");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(step_over), "media-playback-start");
     gtk_tool_item_set_tooltip_text(step_over, "Step Over to breakpoint");
     gtk_widget_show(GTK_WIDGET(step_over));
 

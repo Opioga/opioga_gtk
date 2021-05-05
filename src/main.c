@@ -18,6 +18,11 @@
 #include <config.h>
 #endif
 
+#ifdef _WIN32
+// #include <windows.h>
+#endif
+
+
 #include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -26,7 +31,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
-#include <gdk/gdkx.h>
+#include <gdk/gdk.h>
 
 #ifdef HAVE_INTROSPECTION
 #include <girepository.h>
@@ -89,6 +94,9 @@ int main(int argc, char *argv[])
     Emu8086App *a;
     GOptionContext *context;
     a = emu8086_app_get_default();
+    //g_application_run(G_APPLICATION(a), argc, argv);
+  //g_application_run(G_APPLICATION(a), argc, argv);
+//return;
     context = g_option_context_new(_("- Edit text files"));
     g_application_add_main_option_entries(a, options);
     //g_option_context_add_group(context, gtk_get_option_group(TRUE));
@@ -115,6 +123,9 @@ int main(int argc, char *argv[])
 
     engine = emu8086_plugins_engine_get_default();
     // a = emu8086_app_get_default();
-    g_application_run(G_APPLICATION(a), argc, argv);
-    g_option_context_free(context);
+
+ g_option_context_free(context);
+    
+g_application_run(G_APPLICATION(a), argc, argv);
+   // g_option_context_free(context);
 }

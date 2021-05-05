@@ -15,11 +15,12 @@
  */
 
 #include <stdio.h>
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#else
-#define DATADIR "/home/lion/Desktop/kosyWork/Desktop/gtkemu8086"
-#endif
+
+
+
+#define DATADIR "../share"
+
+
 
 #include <glib.h>
 

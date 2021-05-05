@@ -37,6 +37,8 @@ enum
 };
 
 static guint buffer_signals[N_SIGNALS] = {0};
+
+
 static void skip_space(GtkTextIter *iter)
 {
     while (g_ascii_isspace(gtk_text_iter_get_char(iter)))
@@ -69,7 +71,7 @@ struct _Emu8086AppCodeBufferPrivate
     GHashTable *keywords_hash_table;
     GHashTable *register_hash_table;
 };
-
+G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
 static void _highlight(GtkTextBuffer *buffer, gint i)
 {
     GtkTextIter iter, start, end, iter2;
@@ -268,7 +270,7 @@ static void _highlight(GtkTextBuffer *buffer, gint i)
     }
 }
 
-G_DEFINE_TYPE_WITH_PRIVATE(Emu8086AppCodeBuffer, emu8086_app_code_buffer, GTK_TYPE_TEXT_BUFFER);
+
 
 static void emu8086_app_code_buffer_dispose(GObject *object)
 {

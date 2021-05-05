@@ -1,12 +1,10 @@
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#else
-#define LIBDIR "/usr/local/lib"
-#define DATADIR "/usr/local/share"
-#endif
-// #define EMU_DEBUG
+
+
+#define LIBDIR "../lib"
+#define DATADIR "../share"
+
 
 #include <string.h>
 

@@ -489,6 +489,7 @@ static int emu_init(Emu8086AppCodeRunner *runner)
     struct emu8086 *aCPU = priv->aCPU;
     gchar *fname;
     fname = priv->fname;
+    g_print("%s \n", fname);
     if (aCPU == NULL)
     {
         aCPU = emu8086_new();
@@ -683,8 +684,10 @@ void run_clicked_app(Emu8086AppCodeRunner *runner)
             return;
     }
 
-    priv->to = g_timeout_add(200, (GSourceFunc)emu_run, runner);
-    set_app_state(runner, PLAYING);
+    
+
+//    priv->to = g_timeout_add(200, (GSourceFunc)emu_run, runner);
+   // set_app_state(runner, PLAYING);
 
     // g_timeout_add
 } //x

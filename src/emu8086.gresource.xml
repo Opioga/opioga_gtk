@@ -9,5 +9,8 @@
     <file>ui/errtv.ui</file>
     <file>css/text.css</file>
     <file>pics/emu8086.png</file>
+	  <file>pics/memory.svg</file>
+	  <file>pics/good.svg</file>
+	  <file>pics/errors.svg</file>
   </gresource>
 </gresources>

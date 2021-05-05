@@ -11,13 +11,13 @@ lib_LTLIBRARIES = libemu8086.la
 libemu8086_la_SOURCES = emu8086.c \
 ops.c \
 assembler.c
-libemu8086_la_LDFLAGS = -version-info 1:0:0
+libemu8086_la_LDFLAGS = -version-info 1:0:0  -no-undefined
 libemu8086_la_CFLAGS = -I $(srcdir)/../include
 
 bin_PROGRAMS = emu8086
 AM_CFLAGS = $(EMU8086_CFLAGS) 	
 emu8086_CFLAGS = -I $(srcdir)/../include $(EMU8086_CFLAGS) -DDATADIR=\""$(datadir)"\" \
--DLIBDIR=\""$(libdir)"\"
+-DLIBDIR=\""$(libdir)"\" -mwindows
 
 
 
@@ -25,13 +25,13 @@ emu8086_LDADD = $(EMU8086_LIBS) libemu8086.la
 
 
 emu8086app_c_files = \
+emu8086appwin.c \
 emu8086appcodebuffer.c \
 emu8086appcodegutter.c \
 emu8086appcode.c \
 emu8086apprunner.c \
 emu8086apppluginbox.c \
 emu8086appmemorywin.c \
-emu8086appwin.c \
 emu8086apppluginsengine.c \
 emu8086stylescheme.c \
 emu8086appuredomanager.c \
@@ -53,6 +53,7 @@ main.c
 
 
 INST_H_FILES =			\
+    $(top_srcdir)/include/emu8086apptypes.h \
     $(top_srcdir)/include/emu8086appcodebuffer.h \
     $(top_srcdir)/include/emu8086appcodegutter.h \
     $(top_srcdir)/include/emu8086appcode.h \
@@ -82,7 +83,7 @@ Emu8086-1.0.gir: emu8086
 Emu8086_1_0_gir_INCLUDES = Gtk-3.0 
 Emu8086_1_0_gir_FILES =  $(INST_H_FILES) $(emu8086app_c_files) 
 Emu8086_1_0_gir_VERSION = 1.0
-Emu8086_1_0_gir_PROGRAM = $(builddir)/emu8086
+Emu8086_1_0_gir_PROGRAM = $(builddir)/emu8086.exe
 Emu8086_1_0_gir_NAMESPACE = Emu8086
 
 
